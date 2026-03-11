@@ -193,3 +193,12 @@ func TestCompatibilityNegativeValues(t *testing.T) {
 	// At minimum, CSS should be generated (not empty).
 	// Exact values depend on theme.
 }
+
+func TestNegativeNonNegatableValueProducesNoOutput(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="-m-auto"`))
+	css := e.CSS()
+	if css != "" {
+		t.Errorf("-m-auto should produce no CSS output, got:\n%s", css)
+	}
+}

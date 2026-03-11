@@ -176,6 +176,17 @@ func resolveDeclarations(
 	theme *ThemeConfig,
 ) []Declaration {
 	if utilDef.Static {
+		if pc.Negative {
+			var negated []Declaration
+			for _, d := range utilDef.Declarations {
+				neg := negateValue(d.Value)
+				if neg == "" {
+					return nil // cannot negate — discard
+				}
+				negated = append(negated, Declaration{Property: d.Property, Value: neg})
+			}
+			return negated
+		}
 		return utilDef.Declarations
 	}
 
@@ -272,6 +283,12 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 	// No namespace — this is a type-based --value() like --value(length, percentage).
 	// Try keyword mapping.
 	if cssVal := keywordToCSS(valueStr); cssVal != "" {
+		if pc.Negative {
+			cssVal = negateValue(cssVal)
+			if cssVal == "" {
+				return ""
+			}
+		}
 		return cssVal
 	}
 
@@ -588,12 +605,21 @@ func parseFloat(s string) float64 {
 	return f
 }
 
-// negateValue prepends calc(-1 * ...) or a minus sign.
+// negateValue prepends calc(-1 * ...) for numeric/calc values.
+// Returns "" if the value cannot be negated (e.g. keywords like "auto").
 func negateValue(v string) string {
+	if v == "" {
+		return ""
+	}
 	if strings.HasPrefix(v, "calc(") {
 		return "calc(-1 * " + v[5:]
 	}
-	return "calc(-1 * " + v + ")"
+	// Only negate values that start with a digit or a dimension-like token.
+	if len(v) > 0 && (v[0] >= '0' && v[0] <= '9' || v[0] == '.') {
+		return "calc(-1 * " + v + ")"
+	}
+	// Cannot negate keyword values like "auto", "none", etc.
+	return ""
 }
 
 // applyModifier wraps a CSS color value with oklch opacity modifier.
