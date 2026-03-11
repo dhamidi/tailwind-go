@@ -30,6 +30,11 @@
 //	preflight := tw.PreflightCSS()  // serve once, cache aggressively
 //	utilities := tw.CSS()            // regenerated per content scan
 //
+// [Engine.FullCSS] combines preflight and utility CSS into a single
+// stylesheet, which is what the HTTP handler serves:
+//
+//	full := tw.FullCSS()  // preflight + utilities
+//
 // # Pipeline Integration
 //
 // [NewPassthrough] creates an engine that also forwards all bytes to an
@@ -38,6 +43,36 @@
 //	tw := tailwind.NewPassthrough(responseWriter)
 //	tmpl.Execute(tw, data) // bytes flow to both tw and responseWriter
 //	css := tw.CSS()
+//
+// # HTTP Serving
+//
+// [NewHandlerFromFS] provides a simple, production-ready way to serve
+// generated CSS. It scans an [fs.FS] for class candidates, generates
+// the CSS, and returns an [http.Handler] with content-hashed URLs,
+// immutable cache headers, ETag support, and gzip compression:
+//
+//	h, err := tailwind.NewHandlerFromFS(templateFS)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	mux.Handle(h.URL(), h)
+//
+// For more control, use [NewHandler] with an existing [Engine]:
+//
+//	engine := tailwind.New()
+//	engine.Scan(templateFS)
+//	h := tailwind.NewHandler(engine)
+//	h.Build()
+//	mux.Handle(h.URL(), h)
+//
+// # Scanning Files
+//
+// [Engine.Scan] walks an [fs.FS] and extracts Tailwind class candidates
+// from all text files, automatically skipping binary files:
+//
+//	engine := tailwind.New()
+//	engine.Scan(os.DirFS("./templates"))
+//	css := engine.CSS()
 //
 // # Custom Definitions
 //
@@ -72,6 +107,11 @@
 //   - Fractions: w-1/2, translate-x-2/3
 //   - Opacity modifiers: bg-blue-500/75
 //   - Type hints: text-[length:1.5em]
+//   - Compound variants: group-hover:text-white, peer-focus:ring-2, not-hover:opacity-100, has-*:, in-*:
+//   - Named groups/peers: group/sidebar, group-hover/sidebar:flex
+//   - Container query variants: @md:flex, @lg:grid
+//   - @supports variants: supports-grid:flex, [@supports(display:grid)]:flex
+//   - @starting-style variant: starting:opacity-0
 //
 // # CSS Directives
 //
@@ -82,6 +122,7 @@
 //   - @utility name-* { ... } — define a dynamic utility (e.g., p-*, bg-*)
 //   - @variant name (&:selector); — define a pseudo-class or selector variant
 //   - @variant name (@media ...); — define a media query variant
+//   - @apply class1 class2; — compose utilities in custom CSS rules
 //   - @keyframes name { ... } — define animation keyframes
 //
 // Inside utility declarations, these placeholders are resolved at generation time:
