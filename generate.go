@@ -124,6 +124,28 @@ func resolveUtility(pc ParsedClass, utils *utilityIndex) (*UtilityDef, string) {
 		return u, val
 	}
 
+	// Exhaustive fallback: try every possible hyphen-split of the full
+	// string, longest utility prefix first. This handles cases where the
+	// class parser's heuristic split was wrong and lookup didn't find a
+	// match (e.g., multi-segment color names or compound utilities).
+	for i := len(full) - 1; i > 0; i-- {
+		if full[i] != '-' {
+			continue
+		}
+		utilPart := full[:i]
+		valPart := full[i+1:]
+		if valPart == "" {
+			continue
+		}
+
+		// Try dynamic patterns for this split.
+		for _, u := range utils.dynamic {
+			if utilPart == u.Pattern {
+				return u, valPart
+			}
+		}
+	}
+
 	return nil, ""
 }
 
