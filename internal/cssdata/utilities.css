@@ -1,3 +1,8 @@
+/* This file is maintained by the tailwind-go project.
+   Unlike theme.css and preflight.css (downloaded from Tailwind npm),
+   utility and variant definitions here are project-owned and drive
+   the Go engine's CSS generation. Do NOT overwrite with download.sh. */
+
 /* Tailwind CSS v4 utilities in @utility format for tailwind-go engine.
    Translated from the Tailwind v4 TypeScript source into CSS @utility at-rules.
    Priority chains follow the spec (§5.1.2): multiple declarations of the same
