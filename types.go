@@ -75,12 +75,16 @@ type Declaration struct {
 // VariantDef defines a variant parsed from @variant directives.
 // There are three variant types: selector-based (Selector is set),
 // media query (Media is set), or at-rule (AtRule is set).
+// Compound variants (e.g., group-*, peer-*, not-*) use Template
+// with a {value} placeholder.
 type VariantDef struct {
-	Name     string // Variant name, e.g., "hover", "md", "dark".
+	Name     string // Variant name, e.g., "hover", "md", "dark", "group" (for group-*).
 	Selector string // Selector variant, e.g., "&:hover", "&:first-child".
 	Media    string // Media query variant, e.g., "(width >= 48rem)".
 	AtRule   string // At-rule variant, e.g., "supports", "container".
 	Order    int    // Definition order for stable CSS output sorting.
+	Compound bool   // True for wildcard variants like group-*, peer-*, not-*.
+	Template string // Selector template with {value} and & placeholders for compound variants.
 }
 
 // KeyframesRule represents a @keyframes block, used by animation utilities.

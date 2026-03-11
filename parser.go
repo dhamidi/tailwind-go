@@ -165,48 +165,125 @@ func (p *parser) parseUtility(ss *Stylesheet) {
 
 // parseVariant parses: @variant name (&:selector);
 // or: @variant name (@media ...);
+// or: @variant name-* { :merge(.group):{value} & { @slot; } }
 func (p *parser) parseVariant(ss *Stylesheet) {
 	p.advance() // consume @variant
 	p.skipWhitespace()
 
 	name := p.consumeIdentValue()
+
+	// Check for wildcard suffix: name ends with - and next token is *
+	compound := false
+	if strings.HasSuffix(name, "-") && p.peek().typ == tokDelim && p.peek().value == "*" {
+		p.advance() // consume *
+		compound = true
+		name = strings.TrimSuffix(name, "-") // "group-" → "group"
+	}
+
 	p.skipWhitespace()
 
-	v := &VariantDef{Name: name}
+	v := &VariantDef{Name: name, Compound: compound}
 	p.order++
 	v.Order = p.order
 
-	// The rest until ; or { is the variant definition.
-	// Could be (&:hover), (@media ...), or a block.
-	if p.peek().typ == tokParenOpen {
-		content := p.consumeParenContent()
-		content = strings.TrimSpace(content)
+	if compound && p.peek().typ == tokBraceOpen {
+		// Parse block-form compound variant.
+		v.Template = p.parseCompoundVariantBlock()
+	} else {
+		// The rest until ; or { is the variant definition.
+		// Could be (&:hover), (@media ...), or a block.
+		if p.peek().typ == tokParenOpen {
+			content := p.consumeParenContent()
+			content = strings.TrimSpace(content)
 
-		if strings.HasPrefix(content, "@media") {
-			v.Media = strings.TrimPrefix(content, "@media ")
-		} else if strings.HasPrefix(content, "@supports") {
-			v.AtRule = "supports"
-			v.Media = strings.TrimPrefix(content, "@supports ")
-		} else if strings.HasPrefix(content, "@container") {
-			v.AtRule = "container"
-			v.Media = strings.TrimPrefix(content, "@container ")
-		} else {
-			v.Selector = content
+			if strings.HasPrefix(content, "@media") {
+				v.Media = strings.TrimPrefix(content, "@media ")
+			} else if strings.HasPrefix(content, "@supports") {
+				v.AtRule = "supports"
+				v.Media = strings.TrimPrefix(content, "@supports ")
+			} else if strings.HasPrefix(content, "@container") {
+				v.AtRule = "container"
+				v.Media = strings.TrimPrefix(content, "@container ")
+			} else {
+				v.Selector = content
+			}
+		}
+
+		// Consume trailing semicolon if present.
+		p.skipWhitespace()
+		if p.peek().typ == tokSemicolon {
+			p.advance()
+		}
+
+		// Or it might have a block body.
+		if p.peek().typ == tokBraceOpen {
+			p.skipBlock()
 		}
 	}
 
-	// Consume trailing semicolon if present.
+	ss.Variants = append(ss.Variants, v)
+}
+
+// parseCompoundVariantBlock parses the block body of a compound variant
+// definition. It extracts the selector template from the block, which
+// contains {value}, &, and possibly :merge() functions.
+//
+// Because the tokenizer treats `{value}` as tokBraceOpen + ident + tokBraceClose,
+// we must distinguish `{value}` placeholders from real nested blocks.
+//
+// Returns the selector template, e.g., ":merge(.group):{value} &"
+func (p *parser) parseCompoundVariantBlock() string {
+	if p.peek().typ != tokBraceOpen {
+		return ""
+	}
+	p.advance() // consume outer {
 	p.skipWhitespace()
-	if p.peek().typ == tokSemicolon {
+
+	// Collect the selector template tokens until we find the inner block.
+	// A `{` is part of `{value}` if followed by ident "value" then `}`.
+	// Otherwise it's the start of the inner block (which contains @slot).
+	var parts []string
+	for p.peek().typ != tokEOF {
+		tok := p.peek()
+		if tok.typ == tokBraceOpen {
+			// Check if this is {value} placeholder.
+			if p.isValuePlaceholder() {
+				parts = append(parts, "{value}")
+				p.advance() // {
+				p.advance() // value
+				p.advance() // }
+				continue
+			}
+			// This is the inner block — skip it and break.
+			p.skipBlock()
+			break
+		}
+		if tok.typ == tokBraceClose {
+			// End of outer block without inner block.
+			break
+		}
+		parts = append(parts, tok.value)
 		p.advance()
 	}
 
-	// Or it might have a block body.
-	if p.peek().typ == tokBraceOpen {
-		p.skipBlock()
+	// Skip to the end of the outer block.
+	p.skipWhitespace()
+	if p.peek().typ == tokBraceClose {
+		p.advance()
 	}
 
-	ss.Variants = append(ss.Variants, v)
+	return strings.TrimSpace(strings.Join(parts, ""))
+}
+
+// isValuePlaceholder checks if the current position has the token sequence
+// `{` `value` `}` which represents the {value} placeholder in compound variants.
+func (p *parser) isValuePlaceholder() bool {
+	if p.pos+2 >= len(p.tokens) {
+		return false
+	}
+	return p.tokens[p.pos].typ == tokBraceOpen &&
+		p.tokens[p.pos+1].typ == tokIdent && p.tokens[p.pos+1].value == "value" &&
+		p.tokens[p.pos+2].typ == tokBraceClose
 }
 
 // parseDeclaration parses: property: value;

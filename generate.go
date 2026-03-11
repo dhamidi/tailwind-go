@@ -433,13 +433,12 @@ func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 			continue
 		}
 
-		if v, ok := defs[name]; ok {
-			if v.Media != "" {
-				if v.AtRule != "" {
-					media = append(media, "@"+v.AtRule+" "+v.Media)
-				} else {
-					media = append(media, "@media "+v.Media)
-				}
+		v := lookupVariant(name, defs)
+		if v != nil && v.Media != "" {
+			if v.AtRule != "" {
+				media = append(media, "@"+v.AtRule+" "+v.Media)
+			} else {
+				media = append(media, "@media "+v.Media)
 			}
 		}
 	}
@@ -460,9 +459,71 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 
 		if v, ok := defs[name]; ok && v.Selector != "" {
 			sel = strings.ReplaceAll(v.Selector, "&", sel)
+			continue
+		}
+
+		// Try compound variant resolution.
+		if v := lookupCompoundVariant(name, defs); v != nil {
+			value := name[len(v.Name)+1:] // e.g., "group-hover" → "hover"
+			selector := resolveCompoundTemplate(v.Template, value)
+			sel = strings.ReplaceAll(selector, "&", sel)
 		}
 	}
 	return sel
+}
+
+// lookupVariant finds a variant by exact name or compound match.
+func lookupVariant(name string, defs map[string]*VariantDef) *VariantDef {
+	if v, ok := defs[name]; ok {
+		return v
+	}
+	return lookupCompoundVariant(name, defs)
+}
+
+// lookupCompoundVariant checks if a variant name matches any compound variant
+// pattern (e.g., "group-hover" matches "group" compound variant).
+func lookupCompoundVariant(name string, defs map[string]*VariantDef) *VariantDef {
+	for _, v := range defs {
+		if !v.Compound {
+			continue
+		}
+		prefix := v.Name + "-"
+		if strings.HasPrefix(name, prefix) && len(name) > len(prefix) {
+			return v
+		}
+	}
+	return nil
+}
+
+// resolveCompoundTemplate substitutes {value} in a compound variant template
+// and processes :merge() functions.
+func resolveCompoundTemplate(template, value string) string {
+	// Replace {value} with the extracted value.
+	result := strings.ReplaceAll(template, "{value}", value)
+
+	// Process :merge(X) → X (strip the :merge() wrapper).
+	for {
+		idx := strings.Index(result, ":merge(")
+		if idx < 0 {
+			break
+		}
+		start := idx + len(":merge(")
+		depth := 1
+		end := start
+		for end < len(result) && depth > 0 {
+			if result[end] == '(' {
+				depth++
+			} else if result[end] == ')' {
+				depth--
+			}
+			end++
+		}
+		// Extract the content inside :merge(...).
+		inner := result[start : end-1]
+		result = result[:idx] + inner + result[end:]
+	}
+
+	return result
 }
 
 // emitCSS serializes generated rules into a CSS string.

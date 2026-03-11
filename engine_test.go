@@ -1151,6 +1151,167 @@ func TestScanAccumulatesCandidates(t *testing.T) {
 	}
 }
 
+// --- Compound variant tests ---
+
+func TestCompoundVariantGroupHover(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; }
+@utility text-* { color: --value(--color); }
+@variant group-* {
+  :merge(.group):{value} & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="group-hover:text-white"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, ".group:hover") {
+		t.Errorf("missing .group:hover, got: %s", result)
+	}
+	if !strings.Contains(result, "color: #fff") {
+		t.Errorf("missing color: #fff, got: %s", result)
+	}
+}
+
+func TestCompoundVariantPeerFocus(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; }
+@utility text-* { color: --value(--color); }
+@variant peer-* {
+  :merge(.peer):{value} ~ & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="peer-focus:text-white"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, ".peer:focus") {
+		t.Errorf("missing .peer:focus, got: %s", result)
+	}
+	if !strings.Contains(result, "~") {
+		t.Errorf("missing ~ combinator, got: %s", result)
+	}
+}
+
+func TestCompoundVariantNotHover(t *testing.T) {
+	css := []byte(`
+@theme { --opacity-100: 1; }
+@utility opacity-* { opacity: --value(--opacity); }
+@variant not-* {
+  &:not(:{value}) {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="not-hover:opacity-100"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, ":not(:hover)") {
+		t.Errorf("missing :not(:hover), got: %s", result)
+	}
+}
+
+func TestCompoundVariantHasChecked(t *testing.T) {
+	css := []byte(`
+@theme { --color-gray-50: #f9fafb; }
+@utility bg-* { background-color: --value(--color); }
+@variant has-* {
+  &:has(:{value}) {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="has-checked:bg-gray-50"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, ":has(:checked)") {
+		t.Errorf("missing :has(:checked), got: %s", result)
+	}
+}
+
+func TestCompoundVariantInDataCurrent(t *testing.T) {
+	css := []byte(`
+@utility font-bold { font-weight: 700; }
+@variant in-* {
+  [{value}] & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="in-data-current:font-bold"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "[data-current]") {
+		t.Errorf("missing [data-current], got: %s", result)
+	}
+}
+
+func TestCompoundVariantStacking(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; --breakpoint-md: 48rem; }
+@utility text-* { color: --value(--color); }
+@variant md (@media (width >= 48rem));
+@variant group-* {
+  :merge(.group):{value} & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="md:group-hover:text-white"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "@media") {
+		t.Errorf("missing @media wrapper, got: %s", result)
+	}
+	if !strings.Contains(result, ".group:hover") {
+		t.Errorf("missing .group:hover, got: %s", result)
+	}
+}
+
+func TestCompoundVariantParserBlockForm(t *testing.T) {
+	css := []byte(`
+@variant group-* {
+  :merge(.group):{value} & {
+    @slot;
+  }
+}
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ss.Variants) != 1 {
+		t.Fatalf("got %d variants, want 1", len(ss.Variants))
+	}
+	v := ss.Variants[0]
+	if v.Name != "group" {
+		t.Errorf("name = %q, want %q", v.Name, "group")
+	}
+	if !v.Compound {
+		t.Error("expected compound = true")
+	}
+	if !strings.Contains(v.Template, "{value}") {
+		t.Errorf("template missing {value}: %q", v.Template)
+	}
+	if !strings.Contains(v.Template, "&") {
+		t.Errorf("template missing &: %q", v.Template)
+	}
+}
+
 func TestScanResetClearsCandidates(t *testing.T) {
 	fs1 := fstest.MapFS{
 		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},
