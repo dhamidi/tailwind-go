@@ -1614,6 +1614,59 @@ func TestBuiltinContainerQueryVariants(t *testing.T) {
 	}
 }
 
+// --- @supports variant tests ---
+
+func TestSupportsVariant(t *testing.T) {
+	e := New()
+	e.LoadCSS([]byte(`
+@utility flex { display: flex; }
+@variant supports-grid (@supports (display: grid));
+`))
+	e.Write([]byte(`supports-grid:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@supports (display: grid)") {
+		t.Errorf("expected @supports wrapper, got:\n%s", css)
+	}
+	if !strings.Contains(css, "display: flex") {
+		t.Errorf("expected display: flex declaration, got:\n%s", css)
+	}
+}
+
+func TestArbitrarySupportsVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`[@supports(display:grid)]:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@supports") {
+		t.Errorf("expected @supports wrapper from arbitrary variant, got:\n%s", css)
+	}
+	if !strings.Contains(css, "display: flex") {
+		t.Errorf("expected display: flex declaration, got:\n%s", css)
+	}
+}
+
+func TestSupportsWithMediaVariantStacking(t *testing.T) {
+	e := New()
+	e.LoadCSS([]byte(`
+@utility flex { display: flex; }
+@variant supports-grid (@supports (display: grid));
+@variant md (@media (width >= 48rem));
+`))
+	e.Write([]byte(`md:supports-grid:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media") {
+		t.Errorf("expected @media wrapper, got:\n%s", css)
+	}
+	if !strings.Contains(css, "@supports") {
+		t.Errorf("expected @supports wrapper, got:\n%s", css)
+	}
+	if !strings.Contains(css, "display: flex") {
+		t.Errorf("expected display: flex declaration, got:\n%s", css)
+	}
+}
+
 // --- Built-in parameterized variant tests (using New() without LoadCSS) ---
 
 func TestNotVariant(t *testing.T) {

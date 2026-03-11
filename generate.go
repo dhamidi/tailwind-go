@@ -499,6 +499,13 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 		if strings.HasPrefix(name, "[") && strings.HasSuffix(name, "]") {
 			inner := name[1 : len(name)-1]
 			inner = strings.ReplaceAll(inner, "_", " ")
+			// At-rule variants (@media, @supports, @container) are handled by
+			// resolveVariants as wrapper blocks, not as selector transforms.
+			if strings.HasPrefix(inner, "@media") ||
+				strings.HasPrefix(inner, "@supports") ||
+				strings.HasPrefix(inner, "@container") {
+				continue
+			}
 			sel = strings.ReplaceAll(inner, "&", sel)
 			continue
 		}
