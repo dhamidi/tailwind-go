@@ -845,6 +845,40 @@ func TestApplyDirectiveWithVariant(t *testing.T) {
 	}
 }
 
+func TestDiagnosticsBasic(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; }
+@utility flex { display: flex; }
+@utility bg-* { background-color: --value(--color); }
+@variant hover (&:hover);
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`<div class="flex bg-blue-500 unknown-class">`))
+
+	d := e.Diagnostics()
+	if d.UtilityCount < 2 {
+		t.Errorf("utility count = %d, want >= 2", d.UtilityCount)
+	}
+	if d.VariantCount < 1 {
+		t.Errorf("variant count = %d, want >= 1", d.VariantCount)
+	}
+	if d.ThemeTokenCount < 1 {
+		t.Errorf("theme token count = %d, want >= 1", d.ThemeTokenCount)
+	}
+	// "unknown-class" should be in dropped candidates.
+	found := false
+	for _, c := range d.DroppedCandidates {
+		if c == "unknown-class" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected 'unknown-class' in dropped candidates: %v", d.DroppedCandidates)
+	}
+}
+
 func TestApplyDirectiveUnknownClass(t *testing.T) {
 	css := []byte(`
 .btn {
