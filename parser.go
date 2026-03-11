@@ -70,8 +70,8 @@ func (p *parser) parse() (*Stylesheet, error) {
 		} else if tok.typ == tokEOF {
 			break
 		} else {
-			// Skip qualified rules (regular CSS rules).
-			p.skipRule()
+			// Parse qualified rules — they may contain @apply directives.
+			p.parseRule(ss)
 		}
 	}
 
@@ -314,6 +314,86 @@ func (p *parser) consumeParenContent() string {
 	}
 
 	return strings.Join(parts, "")
+}
+
+// parseRule parses a qualified CSS rule, looking for @apply directives inside.
+// If no @apply is found, the rule is simply skipped.
+func (p *parser) parseRule(ss *Stylesheet) {
+	// Consume selector tokens until '{'.
+	var selectorParts []string
+	for p.peek().typ != tokBraceOpen && p.peek().typ != tokEOF {
+		selectorParts = append(selectorParts, p.peek().value)
+		p.advance()
+	}
+	selector := strings.TrimSpace(strings.Join(selectorParts, ""))
+
+	if p.peek().typ != tokBraceOpen {
+		return
+	}
+	p.advance() // consume {
+
+	// Parse declarations, looking for @apply.
+	for p.peek().typ != tokBraceClose && p.peek().typ != tokEOF {
+		p.skipWhitespace()
+		if p.peek().typ == tokBraceClose {
+			break
+		}
+
+		if p.peek().typ == tokAtKeyword && p.peek().value == "@apply" {
+			classes := p.parseApplyDirective()
+			p.order++
+			ss.ApplyRules = append(ss.ApplyRules, &ApplyRule{
+				Selector: selector,
+				Classes:  classes,
+				Order:    p.order,
+			})
+		} else {
+			// Skip other declarations.
+			for p.peek().typ != tokSemicolon &&
+				p.peek().typ != tokBraceClose &&
+				p.peek().typ != tokEOF {
+				p.advance()
+			}
+			if p.peek().typ == tokSemicolon {
+				p.advance()
+			}
+		}
+	}
+	if p.peek().typ == tokBraceClose {
+		p.advance()
+	}
+}
+
+// parseApplyDirective parses the class list after @apply.
+func (p *parser) parseApplyDirective() []string {
+	p.advance() // consume @apply
+	p.skipWhitespace()
+
+	var classes []string
+	for p.peek().typ != tokSemicolon &&
+		p.peek().typ != tokBraceClose &&
+		p.peek().typ != tokEOF {
+		if p.peek().typ == tokWhitespace {
+			p.advance()
+			continue
+		}
+		// Collect a class name token (may span multiple non-whitespace tokens).
+		var parts []string
+		for p.peek().typ != tokWhitespace &&
+			p.peek().typ != tokSemicolon &&
+			p.peek().typ != tokBraceClose &&
+			p.peek().typ != tokEOF {
+			parts = append(parts, p.peek().value)
+			p.advance()
+		}
+		if cls := strings.Join(parts, ""); cls != "" {
+			classes = append(classes, cls)
+		}
+	}
+	if p.peek().typ == tokSemicolon {
+		p.advance()
+	}
+	return classes
 }
 
 // skipBlock skips a { ... } block, handling nesting.

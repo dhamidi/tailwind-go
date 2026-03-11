@@ -795,3 +795,64 @@ func TestArbitraryAtMediaVariant(t *testing.T) {
 		t.Errorf("expected @media wrapper in output, got: %s", result)
 	}
 }
+
+// --- @apply tests ---
+
+func TestApplyDirectiveBasic(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; }
+@utility bg-* { background-color: --value(--color); }
+@utility font-bold { font-weight: 700; }
+
+.btn {
+  @apply bg-blue-500 font-bold;
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	result := e.CSS()
+	t.Logf("CSS: %s", result)
+	if !strings.Contains(result, ".btn") {
+		t.Error("missing .btn selector")
+	}
+	if !strings.Contains(result, "background-color: #3b82f6") {
+		t.Error("missing bg-blue-500")
+	}
+	if !strings.Contains(result, "font-weight: 700") {
+		t.Error("missing font-bold")
+	}
+}
+
+func TestApplyDirectiveWithVariant(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-700: #1d4ed8; }
+@utility bg-* { background-color: --value(--color); }
+@variant hover (&:hover);
+
+.btn {
+  @apply hover:bg-blue-700;
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	result := e.CSS()
+	t.Logf("CSS: %s", result)
+	if !strings.Contains(result, ".btn:hover") {
+		t.Errorf("missing .btn:hover selector, got: %s", result)
+	}
+	if !strings.Contains(result, "background-color: #1d4ed8") {
+		t.Errorf("missing background-color: #1d4ed8, got: %s", result)
+	}
+}
+
+func TestApplyDirectiveUnknownClass(t *testing.T) {
+	css := []byte(`
+.btn {
+  @apply nonexistent-utility;
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	// Should not panic, just produce no output for unknown classes.
+	_ = e.CSS()
+}

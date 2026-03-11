@@ -51,6 +51,9 @@ type Engine struct {
 	// Parsed @keyframes rules, keyed by name.
 	keyframes map[string]*KeyframesRule
 
+	// Resolved @apply rules from LoadCSS.
+	applyRules []generatedRule
+
 	// Accumulated candidate class names from Write() calls.
 	candidates map[string]struct{}
 
@@ -128,6 +131,11 @@ func (e *Engine) LoadCSS(css []byte) error {
 		e.keyframes[kf.Name] = kf
 	}
 
+	// Process @apply rules
+	if len(stylesheet.ApplyRules) > 0 {
+		e.applyRules = append(e.applyRules, e.processApplyRules(stylesheet.ApplyRules)...)
+	}
+
 	return nil
 }
 
@@ -198,7 +206,46 @@ func (e *Engine) CSS() string {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
-	return generate(candidates, e.theme, e.utilIndex, e.variants, e.keyframes)
+	utilCSS := generate(candidates, e.theme, e.utilIndex, e.variants, e.keyframes)
+	if len(e.applyRules) > 0 {
+		applyCSS := emitCSS(e.applyRules, nil, nil)
+		if utilCSS != "" {
+			return applyCSS + "\n" + utilCSS
+		}
+		return applyCSS
+	}
+	return utilCSS
+}
+
+// processApplyRules resolves @apply directives against the utility registry.
+func (e *Engine) processApplyRules(rules []*ApplyRule) []generatedRule {
+	var result []generatedRule
+	for _, ar := range rules {
+		for _, cls := range ar.Classes {
+			pc := parseClass(cls)
+			utilDef, valueStr := resolveUtility(pc, e.utilIndex)
+			if utilDef == nil {
+				continue
+			}
+			decls := resolveDeclarations(utilDef, valueStr, pc, e.theme)
+			if decls == nil {
+				continue
+			}
+
+			sel := ar.Selector
+			sel = resolveVariantSelector(sel, pc.Variants, e.variants)
+			mediaQueries := resolveVariants(pc.Variants, e.variants)
+
+			result = append(result, generatedRule{
+				selector:     sel,
+				declarations: decls,
+				important:    pc.Important,
+				mediaQueries: mediaQueries,
+				order:        ar.Order,
+			})
+		}
+	}
+	return result
 }
 
 // Reset clears all accumulated candidates, allowing the engine to be

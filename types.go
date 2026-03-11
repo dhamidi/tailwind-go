@@ -85,12 +85,20 @@ type KeyframesRule struct {
 	Body string // raw CSS body including @keyframes name { ... }
 }
 
+// ApplyRule represents an @apply directive found inside a CSS rule.
+type ApplyRule struct {
+	Selector string   // the parent CSS selector (e.g., ".btn")
+	Classes  []string // the class names to apply
+	Order    int
+}
+
 // Stylesheet is the parsed representation of a Tailwind CSS source.
 type Stylesheet struct {
-	Theme     ThemeConfig
-	Utilities []*UtilityDef
-	Variants  []*VariantDef
-	Keyframes []*KeyframesRule
+	Theme      ThemeConfig
+	Utilities  []*UtilityDef
+	Variants   []*VariantDef
+	Keyframes  []*KeyframesRule
+	ApplyRules []*ApplyRule
 }
 
 // utilityIndex provides fast lookup of utility definitions by class prefix.
