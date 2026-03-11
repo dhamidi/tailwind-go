@@ -1445,6 +1445,26 @@ func TestNamedGroupSelectorEscaping(t *testing.T) {
 	}
 }
 
+func TestStripMerge(t *testing.T) {
+	tests := []struct {
+		input, want string
+	}{
+		{":merge(.group):hover &", ".group:hover &"},
+		{":merge(.peer):focus ~ &", ".peer:focus ~ &"},
+		{`:merge(.group\/sidebar):hover &`, `.group\/sidebar:hover &`},
+		{"&:hover", "&:hover"},
+		{"", ""},
+		{":merge(.a):merge(.b) &", ".a.b &"},
+		{":merge(.outer(:inner)) &", ".outer(:inner) &"},
+	}
+	for _, tt := range tests {
+		got := stripMerge(tt.input)
+		if got != tt.want {
+			t.Errorf("stripMerge(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
 func TestScanResetClearsCandidates(t *testing.T) {
 	fs1 := fstest.MapFS{
 		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},

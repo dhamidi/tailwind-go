@@ -505,14 +505,41 @@ func lookupCompoundVariant(name string, defs map[string]*VariantDef) *VariantDef
 	return nil
 }
 
+// stripMerge removes :merge() wrappers from a selector string.
+// For example, ":merge(.group):hover &" becomes ".group:hover &".
+func stripMerge(selector string) string {
+	for {
+		idx := strings.Index(selector, ":merge(")
+		if idx < 0 {
+			return selector
+		}
+		start := idx + len(":merge(")
+		depth := 1
+		end := start
+		for end < len(selector) && depth > 0 {
+			if selector[end] == '(' {
+				depth++
+			} else if selector[end] == ')' {
+				depth--
+			}
+			end++
+		}
+		inner := selector[start : end-1]
+		selector = selector[:idx] + inner + selector[end:]
+	}
+}
+
 // resolveCompoundTemplate substitutes {value} in a compound variant template
 // and processes :merge() functions. If groupName is non-empty, the class inside
 // :merge() is suffixed with \/ and the group name (e.g., .group → .group\/sidebar).
 func resolveCompoundTemplate(template, value, groupName string) string {
-	// Replace {value} with the extracted value.
 	result := strings.ReplaceAll(template, "{value}", value)
 
-	// Process :merge(X) → X (strip the :merge() wrapper).
+	if groupName == "" {
+		return stripMerge(result)
+	}
+
+	// When groupName is set, we need to suffix the inner content before stripping.
 	for {
 		idx := strings.Index(result, ":merge(")
 		if idx < 0 {
@@ -529,11 +556,7 @@ func resolveCompoundTemplate(template, value, groupName string) string {
 			}
 			end++
 		}
-		// Extract the content inside :merge(...).
-		inner := result[start : end-1]
-		if groupName != "" {
-			inner = inner + `\/` + groupName
-		}
+		inner := result[start:end-1] + `\/` + groupName
 		result = result[:idx] + inner + result[end:]
 	}
 
