@@ -128,6 +128,8 @@ func resolveUtility(pc ParsedClass, utils *utilityIndex) (*UtilityDef, string) {
 }
 
 // resolveDeclarations substitutes values into utility declarations.
+// When multiple declarations share the same CSS property (a priority chain),
+// only the first successfully-resolved alternative is emitted.
 func resolveDeclarations(
 	utilDef *UtilityDef,
 	valueStr string,
@@ -138,33 +140,57 @@ func resolveDeclarations(
 		return utilDef.Declarations
 	}
 
-	// Determine the resolved CSS value.
-	cssValue := resolveValue(utilDef, valueStr, pc, theme)
-	if cssValue == "" {
+	// Group declarations by property name (preserving order of first appearance).
+	type propGroup struct {
+		property string
+		alts     []Declaration
+	}
+	var groups []propGroup
+	seenProp := make(map[string]int) // property → index in groups
+
+	for _, d := range utilDef.Declarations {
+		if idx, ok := seenProp[d.Property]; ok {
+			groups[idx].alts = append(groups[idx].alts, d)
+		} else {
+			seenProp[d.Property] = len(groups)
+			groups = append(groups, propGroup{property: d.Property, alts: []Declaration{d}})
+		}
+	}
+
+	// Resolve each property group: try alternatives in order.
+	var result []Declaration
+	for _, g := range groups {
+		resolved := resolvePropertyGroup(g.alts, valueStr, pc, theme)
+		if resolved != nil {
+			result = append(result, *resolved)
+		}
+	}
+	if len(result) == 0 {
 		return nil
 	}
-
-	// Substitute --value(...) placeholders in declarations.
-	var decls []Declaration
-	for _, d := range utilDef.Declarations {
-		resolved := substituteValue(d.Value, cssValue)
-		decls = append(decls, Declaration{
-			Property: d.Property,
-			Value:    resolved,
-		})
-	}
-
-	return decls
+	return result
 }
 
-// resolveValue determines the final CSS value for a utility.
-func resolveValue(
-	utilDef *UtilityDef,
-	valueStr string,
-	pc ParsedClass,
-	theme *ThemeConfig,
-) string {
-	// Arbitrary values pass through directly.
+// resolvePropertyGroup tries each alternative declaration for a property
+// and returns the first one that successfully resolves.
+func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, theme *ThemeConfig) *Declaration {
+	for _, d := range alts {
+		if !strings.Contains(d.Value, "--value(") {
+			// No placeholder — emit verbatim.
+			return &Declaration{Property: d.Property, Value: d.Value}
+		}
+		cssValue := resolveValueForDecl(d, valueStr, pc, theme)
+		if cssValue != "" {
+			resolved := substituteValue(d.Value, cssValue)
+			return &Declaration{Property: d.Property, Value: resolved}
+		}
+	}
+	return nil
+}
+
+// resolveValueForDecl resolves the CSS value for a specific declaration's --value() args.
+func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *ThemeConfig) string {
+	// Arbitrary values pass through for any --value() type.
 	if pc.Arbitrary != "" {
 		v := pc.Arbitrary
 		if pc.Negative {
@@ -188,40 +214,76 @@ func resolveValue(
 		}
 	}
 
-	// Try to resolve through the theme.
-	// Inspect the utility's declarations for --value() hints.
-	for _, d := range utilDef.Declarations {
-		ns := extractNamespace(d.Value)
-		if ns != "" {
-			if resolved, ok := theme.Resolve(ns, valueStr); ok {
-				if pc.Negative {
-					resolved = negateValue(resolved)
-				}
-				return resolved
-			}
-		}
-	}
-
-	// Try as a raw value keyword.
-	if cssVal := keywordToCSS(valueStr); cssVal != "" {
-		return cssVal
-	}
-
-	// Try the spacing scale as default for numeric values.
-	if isNumeric(valueStr) {
-		if resolved, ok := theme.Resolve("spacing", valueStr); ok {
+	ns := extractNamespace(d.Value)
+	if ns != "" {
+		// Namespace specified (e.g., --value(--spacing)). Try theme resolution.
+		if resolved, ok := theme.Resolve(ns, valueStr); ok {
 			if pc.Negative {
 				resolved = negateValue(resolved)
 			}
 			return resolved
 		}
+		return "" // namespace specified but didn't resolve — try next alt
 	}
 
-	// Last resort: pass through as-is (handles things like "px").
-	if raw := rawValue(valueStr); raw != "" {
-		return raw
+	// No namespace — this is a type-based --value() like --value(length, percentage).
+	// Try keyword mapping.
+	if cssVal := keywordToCSS(valueStr); cssVal != "" {
+		return cssVal
 	}
 
+	// Try type-based resolution.
+	valueTypes := extractValueTypes(d.Value)
+	return resolveRawValue(valueStr, valueTypes, pc)
+}
+
+// extractValueTypes parses --value(length, percentage) → ["length", "percentage"]
+func extractValueTypes(value string) []string {
+	idx := strings.Index(value, "--value(")
+	if idx < 0 {
+		return nil
+	}
+	start := idx + len("--value(")
+	end := strings.Index(value[start:], ")")
+	if end < 0 {
+		return nil
+	}
+	arg := strings.TrimSpace(value[start : start+end])
+	if strings.HasPrefix(arg, "--") {
+		// This is a namespace reference, not type list.
+		return nil
+	}
+	parts := strings.Split(arg, ",")
+	for i, p := range parts {
+		parts[i] = strings.TrimSpace(p)
+	}
+	return parts
+}
+
+// resolveRawValue handles type-based --value() resolution for non-arbitrary,
+// non-theme values (e.g., --value(length), --value(integer), --value(any)).
+func resolveRawValue(valueStr string, types []string, pc ParsedClass) string {
+	for _, t := range types {
+		switch t {
+		case "integer", "number":
+			if isNumeric(valueStr) {
+				v := valueStr
+				if pc.Negative {
+					v = "-" + v
+				}
+				return v
+			}
+		case "any":
+			if valueStr != "" {
+				return valueStr
+			}
+		case "length", "percentage":
+			// For non-arbitrary values, try raw value conversion.
+			if raw := rawValue(valueStr); raw != "" {
+				return raw
+			}
+		}
+	}
 	return ""
 }
 

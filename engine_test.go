@@ -589,6 +589,76 @@ func TestIoCopy(t *testing.T) {
 	}
 }
 
+func TestMultiDeclarationPrioritySpacing(t *testing.T) {
+	// w-4 should use spacing (first alternative), not width
+	css := []byte(`
+@theme { --spacing: 0.25rem; }
+@utility w-* {
+  width: --value(--spacing);
+  width: --value(--width);
+  width: --value(length, percentage);
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="w-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "calc(4") {
+		t.Errorf("expected spacing calc, got: %s", result)
+	}
+	// Should only have one width declaration
+	if strings.Count(result, "width:") != 1 {
+		t.Errorf("expected exactly one width declaration, got: %s", result)
+	}
+}
+
+func TestMultiDeclarationPriorityTheme(t *testing.T) {
+	// w-prose should fall through to --width namespace
+	css := []byte(`
+@theme { --spacing: 0.25rem; --width-prose: 65ch; }
+@utility w-* {
+  width: --value(--spacing);
+  width: --value(--width);
+  width: --value(length, percentage);
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="w-prose"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "65ch") {
+		t.Errorf("expected 65ch, got: %s", result)
+	}
+	if strings.Count(result, "width:") != 1 {
+		t.Errorf("expected exactly one width declaration, got: %s", result)
+	}
+}
+
+func TestMultiDeclarationPriorityArbitrary(t *testing.T) {
+	// w-[300px] should resolve as arbitrary value
+	css := []byte(`
+@theme { --spacing: 0.25rem; }
+@utility w-* {
+  width: --value(--spacing);
+  width: --value(--width);
+  width: --value(length, percentage);
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="w-[300px]"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "width: 300px") {
+		t.Errorf("expected width: 300px, got: %s", result)
+	}
+	if strings.Count(result, "width:") != 1 {
+		t.Errorf("expected exactly one width declaration, got: %s", result)
+	}
+}
+
 func TestReset(t *testing.T) {
 	css := []byte(`
 @utility flex { display: flex; }

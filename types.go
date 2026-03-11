@@ -24,8 +24,8 @@ func (tc *ThemeConfig) Resolve(namespace, key string) (string, bool) {
 		return v, true
 	}
 
-	// For spacing, compute from the base multiplier.
-	if namespace == "spacing" {
+	// For spacing, compute from the base multiplier (numeric keys only).
+	if namespace == "spacing" && isNumeric(key) {
 		if base, ok := tc.Tokens["--spacing"]; ok {
 			return "calc(" + key + " * " + base + ")", true
 		}
@@ -107,7 +107,18 @@ func (idx *utilityIndex) add(u *UtilityDef) {
 	if u.Static {
 		idx.static[u.Pattern] = u
 	} else {
-		idx.dynamic = append(idx.dynamic, u)
+		// Replace existing dynamic utility with the same pattern.
+		replaced := false
+		for i, existing := range idx.dynamic {
+			if existing.Pattern == u.Pattern {
+				idx.dynamic[i] = u
+				replaced = true
+				break
+			}
+		}
+		if !replaced {
+			idx.dynamic = append(idx.dynamic, u)
+		}
 		// Keep sorted longest-pattern-first for greedy matching.
 		sort.Slice(idx.dynamic, func(i, j int) bool {
 			return len(idx.dynamic[i].Pattern) > len(idx.dynamic[j].Pattern)
