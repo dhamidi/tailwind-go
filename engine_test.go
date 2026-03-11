@@ -1702,3 +1702,45 @@ func TestScreenKeywordMaxHeight(t *testing.T) {
 		t.Errorf("max-h-screen should produce max-height: 100vh, got:\n%s", css)
 	}
 }
+
+func TestTypeHintDisambiguation(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-[length:2em]`))
+	css := e.CSS()
+	if !strings.Contains(css, "font-size: 2em") {
+		t.Errorf("type hint 'length' should select font-size branch, got:\n%s", css)
+	}
+	if strings.Contains(css, "color: 2em") {
+		t.Error("should NOT produce color declaration for length type hint")
+	}
+}
+
+func TestTypeHintColor(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-[color:red]`))
+	css := e.CSS()
+	if !strings.Contains(css, "color: red") {
+		t.Errorf("type hint 'color' should select color branch, got:\n%s", css)
+	}
+	if strings.Contains(css, "font-size: red") {
+		t.Error("should NOT produce font-size declaration for color type hint")
+	}
+}
+
+func TestTypeHintBgColor(t *testing.T) {
+	e := New()
+	e.Write([]byte(`bg-[color:--my-bg]`))
+	css := e.CSS()
+	if !strings.Contains(css, "background-color: var(--my-bg)") {
+		t.Errorf("bg-[color:--my-bg] should produce background-color: var(--my-bg), got:\n%s", css)
+	}
+}
+
+func TestArbitraryValueWithoutTypeHintStillWorks(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-[#ff0000]`))
+	css := e.CSS()
+	if !strings.Contains(css, "color: #ff0000") {
+		t.Errorf("text-[#ff0000] without type hint should still work, got:\n%s", css)
+	}
+}

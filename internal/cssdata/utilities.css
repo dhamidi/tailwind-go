@@ -636,8 +636,9 @@
 @utility diagonal-fractions { font-variant-numeric: diagonal-fractions; }
 @utility stacked-fractions { font-variant-numeric: stacked-fractions; }
 
-/* ===== Text Color ===== */
+/* ===== Text Color / Size ===== */
 @utility text-* {
+  font-size: --value(--font-size, length, percentage);
   color: --value(--color);
   color: --value(color);
 }

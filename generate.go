@@ -229,6 +229,14 @@ func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, t
 			// No placeholder — emit verbatim.
 			return &Declaration{Property: d.Property, Value: d.Value}
 		}
+
+		// If a type hint is provided, skip declarations that don't match.
+		if pc.TypeHint != "" {
+			if !matchesTypeHint(pc.TypeHint, extractNamespace(d.Value), extractValueTypes(d.Value)) {
+				continue
+			}
+		}
+
 		cssValue := resolveValueForDecl(d, valueStr, pc, theme)
 		if cssValue != "" {
 			resolved := substituteValue(d.Value, cssValue)
@@ -240,6 +248,20 @@ func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, t
 		}
 	}
 	return nil
+}
+
+// matchesTypeHint returns true if the type hint matches the declaration's
+// namespace or any of its value types.
+func matchesTypeHint(hint, namespace string, types []string) bool {
+	if namespace != "" && namespace == hint {
+		return true
+	}
+	for _, t := range types {
+		if t == hint {
+			return true
+		}
+	}
+	return false
 }
 
 // resolveValueForDecl resolves the CSS value for a specific declaration's --value() args.
@@ -277,7 +299,14 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 			}
 			return resolved
 		}
-		return "" // namespace specified but didn't resolve — try next alt
+		// If there are also type-based args (mixed form like --value(--font-size, length)),
+		// fall through to type-based resolution below. Otherwise, try next alt.
+		valueTypes := extractValueTypes(d.Value)
+		if len(valueTypes) == 0 {
+			return "" // namespace-only but didn't resolve — try next alt
+		}
+		// Fall through to type-based resolution with the extracted types.
+		return resolveRawValue(valueStr, valueTypes, pc)
 	}
 
 	// No namespace — this is a type-based --value() like --value(length, percentage).
@@ -298,6 +327,8 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 }
 
 // extractValueTypes parses --value(length, percentage) → ["length", "percentage"]
+// For mixed forms like --value(--font-size, length, percentage), it returns
+// only the non-namespace parts: ["length", "percentage"].
 func extractValueTypes(value string) []string {
 	idx := strings.Index(value, "--value(")
 	if idx < 0 {
@@ -309,15 +340,19 @@ func extractValueTypes(value string) []string {
 		return nil
 	}
 	arg := strings.TrimSpace(value[start : start+end])
-	if strings.HasPrefix(arg, "--") {
-		// This is a namespace reference, not type list.
-		return nil
-	}
 	parts := strings.Split(arg, ",")
-	for i, p := range parts {
-		parts[i] = strings.TrimSpace(p)
+	var types []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if strings.HasPrefix(p, "--") {
+			// This is a namespace reference, skip it.
+			continue
+		}
+		if p != "" {
+			types = append(types, p)
+		}
 	}
-	return parts
+	return types
 }
 
 // resolveRawValue handles type-based --value() resolution for non-arbitrary,
@@ -349,6 +384,7 @@ func resolveRawValue(valueStr string, types []string, pc ParsedClass) string {
 
 // extractNamespace pulls the theme namespace from a --value() expression.
 // e.g., "--value(--color)" → "color", "--value(--spacing)" → "spacing"
+// For mixed forms like "--value(--font-size, length, percentage)" → "font-size"
 func extractNamespace(value string) string {
 	idx := strings.Index(value, "--value(")
 	if idx < 0 {
@@ -361,9 +397,15 @@ func extractNamespace(value string) string {
 	}
 	arg := strings.TrimSpace(value[start : start+end])
 
+	// Handle comma-separated args: extract only the first if it's a namespace.
+	first := arg
+	if commaIdx := strings.Index(arg, ","); commaIdx >= 0 {
+		first = strings.TrimSpace(arg[:commaIdx])
+	}
+
 	// --value(--color) → namespace "color"
-	if strings.HasPrefix(arg, "--") {
-		return strings.TrimPrefix(arg, "--")
+	if strings.HasPrefix(first, "--") {
+		return strings.TrimPrefix(first, "--")
 	}
 
 	// --value(length, percentage) → no namespace, accepts arbitrary CSS types
