@@ -894,6 +894,25 @@ func TestApplyDirectiveUnknownClass(t *testing.T) {
 
 // --- Preflight CSS tests ---
 
+func TestPreflightReturnsNonEmpty(t *testing.T) {
+	e := New()
+	css := e.Preflight()
+	if css == "" {
+		t.Fatal("Preflight() returned empty string")
+	}
+}
+
+func TestPreflightContainsResetRules(t *testing.T) {
+	e := New()
+	css := e.Preflight()
+	if !strings.Contains(css, "box-sizing: border-box") {
+		t.Error("missing box-sizing reset in preflight")
+	}
+	if !strings.Contains(css, "margin: 0") {
+		t.Error("missing margin reset in preflight")
+	}
+}
+
 func TestPreflightCSS(t *testing.T) {
 	e := New()
 	css := e.PreflightCSS()
@@ -910,6 +929,34 @@ func TestPreflightCSS(t *testing.T) {
 	// Verify mono fallback is present
 	if !strings.Contains(css, "ui-monospace") {
 		t.Error("expected default mono font family in preflight")
+	}
+}
+
+func TestFullCSSWithNoCandidates(t *testing.T) {
+	e := New()
+	full := e.FullCSS()
+	preflight := e.Preflight()
+	if full != preflight {
+		t.Errorf("FullCSS with no candidates should equal Preflight;\nFullCSS length=%d, Preflight length=%d", len(full), len(preflight))
+	}
+}
+
+func TestFullCSSWithCandidates(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class="flex p-4">`))
+	full := e.FullCSS()
+	preflight := e.Preflight()
+	utility := e.CSS()
+
+	if !strings.Contains(full, "box-sizing: border-box") {
+		t.Error("FullCSS missing preflight content")
+	}
+	if !strings.Contains(full, "display: flex") {
+		t.Error("FullCSS missing utility content")
+	}
+	expected := preflight + "\n" + utility
+	if full != expected {
+		t.Errorf("FullCSS != Preflight + newline + CSS")
 	}
 }
 

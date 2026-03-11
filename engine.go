@@ -231,14 +231,38 @@ func (e *Engine) processApplyRules(rules []*ApplyRule) []generatedRule {
 	return result
 }
 
-// PreflightCSS returns the Tailwind preflight (CSS reset) stylesheet
-// with --theme() references resolved against the engine's current theme
-// configuration. The preflight is independent of the utility CSS
-// returned by CSS() — it must be served separately.
-func (e *Engine) PreflightCSS() string {
+// Preflight returns the Tailwind CSS preflight (reset/normalize) stylesheet.
+// This is a static stylesheet that does not depend on scanned candidates.
+// It should be included before utility CSS in the served output.
+// Theme references (--theme()) are resolved against the engine's current
+// theme configuration.
+func (e *Engine) Preflight() string {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return resolveThemeRefs(string(cssdata.Preflight), e.theme.Tokens)
+}
+
+// PreflightCSS is an alias for [Preflight].
+func (e *Engine) PreflightCSS() string {
+	return e.Preflight()
+}
+
+// FullCSS returns the complete Tailwind stylesheet: preflight/reset
+// styles followed by the generated utility CSS. This is the method
+// the HTTP handler uses to produce the served stylesheet.
+func (e *Engine) FullCSS() string {
+	preflight := e.Preflight()
+	utility := e.CSS()
+	if preflight == "" && utility == "" {
+		return ""
+	}
+	if preflight == "" {
+		return utility
+	}
+	if utility == "" {
+		return preflight
+	}
+	return preflight + "\n" + utility
 }
 
 // resolveThemeRefs replaces all --theme(--token, fallback) references in
