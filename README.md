@@ -27,6 +27,26 @@ func main() {
 }
 ```
 
+Output:
+
+```css
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.p-4 {
+  padding: calc(4 * 0.25rem);
+}
+
+.text-blue-500 {
+  color: oklch(62.3% 0.214 259.815);
+}
+```
+
 ## How-To Guides
 
 ### Use with `html/template`
