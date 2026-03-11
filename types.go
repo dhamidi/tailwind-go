@@ -65,24 +65,30 @@ type UtilityDef struct {
 }
 
 // Declaration is a single CSS property: value pair.
+// The Value field may contain "--value(...)" placeholders that are resolved
+// at generation time against the [ThemeConfig] or by value type.
 type Declaration struct {
-	Property string
-	Value    string // May contain "--value(...)" placeholders.
+	Property string // CSS property name, e.g., "display", "padding".
+	Value    string // CSS value, possibly containing "--value(...)" placeholders.
 }
 
 // VariantDef defines a variant parsed from @variant directives.
+// There are three variant types: selector-based (Selector is set),
+// media query (Media is set), or at-rule (AtRule is set).
 type VariantDef struct {
-	Name     string
-	Selector string // e.g., "&:hover", "&:first-child"
-	Media    string // e.g., "(width >= 48rem)"
-	AtRule   string // e.g., "supports", "container"
-	Order    int
+	Name     string // Variant name, e.g., "hover", "md", "dark".
+	Selector string // Selector variant, e.g., "&:hover", "&:first-child".
+	Media    string // Media query variant, e.g., "(width >= 48rem)".
+	AtRule   string // At-rule variant, e.g., "supports", "container".
+	Order    int    // Definition order for stable CSS output sorting.
 }
 
-// KeyframesRule represents a @keyframes block.
+// KeyframesRule represents a @keyframes block, used by animation utilities.
+// When a utility references an animation name that matches a KeyframesRule,
+// the keyframes block is included in the generated CSS output.
 type KeyframesRule struct {
-	Name string // e.g., "spin"
-	Body string // raw CSS body including @keyframes name { ... }
+	Name string // Animation name, e.g., "spin", "ping", "bounce".
+	Body string // Raw CSS body including @keyframes name { ... }.
 }
 
 // ApplyRule represents an @apply directive found inside a CSS rule.
@@ -92,13 +98,15 @@ type ApplyRule struct {
 	Order    int
 }
 
-// Stylesheet is the parsed representation of a Tailwind CSS source.
+// Stylesheet is the parsed representation of Tailwind CSS input.
+// It is produced by parsing CSS containing @theme, @utility, @variant,
+// @keyframes, and @apply directives.
 type Stylesheet struct {
-	Theme      ThemeConfig
-	Utilities  []*UtilityDef
-	Variants   []*VariantDef
-	Keyframes  []*KeyframesRule
-	ApplyRules []*ApplyRule
+	Theme      ThemeConfig      // Design tokens from @theme blocks.
+	Utilities  []*UtilityDef    // Utility definitions from @utility blocks.
+	Variants   []*VariantDef    // Variant definitions from @variant directives.
+	Keyframes  []*KeyframesRule // Animation keyframes from @keyframes blocks.
+	ApplyRules []*ApplyRule     // Resolved @apply directives.
 }
 
 // utilityIndex provides fast lookup of utility definitions by class prefix.

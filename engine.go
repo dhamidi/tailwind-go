@@ -1,22 +1,3 @@
-// Package tailwind implements a pure-Go Tailwind CSS engine.
-//
-// The engine ingests Tailwind's own CSS source (v4 format) to learn
-// the utility definitions, theme tokens, and variant rules. It then
-// implements [io.Writer] so that any byte stream — template output,
-// HTML files, source code — can be piped through it. The engine
-// extracts candidate class names from the stream and, on request,
-// generates the minimal CSS needed.
-//
-//	engine := tailwind.New()
-//	engine.LoadCSS(tailwindSource) // raw Tailwind v4 CSS
-//
-//	// Pipe any bytes through — templates, HTML, source files:
-//	tmpl.Execute(engine, data)
-//	io.Copy(engine, someReader)
-//	engine.Write([]byte(`<div class="flex items-center p-4">`))
-//
-//	// Retrieve the generated CSS:
-//	css := engine.CSS()
 //go:generate bash internal/cssdata/download.sh
 
 package tailwind
