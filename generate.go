@@ -182,6 +182,10 @@ func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, t
 		cssValue := resolveValueForDecl(d, valueStr, pc, theme)
 		if cssValue != "" {
 			resolved := substituteValue(d.Value, cssValue)
+			// Apply opacity modifier if the declaration used a color namespace.
+			if pc.Modifier != "" && extractNamespace(d.Value) == "color" {
+				resolved = applyModifier(resolved, pc.Modifier, theme)
+			}
 			return &Declaration{Property: d.Property, Value: resolved}
 		}
 	}
@@ -533,6 +537,34 @@ func negateValue(v string) string {
 		return "calc(-1 * " + v[5:]
 	}
 	return "calc(-1 * " + v + ")"
+}
+
+// applyModifier wraps a CSS color value with oklch opacity modifier.
+func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
+	if modifier == "" {
+		return cssValue
+	}
+	var opacityStr string
+	if strings.HasPrefix(modifier, "[") && strings.HasSuffix(modifier, "]") {
+		opacityStr = modifier[1 : len(modifier)-1]
+		opacityStr = strings.ReplaceAll(opacityStr, "_", " ")
+	} else {
+		opacityStr = resolveModifierOpacity(modifier, theme)
+	}
+	return "oklch(from " + cssValue + " l c h / " + opacityStr + ")"
+}
+
+// resolveModifierOpacity resolves an opacity modifier value.
+// It checks the theme for --opacity-{modifier} first, then falls back
+// to treating numeric modifiers as percentages.
+func resolveModifierOpacity(modifier string, theme *ThemeConfig) string {
+	if v, ok := theme.Resolve("opacity", modifier); ok {
+		return v
+	}
+	if isNumeric(modifier) {
+		return modifier + "%"
+	}
+	return modifier
 }
 
 // rawValue handles raw Tailwind value tokens like "px", "0", "0.5".

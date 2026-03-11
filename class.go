@@ -23,6 +23,7 @@ type ParsedClass struct {
 	Value     string   // Value portion (e.g., "4", "blue-500", "1/2").
 	Arbitrary string   // Content of [...] if present, with _ → space.
 	ArbitraryProperty bool // True for [mask-type:alpha] style classes.
+	Modifier  string   // Opacity modifier: "75", "[.5]", etc.
 }
 
 // parseClass decomposes a raw Tailwind class string.
@@ -62,6 +63,9 @@ func parseClass(raw string) ParsedClass {
 		pc.Negative = true
 		s = s[1:]
 	}
+
+	// 4b. Extract opacity modifier (e.g., /75, /[.5]).
+	s, pc.Modifier = extractModifier(s)
 
 	// 5. Check for arbitrary value: utility-[value]
 	if idx := strings.Index(s, "-["); idx > 0 {
@@ -208,4 +212,68 @@ func isNumeric(s string) bool {
 		}
 	}
 	return true
+}
+
+// extractModifier splits the opacity modifier from a class string.
+// It finds the last '/' not inside brackets. If the segment before '/'
+// (after the last hyphen) and after '/' are both numeric and form a
+// valid fraction (numerator < denominator), it's a fraction like w-1/2,
+// not an opacity modifier.
+func extractModifier(s string) (base, modifier string) {
+	depth := 0
+	lastSlash := -1
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '[':
+			depth++
+		case ']':
+			if depth > 0 {
+				depth--
+			}
+		case '/':
+			if depth == 0 {
+				lastSlash = i
+			}
+		}
+	}
+	if lastSlash < 0 {
+		return s, ""
+	}
+	left := s[:lastSlash]
+	right := s[lastSlash+1:]
+	// Check for fraction pattern: the segment after the last '-' in left
+	// and right must both be numeric, with numerator < denominator (e.g., 1/2, 2/3).
+	if isNumeric(right) {
+		lastHyphen := strings.LastIndexByte(left, '-')
+		var segment string
+		if lastHyphen >= 0 {
+			segment = left[lastHyphen+1:]
+		} else {
+			segment = left
+		}
+		if isNumeric(segment) && segment != "" {
+			num := parseSimpleInt(segment)
+			den := parseSimpleInt(right)
+			if den > 0 && num < den {
+				return s, ""
+			}
+		}
+	}
+	return left, right
+}
+
+// parseSimpleInt parses a non-negative integer from a string.
+// Returns -1 if the string is not a valid integer.
+func parseSimpleInt(s string) int {
+	if s == "" {
+		return -1
+	}
+	n := 0
+	for _, b := range []byte(s) {
+		if !isDigit(b) {
+			return -1
+		}
+		n = n*10 + int(b-'0')
+	}
+	return n
 }

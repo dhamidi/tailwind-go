@@ -282,6 +282,80 @@ func TestParseClassFraction(t *testing.T) {
 	}
 }
 
+func TestParseClassOpacityModifier(t *testing.T) {
+	pc := parseClass("bg-blue-500/75")
+	if pc.Modifier != "75" {
+		t.Errorf("modifier = %q, want %q", pc.Modifier, "75")
+	}
+	// Value split is ambiguous without the utility index; 500 starts with
+	// a digit so the heuristic splits there. Resolution disambiguates later.
+	if pc.Value != "500" {
+		t.Logf("value = %q (disambiguation happens at resolution)", pc.Value)
+	}
+}
+
+func TestParseClassOpacityModifierArbitrary(t *testing.T) {
+	pc := parseClass("bg-blue-500/[.5]")
+	if pc.Modifier != "[.5]" {
+		t.Errorf("modifier = %q", pc.Modifier)
+	}
+}
+
+func TestParseClassFractionNotModifier(t *testing.T) {
+	pc := parseClass("w-1/2")
+	if pc.Modifier != "" {
+		t.Errorf("fraction should not set modifier, got %q", pc.Modifier)
+	}
+	if pc.Value != "1/2" {
+		t.Errorf("value = %q, want 1/2", pc.Value)
+	}
+}
+
+func TestEndToEndOpacityModifier(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; }
+@utility bg-* { background-color: --value(--color); }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="bg-blue-500/75"`))
+	result := e.CSS()
+	if !strings.Contains(result, "oklch(from #3b82f6 l c h / 75%)") {
+		t.Errorf("unexpected output: %s", result)
+	}
+}
+
+func TestEndToEndOpacityModifierArbitrary(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; }
+@utility bg-* { background-color: --value(--color); }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="bg-blue-500/[.5]"`))
+	result := e.CSS()
+	if !strings.Contains(result, "oklch(from #3b82f6 l c h / .5)") {
+		t.Errorf("unexpected output: %s", result)
+	}
+}
+
+func TestEndToEndOpacityTheme(t *testing.T) {
+	css := []byte(`
+@theme {
+  --color-white: white;
+  --opacity-50: 0.5;
+}
+@utility text-* { color: --value(--color); }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="text-white/50"`))
+	result := e.CSS()
+	if !strings.Contains(result, "oklch(from white l c h / 0.5)") {
+		t.Errorf("unexpected output: %s", result)
+	}
+}
+
 // --- Parser tests ---
 
 func TestParseTheme(t *testing.T) {
