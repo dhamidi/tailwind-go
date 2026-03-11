@@ -1465,6 +1465,115 @@ func TestStripMerge(t *testing.T) {
 	}
 }
 
+// --- Container query variant tests ---
+
+func TestContainerQueryVariant(t *testing.T) {
+	css := []byte(`
+@theme { --spacing: 0.25rem; }
+@utility p-* { padding: --value(--spacing); }
+@variant @md (@container (width >= 48rem));
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="@md:p-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "@container (width >= 48rem)") {
+		t.Errorf("missing @container query, got: %s", result)
+	}
+	if !strings.Contains(result, "padding:") {
+		t.Errorf("missing padding declaration, got: %s", result)
+	}
+}
+
+func TestContainerQueryVariantSelector(t *testing.T) {
+	css := []byte(`
+@utility flex { display: flex; }
+@variant @sm (@container (width >= 40rem));
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="@sm:flex"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, `\@sm`) {
+		t.Errorf("missing escaped @ in selector, got: %s", result)
+	}
+	if !strings.Contains(result, "display: flex") {
+		t.Errorf("missing display: flex, got: %s", result)
+	}
+}
+
+func TestContainerQueryStacking(t *testing.T) {
+	css := []byte(`
+@theme { --spacing: 0.25rem; }
+@utility p-* { padding: --value(--spacing); }
+@variant @md (@container (width >= 48rem));
+@variant hover (&:hover);
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="@md:hover:p-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, "@container (width >= 48rem)") {
+		t.Errorf("missing @container query, got: %s", result)
+	}
+	if !strings.Contains(result, ":hover") {
+		t.Errorf("missing :hover selector, got: %s", result)
+	}
+	if !strings.Contains(result, "padding:") {
+		t.Errorf("missing padding declaration, got: %s", result)
+	}
+}
+
+func TestContainerQueryParserVariant(t *testing.T) {
+	css := []byte(`
+@variant @md (@container (width >= 48rem));
+@variant @sm (@container (width >= 40rem));
+@variant @lg (@container (width >= 64rem));
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ss.Variants) != 3 {
+		t.Fatalf("got %d variants, want 3", len(ss.Variants))
+	}
+	byName := make(map[string]*VariantDef)
+	for _, v := range ss.Variants {
+		byName[v.Name] = v
+	}
+	for _, name := range []string{"@md", "@sm", "@lg"} {
+		v, ok := byName[name]
+		if !ok {
+			t.Errorf("missing variant %q", name)
+			continue
+		}
+		if v.AtRule != "container" {
+			t.Errorf("variant %q AtRule = %q, want %q", name, v.AtRule, "container")
+		}
+	}
+}
+
+func TestScannerExtractsContainerVariantClass(t *testing.T) {
+	var s scanner
+	tokens := s.feed([]byte(`class="@md:p-4 @sm:flex"`))
+	tokens = append(tokens, s.flush())
+	got := make(map[string]bool)
+	for _, tok := range tokens {
+		if tok != "" {
+			got[tok] = true
+		}
+	}
+	if !got["@md:p-4"] {
+		t.Errorf("missing @md:p-4, got %v", tokens)
+	}
+	if !got["@sm:flex"] {
+		t.Errorf("missing @sm:flex, got %v", tokens)
+	}
+}
+
 func TestScanResetClearsCandidates(t *testing.T) {
 	fs1 := fstest.MapFS{
 		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},

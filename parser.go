@@ -170,7 +170,14 @@ func (p *parser) parseVariant(ss *Stylesheet) {
 	p.advance() // consume @variant
 	p.skipWhitespace()
 
-	name := p.consumeIdentValue()
+	// Variant name: usually an ident, but container query variants like @md
+	// produce an AtKeyword token (e.g., "@md") instead of an ident.
+	var name string
+	if p.peek().typ == tokAtKeyword {
+		name = p.advance().value // e.g., "@md"
+	} else {
+		name = p.consumeIdentValue()
+	}
 
 	// Check for wildcard suffix: name ends with - and next token is *
 	compound := false
