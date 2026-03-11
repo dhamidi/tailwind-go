@@ -61,6 +61,8 @@ func (p *parser) parse() (*Stylesheet, error) {
 				p.parseUtility(ss)
 			case "@variant":
 				p.parseVariant(ss)
+			case "@keyframes":
+				p.parseKeyframes(ss)
 			default:
 				// Skip unknown at-rules (e.g., @layer, @import, @tailwind).
 				p.skipAtRule()
@@ -362,4 +364,40 @@ func (p *parser) skipRule() {
 		}
 		p.advance()
 	}
+}
+
+// parseKeyframes parses: @keyframes name { ... }
+func (p *parser) parseKeyframes(ss *Stylesheet) {
+	p.advance() // consume @keyframes
+	p.skipWhitespace()
+
+	name := p.consumeIdentValue()
+	if name == "" {
+		p.skipAtRule()
+		return
+	}
+	p.skipWhitespace()
+
+	if p.peek().typ != tokBraceOpen {
+		return
+	}
+
+	// Capture the block by serializing tokens.
+	start := p.pos
+	p.skipBlock()
+	body := p.serializeTokens(start, p.pos)
+
+	ss.Keyframes = append(ss.Keyframes, &KeyframesRule{
+		Name: name,
+		Body: "@keyframes " + name + " " + body,
+	})
+}
+
+// serializeTokens reconstructs CSS text from a range of tokens.
+func (p *parser) serializeTokens(start, end int) string {
+	var sb strings.Builder
+	for i := start; i < end && i < len(p.tokens); i++ {
+		sb.WriteString(p.tokens[i].value)
+	}
+	return sb.String()
 }

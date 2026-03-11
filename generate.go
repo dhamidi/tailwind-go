@@ -26,14 +26,21 @@ func generate(
 	theme *ThemeConfig,
 	utils *utilityIndex,
 	variants map[string]*VariantDef,
+	keyframes map[string]*KeyframesRule,
 ) string {
 	var rules []generatedRule
+	referencedKeyframes := make(map[string]bool)
 
 	for _, raw := range candidates {
 		pc := parseClass(raw)
 		rule := resolveClass(pc, theme, utils, variants)
 		if rule != nil {
 			rules = append(rules, *rule)
+			for _, d := range rule.declarations {
+				if d.Property == "animation" || d.Property == "animation-name" {
+					extractKeyframeNames(d.Value, referencedKeyframes)
+				}
+			}
 		}
 	}
 
@@ -42,7 +49,17 @@ func generate(
 		return rules[i].order < rules[j].order
 	})
 
-	return emitCSS(rules)
+	return emitCSS(rules, referencedKeyframes, keyframes)
+}
+
+// extractKeyframeNames extracts animation names from a CSS animation value.
+func extractKeyframeNames(animValue string, out map[string]bool) {
+	parts := strings.FieldsFunc(animValue, func(r rune) bool {
+		return r == ' ' || r == ',' || r == '\t'
+	})
+	if len(parts) > 0 {
+		out[parts[0]] = true
+	}
 }
 
 // resolveClass attempts to match a parsed class against the utility
@@ -432,11 +449,24 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 }
 
 // emitCSS serializes generated rules into a CSS string.
-func emitCSS(rules []generatedRule) string {
+func emitCSS(rules []generatedRule, referencedKF map[string]bool, keyframes map[string]*KeyframesRule) string {
 	var sb strings.Builder
 
+	// Emit referenced @keyframes before utility rules.
+	first := true
+	for name := range referencedKF {
+		if kf, ok := keyframes[name]; ok {
+			if !first {
+				sb.WriteByte('\n')
+			}
+			sb.WriteString(kf.Body)
+			sb.WriteByte('\n')
+			first = false
+		}
+	}
+
 	for i, r := range rules {
-		if i > 0 {
+		if i > 0 || !first {
 			sb.WriteByte('\n')
 		}
 

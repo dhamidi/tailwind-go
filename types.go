@@ -79,11 +79,18 @@ type VariantDef struct {
 	Order    int
 }
 
+// KeyframesRule represents a @keyframes block.
+type KeyframesRule struct {
+	Name string // e.g., "spin"
+	Body string // raw CSS body including @keyframes name { ... }
+}
+
 // Stylesheet is the parsed representation of a Tailwind CSS source.
 type Stylesheet struct {
 	Theme     ThemeConfig
 	Utilities []*UtilityDef
 	Variants  []*VariantDef
+	Keyframes []*KeyframesRule
 }
 
 // utilityIndex provides fast lookup of utility definitions by class prefix.

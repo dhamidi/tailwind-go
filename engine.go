@@ -48,6 +48,9 @@ type Engine struct {
 	// Sorted longest-prefix-first for disambiguation.
 	utilIndex *utilityIndex
 
+	// Parsed @keyframes rules, keyed by name.
+	keyframes map[string]*KeyframesRule
+
 	// Accumulated candidate class names from Write() calls.
 	candidates map[string]struct{}
 
@@ -68,6 +71,7 @@ func New() *Engine {
 	e := &Engine{
 		theme:      &ThemeConfig{Tokens: make(map[string]string)},
 		variants:   make(map[string]*VariantDef),
+		keyframes:  make(map[string]*KeyframesRule),
 		utilIndex:  newUtilityIndex(),
 		candidates: make(map[string]struct{}),
 	}
@@ -117,6 +121,11 @@ func (e *Engine) LoadCSS(css []byte) error {
 	// Register variants
 	for _, v := range stylesheet.Variants {
 		e.variants[v.Name] = v
+	}
+
+	// Register keyframes
+	for _, kf := range stylesheet.Keyframes {
+		e.keyframes[kf.Name] = kf
 	}
 
 	return nil
@@ -189,7 +198,7 @@ func (e *Engine) CSS() string {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
-	return generate(candidates, e.theme, e.utilIndex, e.variants)
+	return generate(candidates, e.theme, e.utilIndex, e.variants, e.keyframes)
 }
 
 // Reset clears all accumulated candidates, allowing the engine to be
