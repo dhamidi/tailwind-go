@@ -118,7 +118,7 @@ func (e *Engine) CSS() string
 
 Generates the complete Tailwind CSS stylesheet for all candidates extracted so far. Only candidates that match a known utility definition (or are valid arbitrary properties) produce output. Unknown candidates are silently ignored.
 
-The output is a single string containing valid CSS. Rules are ordered according to the Tailwind layer system (see §9).
+The output is a single string containing valid CSS. Rules are ordered according to the Tailwind layer system (see §10).
 
 Calls `Flush()` implicitly before generation.
 
@@ -133,7 +133,47 @@ func (e *Engine) Reset()
 Clears all accumulated candidates and resets the scanner state. Theme, utility, and variant definitions are preserved. Use this to re-scan a different set of source files without reloading the CSS.
 
 
-## 3. Byte Stream Scanner
+## 3. Bundled CSS Source
+
+### 3.1 Code Generation
+
+The repository includes a `go generate` directive that downloads the current release of the Tailwind CSS v4 source file. The exact mechanism (e.g., a shell script or Go helper in `internal/generate`) is an implementation detail, but the result is a Go source file containing the CSS embedded as a constant or `//go:embed` directive.
+
+Running `go generate ./...` fetches the upstream Tailwind CSS source and writes it into the repository so that it is available at compile time.
+
+### 3.2 Embedded Default CSS
+
+The downloaded CSS file is embedded into the library using Go's `//go:embed` mechanism (or an equivalent compile-time embedding). This embedded CSS serves as the **default CSS source** for the engine.
+
+When `New()` or `NewPassthrough()` is called, the engine automatically loads the embedded Tailwind CSS. No explicit `LoadCSS` call is required for standard Tailwind utilities to work:
+
+```go
+engine := tailwind.New()
+// engine already knows all standard Tailwind v4 utilities
+engine.Write([]byte(`<div class="flex items-center p-4">`))
+css := engine.CSS()  // produces valid CSS immediately
+```
+
+### 3.3 LoadCSS Is Additive
+
+`LoadCSS` **appends** to the engine's internal CSS buffer. It does not replace the previously loaded CSS (whether from the embedded default or from prior `LoadCSS` calls). Each call parses the provided CSS and merges the resulting definitions into the existing registries:
+
+- Theme tokens: later values overwrite earlier ones for the same key.
+- Utilities: later definitions with the same pattern overwrite earlier ones.
+- Variants: later definitions with the same name overwrite earlier ones.
+
+This means a typical usage pattern layers custom definitions on top of the bundled default:
+
+```go
+engine := tailwind.New()                  // loads embedded Tailwind CSS
+engine.LoadCSS(myProjectOverrides)        // adds/overrides on top
+engine.LoadCSS(myComponentLibraryCSS)     // further additions
+```
+
+All three CSS sources contribute to the final registries. Definitions from later `LoadCSS` calls take precedence over earlier ones when keys collide, but non-colliding definitions from all sources coexist.
+
+
+## 4. Byte Stream Scanner
 
 ### 3.1 Overview
 
@@ -201,13 +241,13 @@ These filters are deliberately **conservative** (reject obvious non-classes) rat
 All of these would couple the scanner to specific formats. Instead, the scanner extracts **every plausible token** from the byte stream. The tradeoff is a slightly larger candidate set (more misses during generation), which has negligible performance impact.
 
 
-## 4. CSS Source Parsing
+## 5. CSS Source Parsing
 
-### 4.1 Supported Tailwind v4 Dialect
+### 5.1 Supported Tailwind v4 Dialect
 
 The parser understands the following CSS constructs:
 
-#### 4.1.1 `@theme` Blocks
+#### 5.1.1 `@theme` Blocks
 
 ```css
 @theme {
@@ -262,7 +302,7 @@ Theme tokens are organized into namespaces by their property name prefix. The en
 | `--width-` | `width` | `--width-prose` |
 | `--z-` | `z` | `--z-50` |
 
-#### 4.1.2 `@utility` Blocks
+#### 5.1.2 `@utility` Blocks
 
 ##### Static Utilities
 
@@ -370,7 +410,7 @@ Some utilities produce declarations that call CSS functions:
 
 The `--value()` appears inside a CSS function call. The engine substitutes the resolved value at the exact position of `--value(...)`.
 
-#### 4.1.3 `@variant` Directives
+#### 5.1.3 `@variant` Directives
 
 ```css
 @variant hover (&:hover);
@@ -465,15 +505,15 @@ Tailwind v4 supports compound variant definitions:
 
 Here `{value}` is replaced with the specific variant condition (e.g., `group-hover` → `.group:hover &`).
 
-#### 4.1.4 `@layer` Directives
+#### 5.1.4 `@layer` Directives
 
 ```css
 @layer theme, base, components, utilities;
 ```
 
-Tailwind uses CSS layers to establish cascade ordering. The engine must respect this ordering when emitting CSS (see §9).
+Tailwind uses CSS layers to establish cascade ordering. The engine must respect this ordering when emitting CSS (see §10).
 
-#### 4.1.5 `@import` and `@config`
+#### 5.1.5 `@import` and `@config`
 
 ```css
 @import "tailwindcss";
@@ -482,7 +522,7 @@ Tailwind uses CSS layers to establish cascade ordering. The engine must respect 
 
 These are directives that Tailwind's build tool processes. The Go engine ignores them (it receives already-resolved CSS, not unprocessed source).
 
-#### 4.1.6 `@source`
+#### 5.1.6 `@source`
 
 ```css
 @source "../src/**/*.html";
@@ -490,11 +530,11 @@ These are directives that Tailwind's build tool processes. The Go engine ignores
 
 Specifies content paths for class scanning. The Go engine ignores this — scanning is done via the `io.Writer` interface, not file globs.
 
-#### 4.1.7 Standard CSS Rules
+#### 5.1.7 Standard CSS Rules
 
-Any CSS rules that aren't Tailwind-specific at-rules (e.g., `:root` blocks, reset styles, `@keyframes`) are collected as **base rules**. These may be included in the output verbatim (see §9.1).
+Any CSS rules that aren't Tailwind-specific at-rules (e.g., `:root` blocks, reset styles, `@keyframes`) are collected as **base rules**. These may be included in the output verbatim (see §10.1).
 
-### 4.2 CSS Tokenizer
+### 5.2 CSS Tokenizer
 
 The tokenizer converts raw CSS bytes into a stream of typed tokens. It follows the CSS Tokenization specification (https://www.w3.org/TR/css-syntax-3/#tokenization) with simplifications appropriate for the Tailwind dialect.
 
@@ -534,7 +574,7 @@ The tokenizer converts raw CSS bytes into a stream of typed tokens. It follows t
 - The `Function` token includes the opening `(` in its value (e.g., `"calc("`).
 - Sign characters (`+`, `-`) at the start of a number are consumed as part of the number, **unless** the `-` starts a valid ident (e.g., `-webkit-`).
 
-### 4.3 Parser
+### 5.3 Parser
 
 The parser consumes the token stream and produces a `Stylesheet` structure:
 
@@ -557,9 +597,9 @@ type Stylesheet struct {
 - The parser handles both the parenthesized form (`@variant hover (&:hover);`) and block form (`@variant group-hover { ... }`) of variant definitions.
 
 
-## 5. Class String Parsing
+## 6. Class String Parsing
 
-### 5.1 Structure of a Tailwind Class
+### 6.1 Structure of a Tailwind Class
 
 A Tailwind class has this general structure:
 
@@ -588,7 +628,7 @@ text-[length:--my-size]       → utility "text", arbitrary with type hint "leng
 group-hover:text-white        → compound variant "group-hover", utility "text", value "white"
 ```
 
-### 5.2 Parsing Algorithm
+### 6.2 Parsing Algorithm
 
 #### Step 1: Split Variants
 
@@ -674,12 +714,12 @@ bg-blue-500
   Try: "bg" + "blue-500" → "bg" is in dynamic index, "blue-500" resolves via --color namespace → match!
 ```
 
-This is performed during generation (§8), not during class parsing. The class parser produces a preliminary split using heuristics (rightmost hyphen where the right side starts with a digit or is a known keyword), but the generator re-evaluates this against the actual utility registry.
+This is performed during generation (§9), not during class parsing. The class parser produces a preliminary split using heuristics (rightmost hyphen where the right side starts with a digit or is a known keyword), but the generator re-evaluates this against the actual utility registry.
 
 
-## 6. Theme Resolution
+## 7. Theme Resolution
 
-### 6.1 Direct Token Lookup
+### 7.1 Direct Token Lookup
 
 The simplest resolution: look up `--{namespace}-{value}` in the theme tokens.
 
@@ -689,7 +729,7 @@ text-lg      →  look up "--font-size-lg"    →  "1.125rem"
 rounded-md   →  look up "--radius-md"       →  "0.375rem"
 ```
 
-### 6.2 Spacing Scale Computation
+### 7.2 Spacing Scale Computation
 
 The spacing namespace has a special **computed scale** behavior. The theme defines a base spacing unit:
 
@@ -720,7 +760,7 @@ Named spacing overrides take precedence over computed values:
 
 Look up `--spacing-{N}` first; if not found, compute `N * base`.
 
-### 6.3 Keyword Values
+### 7.3 Keyword Values
 
 Certain value strings map directly to CSS values without theme lookup:
 
@@ -742,7 +782,7 @@ Certain value strings map directly to CSS values without theme lookup:
 | `current` | `currentColor` |
 | `transparent` | `transparent` |
 
-### 6.4 Fraction Values
+### 7.4 Fraction Values
 
 Values containing `/` where both sides are numeric are treated as fractions:
 
@@ -755,7 +795,7 @@ w-5/12   →  41.666667%
 
 Computed as: `(numerator / denominator) * 100` with sufficient decimal precision.
 
-### 6.5 Arbitrary Value Passthrough
+### 7.5 Arbitrary Value Passthrough
 
 Values wrapped in `[...]` are passed through as raw CSS after:
 1. Replacing `_` with space
@@ -769,7 +809,7 @@ w-[--sidebar]       →  "var(--sidebar)"
 text-[length:1.5em] →  "1.5em" (type hint "length" used for disambiguation)
 ```
 
-### 6.6 Negative Values
+### 7.6 Negative Values
 
 When the negative modifier is set (`-translate-x-4`), the resolved value is negated:
 
@@ -777,7 +817,7 @@ When the negative modifier is set (`-translate-x-4`), the resolved value is nega
 - If the value is a simple dimension: prepend `-` (e.g., `1rem` → `-1rem`)
 - If the value is `0`: remains `0` (no negation needed)
 
-### 6.7 Resolution Priority
+### 7.7 Resolution Priority
 
 When resolving a value for a dynamic utility, try in this order:
 
@@ -791,9 +831,9 @@ When resolving a value for a dynamic utility, try in this order:
 If none resolve, the candidate is discarded (no CSS generated).
 
 
-## 7. Variant Resolution
+## 8. Variant Resolution
 
-### 7.1 Selector Variants
+### 8.1 Selector Variants
 
 Selector variants modify the CSS selector by replacing `&` in the variant definition with the base selector:
 
@@ -813,7 +853,7 @@ group-hover:focus:text-white
   apply "group-hover": .group:hover .group-hover\:focus\:text-white:focus
 ```
 
-### 7.2 Media Query Variants
+### 8.2 Media Query Variants
 
 Media query variants wrap the rule in an `@media` block:
 
@@ -826,7 +866,7 @@ md:bg-blue-500  →
   }
 ```
 
-### 7.3 Feature Query Variants
+### 8.3 Feature Query Variants
 
 Feature query variants wrap the rule in `@supports`:
 
@@ -839,7 +879,7 @@ supports-grid:flex  →
   }
 ```
 
-### 7.4 Container Query Variants
+### 8.4 Container Query Variants
 
 Container query variants wrap the rule in `@container`:
 
@@ -852,7 +892,7 @@ Container query variants wrap the rule in `@container`:
   }
 ```
 
-### 7.5 Variant Stacking
+### 8.5 Variant Stacking
 
 Variants compose by nesting. The ordering is: **outermost wrapping is the leftmost variant in the class name**:
 
@@ -876,7 +916,7 @@ When multiple media queries appear, they may optionally be merged with `and`:
 
 However, nesting is also valid CSS and simpler to implement. The engine should use nesting.
 
-### 7.6 Arbitrary Variants
+### 8.6 Arbitrary Variants
 
 Variants wrapped in `[...]` are arbitrary selector or media patterns:
 
@@ -894,7 +934,7 @@ The content between `[` and `]` is parsed as:
 - If it starts with `@media`, `@supports`, or `@container`: treat as an at-rule wrapper
 - Otherwise: treat as a selector pattern where `&` is replaced with the base selector
 
-### 7.7 `group-*` and `peer-*` Variants
+### 8.7 `group-*` and `peer-*` Variants
 
 These are compound variants that relate one element's state to another:
 
@@ -939,7 +979,7 @@ group-hover/sidebar:flex   → utility activates on hover of the named group
 → .group\/sidebar:hover .group-hover\/sidebar\:flex { display: flex; }
 ```
 
-### 7.8 `not-*`, `has-*`, `in-*` Variants
+### 8.8 `not-*`, `has-*`, `in-*` Variants
 
 ```
 not-hover:opacity-100   → &:not(:hover)
@@ -949,11 +989,11 @@ in-data-current:font-bold → [data-current] &
 
 These are parameterized variants that wrap the value in a CSS pseudo-class.
 
-### 7.9 Responsive Variant Ordering
+### 8.9 Responsive Variant Ordering
 
 Responsive variants (`sm`, `md`, `lg`, `xl`, `2xl`) must appear in the CSS output in ascending breakpoint order so that larger breakpoints override smaller ones. This is ensured by the `Order` field from their definition sequence in the parsed CSS.
 
-### 7.10 `@starting-style` Variant
+### 8.10 `@starting-style` Variant
 
 ```css
 @variant starting (@starting-style);
@@ -962,9 +1002,9 @@ Responsive variants (`sm`, `md`, `lg`, `xl`, `2xl`) must appear in the CSS outpu
 Wraps the rule in a `@starting-style` block for CSS transition entry animations.
 
 
-## 8. Utility Resolution and CSS Generation
+## 9. Utility Resolution and CSS Generation
 
-### 8.1 Resolution Pipeline
+### 9.1 Resolution Pipeline
 
 For each candidate class extracted from the byte stream:
 
@@ -974,44 +1014,44 @@ candidate string
     ▼
 ┌──────────────┐
 │ Parse class   │  → ParsedClass struct
-│ (§5)          │
+│ (§6)          │
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
 │ Match utility │  → UtilityDef + resolved value string
-│ (§8.2)        │
+│ (§9.2)        │
 └──────┬───────┘
        │  (no match → discard candidate)
        ▼
 ┌──────────────┐
 │ Resolve value │  → CSS value string
-│ (§6)          │
+│ (§7)          │
 └──────┬───────┘
        │  (no resolution → discard candidate)
        ▼
 ┌──────────────┐
 │ Build decls   │  → []Declaration with substituted values
-│ (§8.3)        │
+│ (§9.3)        │
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
 │ Build selector│  → escaped CSS selector with variant transforms
-│ (§8.4)        │
+│ (§9.4)        │
 └──────┬───────┘
        │
        ▼
 ┌──────────────┐
 │ Wrap variants │  → media queries, @supports, @container
-│ (§7)          │
+│ (§8)          │
 └──────┬───────┘
        │
        ▼
   generatedRule
 ```
 
-### 8.2 Utility Matching
+### 9.2 Utility Matching
 
 Given the full utility-value string (e.g., `bg-blue-500`), the engine attempts to match it against registered utilities:
 
@@ -1037,7 +1077,7 @@ Candidate "border-t-2":
   Try "border-t" + "2" → match!       (not "border" + "t-2")
 ```
 
-### 8.3 Declaration Building
+### 9.3 Declaration Building
 
 Once a utility and value are matched:
 
@@ -1047,7 +1087,7 @@ Once a utility and value are matched:
 2. If multiple declarations have the same property (value resolution alternatives), only the first successfully-resolved one is emitted.
 3. Apply the important flag: append ` !important` to each declaration's value.
 
-### 8.4 Selector Construction
+### 9.4 Selector Construction
 
 The CSS selector is built from the raw class string with special characters escaped:
 
@@ -1063,12 +1103,12 @@ bg-blue-500/75            → .bg-blue-500\/75
 
 Characters that must be escaped with `\`: `:`, `[`, `]`, `/`, `(`, `)`, `#`, `.`, `,`, `!`, `+`, `*`, `%`, `@`, `&`, `>`, `~`, space.
 
-After escaping, variant selector transformations are applied (§7.1).
+After escaping, variant selector transformations are applied (§8.1).
 
 
-## 9. CSS Output
+## 10. CSS Output
 
-### 9.1 Layer Ordering
+### 10.1 Layer Ordering
 
 The generated CSS is organized into layers following Tailwind's cascade:
 
@@ -1084,13 +1124,13 @@ Within the utility layer, rules are ordered by:
 2. Within the same utility, variant-wrapped rules come after unwrapped ones
 3. Responsive variants are ordered by breakpoint size (ascending)
 
-### 9.2 Deduplication
+### 10.2 Deduplication
 
 If the same class appears multiple times in the candidate set, it produces only one rule. The candidate set is a `map[string]struct{}`.
 
 If two different classes produce identical CSS (same selector, same declarations), both are emitted — deduplication is by class name, not by CSS content.
 
-### 9.3 Output Format
+### 10.3 Output Format
 
 Generated CSS uses:
 - 2-space indentation for declarations inside rules
@@ -1125,9 +1165,9 @@ Example output:
 ```
 
 
-## 10. Opacity Modifier
+## 11. Opacity Modifier
 
-### 10.1 Syntax
+### 11.1 Syntax
 
 ```
 bg-blue-500/75     → 75% opacity on the color
@@ -1135,7 +1175,7 @@ bg-blue-500/[.5]   → arbitrary opacity value 0.5
 text-white/50      → 50% opacity on white
 ```
 
-### 10.2 Resolution
+### 11.2 Resolution
 
 The opacity modifier changes how color values are emitted. Instead of:
 
@@ -1172,9 +1212,9 @@ Theme-defined opacity values are checked first:
 So `bg-blue-500/50` first looks up `--opacity-50` → `0.5`, then applies it.
 
 
-## 11. `@apply` Directive
+## 12. `@apply` Directive
 
-### 11.1 Syntax
+### 12.1 Syntax
 
 ```css
 .btn {
@@ -1182,20 +1222,20 @@ So `bg-blue-500/50` first looks up `--opacity-50` → `0.5`, then applies it.
 }
 ```
 
-### 11.2 Behavior
+### 12.2 Behavior
 
 `@apply` expands Tailwind utility classes inline within a custom CSS rule. The engine must:
 
 1. Parse the `@apply` directive from CSS input (either in `LoadCSS` or in separate user-provided CSS).
-2. Resolve each class name to its declarations using the same pipeline as §8.
+2. Resolve each class name to its declarations using the same pipeline as §9.
 3. Substitute the `@apply` line with the resolved declarations.
 4. Flatten: variants in `@apply`'d classes are applied to the containing rule's selector.
 
-### 11.3 Processing Order
+### 12.3 Processing Order
 
 `@apply` is processed **after** all utility definitions are loaded and **before** final CSS output. This allows `@apply` to reference any utility, including those defined in later `@utility` blocks.
 
-### 11.4 `@apply` with Variants
+### 12.4 `@apply` with Variants
 
 ```css
 .btn {
@@ -1214,7 +1254,7 @@ This should produce:
 The variant modifies the selector of the containing rule, not of the utility class.
 
 
-## 12. Custom Utilities via `@utility`
+## 13. Custom Utilities via `@utility`
 
 Users may define their own utilities in CSS that they pass to `LoadCSS`:
 
@@ -1231,7 +1271,7 @@ Users may define their own utilities in CSS that they pass to `LoadCSS`:
 These are parsed and registered identically to Tailwind's built-in utilities. There is no distinction between "built-in" and "custom" — all utilities come from the CSS source.
 
 
-## 13. `@keyframes` Support
+## 14. `@keyframes` Support
 
 Tailwind defines keyframes for animation utilities:
 
@@ -1248,9 +1288,9 @@ When the `animate-spin` utility is used, the engine must include both:
 The engine should collect `@keyframes` blocks during CSS parsing and include them in the output when any utility references them.
 
 
-## 14. Dark Mode
+## 15. Dark Mode
 
-### 14.1 Media-Based (Default)
+### 15.1 Media-Based (Default)
 
 ```css
 @variant dark (@media (prefers-color-scheme: dark));
@@ -1258,7 +1298,7 @@ The engine should collect `@keyframes` blocks during CSS parsing and include the
 
 Uses `@media (prefers-color-scheme: dark)` wrapping.
 
-### 14.2 Selector-Based
+### 15.2 Selector-Based
 
 Projects may override the dark variant to use a selector strategy:
 
@@ -1271,9 +1311,9 @@ This applies the utility when an ancestor has the `.dark` class.
 The engine doesn't need to know which strategy is in use — it simply applies whatever variant definition is registered for `dark`.
 
 
-## 15. Important Modifier
+## 16. Important Modifier
 
-### 15.1 Per-Utility Important
+### 16.1 Per-Utility Important
 
 ```
 !font-bold  →  font-weight: 700 !important
@@ -1282,7 +1322,7 @@ The engine doesn't need to know which strategy is in use — it simply applies w
 
 The `!` prefix causes all declarations in the generated rule to have `!important` appended.
 
-### 15.2 Interaction with Variants
+### 16.2 Interaction with Variants
 
 ```
 hover:!bg-blue-500  →
@@ -1294,9 +1334,9 @@ hover:!bg-blue-500  →
 The `!` flag is independent of variants and always affects the declarations, not the selector or media query.
 
 
-## 16. Negative Values
+## 17. Negative Values
 
-### 16.1 Syntax
+### 17.1 Syntax
 
 ```
 -m-4           → margin: -1rem
@@ -1306,7 +1346,7 @@ The `!` flag is independent of variants and always affects the declarations, not
 
 The `-` prefix before the utility name negates the resolved value.
 
-### 16.2 Negation Rules
+### 17.2 Negation Rules
 
 - Simple dimensions: prepend `-` (e.g., `1rem` → `-1rem`)
 - `calc()` expressions: wrap as `calc(-1 * <original>)`
@@ -1315,18 +1355,18 @@ The `-` prefix before the utility name negates the resolved value.
 - `auto`, `none`, color values: cannot be negated (class is discarded)
 
 
-## 17. Concurrency
+## 18. Concurrency
 
-### 17.1 Thread Safety Guarantees
+### 18.1 Thread Safety Guarantees
 
 The Engine is safe for concurrent use:
 
-- **`Write()`**: Multiple goroutines may call `Write` concurrently. The candidate map is protected by a mutex. The scanner's cross-chunk buffering assumes sequential delivery within a single stream, but concurrent writes from different streams are safe (worst case: a token at a stream boundary is split, producing two non-matching candidates instead of one matching one — harmless by §3.5's over-extraction principle).
+- **`Write()`**: Multiple goroutines may call `Write` concurrently. The candidate map is protected by a mutex. The scanner's cross-chunk buffering assumes sequential delivery within a single stream, but concurrent writes from different streams are safe (worst case: a token at a stream boundary is split, producing two non-matching candidates instead of one matching one — harmless by §4.5's over-extraction principle).
 - **`CSS()`**: May be called while `Write` is in progress. Takes a snapshot of the current candidate set under a read lock. Does not modify engine state.
 - **`LoadCSS()`**: Must not be called concurrently with `CSS()`. Typically called during initialization before any writes begin.
 - **`Reset()`**: Must not be called concurrently with `Write()` or `CSS()`.
 
-### 17.2 Recommended Usage Patterns
+### 18.2 Recommended Usage Patterns
 
 **Build-time tool:**
 ```go
@@ -1373,21 +1413,21 @@ css := engine.CSS()
 ```
 
 
-## 18. Error Handling
+## 19. Error Handling
 
-### 18.1 `LoadCSS` Errors
+### 19.1 `LoadCSS` Errors
 
 `LoadCSS` returns an error only for fundamental parse failures (e.g., completely unparseable input). Individual malformed rules or unknown constructs are silently skipped. This is by design: the engine should work with partial or future CSS syntax it doesn't fully understand.
 
-### 18.2 `Write` Errors
+### 19.2 `Write` Errors
 
 `Write` only returns errors from the passthrough writer. The scanner itself cannot fail — any byte sequence is valid input (it may not produce useful candidates, but that's not an error).
 
-### 18.3 `CSS` Errors
+### 19.3 `CSS` Errors
 
 `CSS` never returns an error. Unresolvable candidates are silently dropped. If no candidates match any utilities, the output is an empty string.
 
-### 18.4 Diagnostics
+### 19.4 Diagnostics
 
 For debugging, the engine should provide optional diagnostic methods:
 
@@ -1409,53 +1449,53 @@ type Diagnostics struct {
 This is informational only and has no effect on behavior.
 
 
-## 19. Edge Cases
+## 20. Edge Cases
 
-### 19.1 Empty Input
+### 20.1 Empty Input
 
 - `LoadCSS([]byte{})` — no error, no registries populated, `CSS()` returns `""`.
 - `Write([]byte{})` — no-op, returns `(0, nil)`.
 - `CSS()` with no writes — returns `""`.
 
-### 19.2 Unknown Classes
+### 20.2 Unknown Classes
 
 Classes that don't match any utility are silently dropped. No warning, no error.
 
-### 19.3 Conflicting Utility Definitions
+### 20.3 Conflicting Utility Definitions
 
 If two `@utility` blocks define the same pattern, the later one wins (last-write-wins during `LoadCSS`).
 
-### 19.4 Very Long Class Names
+### 20.4 Very Long Class Names
 
 No length limit on class names. The scanner will accumulate tokens of any length.
 
-### 19.5 Binary Content
+### 20.5 Binary Content
 
 If binary content is written to the engine (e.g., an image accidentally piped through), the scanner will extract nonsensical tokens. These won't match any utilities and are harmless. Performance may degrade slightly due to the large number of false-positive candidates.
 
-### 19.6 Nested `@theme` in `@utility`
+### 20.6 Nested `@theme` in `@utility`
 
 Invalid per the Tailwind spec. The parser should skip the nested `@theme` and parse the `@utility` body normally.
 
-### 19.7 Recursive `@apply`
+### 20.7 Recursive `@apply`
 
 If a class referenced in `@apply` itself uses `@apply`, the engine must detect the recursion and stop. Maximum recursion depth: 10. Beyond that, the `@apply` directive is left unresolved and a diagnostic is emitted.
 
 
-## 20. Performance Expectations
+## 21. Performance Expectations
 
-### 20.1 Scanning
+### 21.1 Scanning
 
 The scanner should process bytes at close to memory-copy speed. There are no allocations in the hot path (token bytes are accumulated in a reusable buffer). Target: **>500 MB/s** on modern hardware.
 
-### 20.2 CSS Generation
+### 21.2 CSS Generation
 
 Generation is proportional to the number of matched candidates, not total candidates. For a typical project with 500-2000 matched utilities:
 - Utility matching: O(candidates × utility_count) with early exit on match
 - Value resolution: O(1) per candidate (hash map lookups)
 - Target: **<10ms** for 2000 candidates
 
-### 20.3 Memory
+### 21.3 Memory
 
 The engine's memory footprint is:
 - Theme tokens: ~100KB for Tailwind's full default theme
@@ -1467,9 +1507,9 @@ The engine's memory footprint is:
 Total baseline: **<1MB** for a fully-loaded engine.
 
 
-## 21. Testing Strategy
+## 22. Testing Strategy
 
-### 21.1 Unit Tests
+### 22.1 Unit Tests
 
 Each component is tested in isolation:
 
@@ -1480,17 +1520,17 @@ Each component is tested in isolation:
 - **Theme resolver**: Namespace + key → expected CSS values
 - **Generator**: Candidate + definitions → expected CSS output
 
-### 21.2 Integration Tests
+### 22.2 Integration Tests
 
 End-to-end tests: HTML/template bytes in → CSS string out. These use representative subsets of Tailwind's actual CSS source as the engine's input.
 
-### 21.3 Compatibility Tests
+### 22.3 Compatibility Tests
 
 Parse Tailwind's actual full CSS source (downloaded from npm or CDN) and run it through the engine with known class sets. Compare output against Tailwind's own CLI output for the same classes.
 
 This is the definitive correctness test. If the engine produces different CSS than Tailwind's CLI for the same input, the engine has a bug.
 
-### 21.4 Fuzz Testing
+### 22.4 Fuzz Testing
 
 Use Go's built-in fuzzing (`go test -fuzz`) on:
 - The CSS tokenizer (arbitrary byte input should never panic)
@@ -1499,17 +1539,17 @@ Use Go's built-in fuzzing (`go test -fuzz`) on:
 - The full pipeline (arbitrary bytes through Write → CSS should never panic)
 
 
-## 22. Future Considerations
+## 23. Future Considerations
 
-### 22.1 Incremental Generation
+### 23.1 Incremental Generation
 
 For watch-mode use cases, the engine should support incremental updates: when new candidates appear, generate only the new rules rather than regenerating everything. This requires tracking which candidates have already been generated.
 
-### 22.2 Source Maps
+### 23.2 Source Maps
 
 For debugging, the engine could emit source maps linking generated CSS selectors back to the utility class names that produced them.
 
-### 22.3 CSS Nesting Output
+### 23.3 CSS Nesting Output
 
 Modern CSS supports nesting. The engine could optionally emit nested CSS for smaller output:
 
@@ -1520,10 +1560,10 @@ Modern CSS supports nesting. The engine could optionally emit nested CSS for sma
 }
 ```
 
-### 22.4 Tailwind v4 CSS as Embedded Resource
+### 23.4 Updating the Bundled CSS
 
-The engine could embed a recent version of Tailwind's CSS source using `//go:embed`, providing a batteries-included default that can be overridden by loading a newer CSS file.
+When a new Tailwind CSS v4 release is published, running `go generate ./...` fetches the latest version. The embedded default CSS (§3) should be updated periodically to track upstream releases.
 
-### 22.5 Plugin System
+### 23.5 Plugin System
 
 Allow Go functions to register custom utility generators that go beyond what `@utility` can express in CSS. This would enable plugins equivalent to Tailwind's JS plugin system.
