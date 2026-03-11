@@ -4,6 +4,7 @@ package tailwind
 
 import (
 	"io"
+	"io/fs"
 	"strings"
 	"sync"
 
@@ -285,6 +286,55 @@ func resolveThemeRefs(css string, tokens map[string]string) string {
 		css = css[:idx] + replacement + css[end+1:]
 	}
 	return css
+}
+
+// Scan walks fsys and extracts Tailwind class candidates from all
+// text files. Binary files (images, fonts, compiled artifacts) are
+// automatically skipped.
+//
+// Scan may be called multiple times with different filesystems;
+// candidates accumulate across calls. Call [Engine.Reset] first
+// if you need a fresh scan.
+//
+// Scan reads each text file fully into memory. For extremely large
+// files this is acceptable because template/source files are
+// typically small.
+func (e *Engine) Scan(fsys fs.FS) error {
+	err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			name := d.Name()
+			if strings.HasPrefix(name, ".") && name != "." {
+				return fs.SkipDir
+			}
+			if name == "node_modules" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if !d.Type().IsRegular() {
+			return nil
+		}
+		if !hasTextExtension(path) {
+			return nil
+		}
+		content, err := fs.ReadFile(fsys, path)
+		if err != nil {
+			return err
+		}
+		if !isTextFile(content) {
+			return nil
+		}
+		e.Write(content)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	e.Flush()
+	return nil
 }
 
 // Reset clears all accumulated candidates, allowing the engine to be

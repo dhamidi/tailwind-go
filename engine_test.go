@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 // --- Auto-load tests ---
@@ -972,5 +973,170 @@ func TestResolveThemeRefsRecursive(t *testing.T) {
 	want := "prop: resolved-value;"
 	if got != want {
 		t.Errorf("resolveThemeRefs() = %q, want %q", got, want)
+	}
+}
+
+// --- Scan tests ---
+
+func TestScanHTMLFiles(t *testing.T) {
+	fs := fstest.MapFS{
+		"index.html": &fstest.MapFile{Data: []byte(`<div class="flex p-4">hello</div>`)},
+		"about.html": &fstest.MapFile{Data: []byte(`<div class="block mt-2">about</div>`)},
+	}
+	e := New()
+	if err := e.Scan(fs); err != nil {
+		t.Fatal(err)
+	}
+	candidates := e.Candidates()
+	got := make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	for _, want := range []string{"flex", "p-4", "block", "mt-2"} {
+		if !got[want] {
+			t.Errorf("missing candidate %q, got %v", want, candidates)
+		}
+	}
+}
+
+func TestScanSkipsBinaryFiles(t *testing.T) {
+	fs := fstest.MapFS{
+		"index.html":  &fstest.MapFile{Data: []byte(`<div class="flex">hello</div>`)},
+		"image.png":   &fstest.MapFile{Data: []byte{0x89, 0x50, 0x4E, 0x47}},
+		"styles.css":  &fstest.MapFile{Data: []byte(`/* class="hidden" */`)},
+	}
+	e := New()
+	if err := e.Scan(fs); err != nil {
+		t.Fatal(err)
+	}
+	candidates := e.Candidates()
+	got := make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	if !got["flex"] {
+		t.Error("missing candidate 'flex' from HTML file")
+	}
+	// PNG should be skipped by extension
+	// The CSS file should be scanned (text extension)
+}
+
+func TestScanSkipsGitDir(t *testing.T) {
+	fs := fstest.MapFS{
+		".git/config":      &fstest.MapFile{Data: []byte(`class="secret"`)},
+		".git/HEAD":        &fstest.MapFile{Data: []byte(`ref: refs/heads/main`)},
+		"src/app.html":     &fstest.MapFile{Data: []byte(`<div class="flex">app</div>`)},
+	}
+	e := New()
+	if err := e.Scan(fs); err != nil {
+		t.Fatal(err)
+	}
+	candidates := e.Candidates()
+	got := make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	if got["secret"] {
+		t.Error("should not have scanned .git directory")
+	}
+	if !got["flex"] {
+		t.Error("missing candidate 'flex' from src/app.html")
+	}
+}
+
+func TestScanSkipsNodeModules(t *testing.T) {
+	fs := fstest.MapFS{
+		"node_modules/pkg/index.js": &fstest.MapFile{Data: []byte(`class="hidden"`)},
+		"src/app.html":              &fstest.MapFile{Data: []byte(`<div class="block">app</div>`)},
+	}
+	e := New()
+	if err := e.Scan(fs); err != nil {
+		t.Fatal(err)
+	}
+	candidates := e.Candidates()
+	got := make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	if got["hidden"] {
+		t.Error("should not have scanned node_modules directory")
+	}
+	if !got["block"] {
+		t.Error("missing candidate 'block' from src/app.html")
+	}
+}
+
+func TestScanEmptyFS(t *testing.T) {
+	fs := fstest.MapFS{}
+	e := New()
+	if err := e.Scan(fs); err != nil {
+		t.Fatalf("unexpected error scanning empty FS: %v", err)
+	}
+	if len(e.Candidates()) != 0 {
+		t.Errorf("expected no candidates from empty FS, got %v", e.Candidates())
+	}
+}
+
+func TestScanAccumulatesCandidates(t *testing.T) {
+	fs1 := fstest.MapFS{
+		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},
+	}
+	fs2 := fstest.MapFS{
+		"b.html": &fstest.MapFile{Data: []byte(`<div class="block">b</div>`)},
+	}
+	e := New()
+	if err := e.Scan(fs1); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Scan(fs2); err != nil {
+		t.Fatal(err)
+	}
+	candidates := e.Candidates()
+	got := make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	if !got["flex"] {
+		t.Error("missing 'flex' from first scan")
+	}
+	if !got["block"] {
+		t.Error("missing 'block' from second scan")
+	}
+}
+
+func TestScanResetClearsCandidates(t *testing.T) {
+	fs1 := fstest.MapFS{
+		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},
+	}
+	fs2 := fstest.MapFS{
+		"b.html": &fstest.MapFile{Data: []byte(`<div class="block">b</div>`)},
+	}
+	e := New()
+	if err := e.Scan(fs1); err != nil {
+		t.Fatal(err)
+	}
+	candidates := e.Candidates()
+	got := make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	if !got["flex"] {
+		t.Error("missing 'flex' after first scan")
+	}
+
+	e.Reset()
+	if err := e.Scan(fs2); err != nil {
+		t.Fatal(err)
+	}
+	candidates = e.Candidates()
+	got = make(map[string]bool)
+	for _, c := range candidates {
+		got[c] = true
+	}
+	if got["flex"] {
+		t.Error("'flex' should have been cleared by Reset")
+	}
+	if !got["block"] {
+		t.Error("missing 'block' after second scan")
 	}
 }
