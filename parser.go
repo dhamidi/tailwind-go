@@ -172,9 +172,16 @@ func (p *parser) parseVariant(ss *Stylesheet) {
 
 	// Variant name: usually an ident, but container query variants like @md
 	// produce an AtKeyword token (e.g., "@md") instead of an ident.
+	// Names starting with a digit (e.g., 2xl) tokenize as tokDimension.
+	// Names like @3xs tokenize as tokDelim "@" + tokDimension.
 	var name string
 	if p.peek().typ == tokAtKeyword {
 		name = p.advance().value // e.g., "@md"
+	} else if p.peek().typ == tokDelim && p.peek().value == "@" {
+		p.advance() // consume "@"
+		name = "@" + p.advance().value
+	} else if p.peek().typ == tokDimension {
+		name = p.advance().value // e.g., "2xl"
 	} else {
 		name = p.consumeIdentValue()
 	}

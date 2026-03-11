@@ -1574,6 +1574,23 @@ func TestScannerExtractsContainerVariantClass(t *testing.T) {
 	}
 }
 
+func TestBuiltinContainerQueryVariants(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class="@md:flex @sm:hidden @lg:block">`))
+	got := e.CSS()
+	t.Logf("CSS:\n%s", got)
+
+	if !strings.Contains(got, "@container (width >= 28rem)") {
+		t.Errorf("missing @container wrapper for @md")
+	}
+	if !strings.Contains(got, "@container (width >= 24rem)") {
+		t.Errorf("missing @container wrapper for @sm")
+	}
+	if !strings.Contains(got, "@container (width >= 32rem)") {
+		t.Errorf("missing @container wrapper for @lg")
+	}
+}
+
 func TestScanResetClearsCandidates(t *testing.T) {
 	fs1 := fstest.MapFS{
 		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},
