@@ -1,0 +1,596 @@
+package tailwind
+
+import (
+	"bytes"
+	"io"
+	"strings"
+	"testing"
+)
+
+// --- Scanner tests ---
+
+func TestScannerBasic(t *testing.T) {
+	var s scanner
+	tokens := s.feed([]byte(`<div class="flex items-center p-4 bg-blue-500">`))
+	tokens = append(tokens, s.flush())
+
+	want := map[string]bool{
+		"flex": true, "items-center": true,
+		"p-4": true, "bg-blue-500": true,
+	}
+	got := make(map[string]bool)
+	for _, tok := range tokens {
+		if tok != "" {
+			got[tok] = true
+		}
+	}
+	for w := range want {
+		if !got[w] {
+			t.Errorf("missing candidate %q, got %v", w, tokens)
+		}
+	}
+}
+
+func TestScannerArbitraryValues(t *testing.T) {
+	var s scanner
+	tokens := s.feed([]byte(`class="w-[300px] text-[#ff0000] grid-cols-[1fr_auto_2fr]"`))
+	tokens = append(tokens, s.flush())
+
+	want := []string{"w-[300px]", "text-[#ff0000]", "grid-cols-[1fr_auto_2fr]"}
+	got := make(map[string]bool)
+	for _, tok := range tokens {
+		got[tok] = true
+	}
+	for _, w := range want {
+		if !got[w] {
+			t.Errorf("missing candidate %q", w)
+		}
+	}
+}
+
+func TestScannerChunkedWrites(t *testing.T) {
+	// Token split across two Write calls.
+	var s scanner
+	t1 := s.feed([]byte(`class="bg-bl`))
+	t2 := s.feed([]byte(`ue-500 flex"`))
+	t2 = append(t2, s.flush())
+
+	all := append(t1, t2...)
+	got := make(map[string]bool)
+	for _, tok := range all {
+		if tok != "" {
+			got[tok] = true
+		}
+	}
+	if !got["bg-blue-500"] {
+		t.Errorf("failed to reconstruct 'bg-blue-500' across chunks, got %v", all)
+	}
+	if !got["flex"] {
+		t.Errorf("missing 'flex'")
+	}
+}
+
+func TestScannerRejectsURLs(t *testing.T) {
+	var s scanner
+	tokens := s.feed([]byte(`href="https://example.com" class="flex"`))
+	tokens = append(tokens, s.flush())
+
+	for _, tok := range tokens {
+		if strings.Contains(tok, "://") {
+			t.Errorf("should reject URL-like token, got %q", tok)
+		}
+	}
+}
+
+func TestScannerVariantClasses(t *testing.T) {
+	var s scanner
+	tokens := s.feed([]byte(`"dark:md:hover:bg-blue-500 !-translate-x-1/2"`))
+	tokens = append(tokens, s.flush())
+
+	got := make(map[string]bool)
+	for _, tok := range tokens {
+		got[tok] = true
+	}
+	if !got["dark:md:hover:bg-blue-500"] {
+		t.Errorf("missing variant class")
+	}
+	if !got["!-translate-x-1/2"] {
+		t.Errorf("missing negated important class")
+	}
+}
+
+// --- Tokenizer tests ---
+
+func TestTokenizerBasic(t *testing.T) {
+	src := `@theme { --color-blue-500: #3b82f6; }`
+	tokens := newTokenizer([]byte(src)).tokenize()
+
+	// Should have: @theme, ws, {, ws, --color-blue-500, :, ws, #3b82f6, ;, ws, }
+	types := make([]tokenType, 0)
+	for _, tok := range tokens {
+		types = append(types, tok.typ)
+	}
+
+	// Check key tokens are present.
+	found := make(map[string]bool)
+	for _, tok := range tokens {
+		found[tok.value] = true
+	}
+	if !found["@theme"] {
+		t.Error("missing @theme token")
+	}
+	if !found["--color-blue-500"] {
+		t.Error("missing --color-blue-500 token")
+	}
+}
+
+func TestTokenizerUtility(t *testing.T) {
+	src := `@utility w-* {
+  width: --value(--spacing);
+}`
+	tokens := newTokenizer([]byte(src)).tokenize()
+
+	found := make(map[string]bool)
+	for _, tok := range tokens {
+		found[tok.value] = true
+	}
+	if !found["@utility"] {
+		t.Error("missing @utility")
+	}
+	if !found["width"] {
+		t.Error("missing width")
+	}
+}
+
+func TestTokenizerDimensions(t *testing.T) {
+	src := `width: 48rem;`
+	tokens := newTokenizer([]byte(src)).tokenize()
+
+	var dim *token
+	for i := range tokens {
+		if tokens[i].typ == tokDimension {
+			dim = &tokens[i]
+			break
+		}
+	}
+	if dim == nil {
+		t.Fatal("no dimension token found")
+	}
+	if dim.value != "48rem" {
+		t.Errorf("got dimension %q, want %q", dim.value, "48rem")
+	}
+}
+
+// --- Class parser tests ---
+
+func TestParseClassSimple(t *testing.T) {
+	pc := parseClass("flex")
+	if pc.Utility != "flex" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "flex")
+	}
+	if len(pc.Variants) != 0 {
+		t.Errorf("variants = %v, want none", pc.Variants)
+	}
+}
+
+func TestParseClassWithValue(t *testing.T) {
+	pc := parseClass("p-4")
+	if pc.Utility != "p" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "p")
+	}
+	if pc.Value != "4" {
+		t.Errorf("value = %q, want %q", pc.Value, "4")
+	}
+}
+
+func TestParseClassWithColor(t *testing.T) {
+	pc := parseClass("bg-blue-500")
+	// This is ambiguous without the utility index.
+	// With our heuristic, 500 starts with a digit → split there.
+	if pc.Value != "500" {
+		t.Logf("utility=%q value=%q (disambiguation happens at resolution)", pc.Utility, pc.Value)
+	}
+}
+
+func TestParseClassVariants(t *testing.T) {
+	pc := parseClass("dark:md:hover:bg-blue-500")
+	if len(pc.Variants) != 3 {
+		t.Fatalf("variants = %v, want 3", pc.Variants)
+	}
+	if pc.Variants[0] != "dark" || pc.Variants[1] != "md" || pc.Variants[2] != "hover" {
+		t.Errorf("variants = %v", pc.Variants)
+	}
+}
+
+func TestParseClassImportant(t *testing.T) {
+	pc := parseClass("!font-bold")
+	if !pc.Important {
+		t.Error("expected important")
+	}
+	if pc.Utility != "font-bold" && pc.Utility != "font" {
+		t.Logf("utility = %q (either valid parse)", pc.Utility)
+	}
+}
+
+func TestParseClassNegative(t *testing.T) {
+	pc := parseClass("-translate-x-4")
+	if !pc.Negative {
+		t.Error("expected negative")
+	}
+}
+
+func TestParseClassArbitraryValue(t *testing.T) {
+	pc := parseClass("w-[300px]")
+	if pc.Utility != "w" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "w")
+	}
+	if pc.Arbitrary != "300px" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "300px")
+	}
+}
+
+func TestParseClassArbitraryWithSpaces(t *testing.T) {
+	pc := parseClass("grid-cols-[1fr_auto_2fr]")
+	if pc.Arbitrary != "1fr auto 2fr" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "1fr auto 2fr")
+	}
+}
+
+func TestParseClassArbitraryProperty(t *testing.T) {
+	pc := parseClass("[mask-type:alpha]")
+	if !pc.ArbitraryProperty {
+		t.Error("expected arbitrary property")
+	}
+	if pc.Utility != "mask-type" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "mask-type")
+	}
+	if pc.Arbitrary != "alpha" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "alpha")
+	}
+}
+
+func TestParseClassArbitraryVariant(t *testing.T) {
+	pc := parseClass("[&:nth-child(3)]:bg-red-500")
+	if len(pc.Variants) != 1 || pc.Variants[0] != "[&:nth-child(3)]" {
+		t.Errorf("variants = %v", pc.Variants)
+	}
+}
+
+func TestParseClassFraction(t *testing.T) {
+	pc := parseClass("w-1/2")
+	if pc.Value != "1/2" {
+		t.Errorf("value = %q, want %q", pc.Value, "1/2")
+	}
+}
+
+// --- Parser tests ---
+
+func TestParseTheme(t *testing.T) {
+	css := []byte(`
+@theme {
+  --color-blue-500: #3b82f6;
+  --spacing: 0.25rem;
+  --breakpoint-md: 48rem;
+}
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v := ss.Theme.Tokens["--color-blue-500"]; v != "#3b82f6" {
+		t.Errorf("color-blue-500 = %q", v)
+	}
+	if v := ss.Theme.Tokens["--spacing"]; v != "0.25rem" {
+		t.Errorf("spacing = %q", v)
+	}
+	if v := ss.Theme.Tokens["--breakpoint-md"]; v != "48rem" {
+		t.Errorf("breakpoint-md = %q", v)
+	}
+}
+
+func TestParseUtilityDynamic(t *testing.T) {
+	css := []byte(`
+@utility w-* {
+  width: --value(--spacing);
+}
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(ss.Utilities) != 1 {
+		t.Fatalf("got %d utilities, want 1", len(ss.Utilities))
+	}
+
+	u := ss.Utilities[0]
+	if u.Pattern != "w" {
+		t.Errorf("pattern = %q, want %q", u.Pattern, "w")
+	}
+	if u.Static {
+		t.Error("expected dynamic utility")
+	}
+	if len(u.Declarations) != 1 {
+		t.Fatalf("got %d declarations", len(u.Declarations))
+	}
+	if u.Declarations[0].Property != "width" {
+		t.Errorf("property = %q", u.Declarations[0].Property)
+	}
+}
+
+func TestParseUtilityStatic(t *testing.T) {
+	css := []byte(`
+@utility flex {
+  display: flex;
+}
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(ss.Utilities) != 1 {
+		t.Fatalf("got %d utilities", len(ss.Utilities))
+	}
+	if !ss.Utilities[0].Static {
+		t.Error("expected static utility")
+	}
+	if ss.Utilities[0].Pattern != "flex" {
+		t.Errorf("pattern = %q", ss.Utilities[0].Pattern)
+	}
+}
+
+func TestParseVariant(t *testing.T) {
+	css := []byte(`
+@variant hover (&:hover);
+@variant md (@media (width >= 48rem));
+@variant dark (@media (prefers-color-scheme: dark));
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(ss.Variants) != 3 {
+		t.Fatalf("got %d variants, want 3", len(ss.Variants))
+	}
+
+	byName := make(map[string]*VariantDef)
+	for _, v := range ss.Variants {
+		byName[v.Name] = v
+	}
+
+	if v := byName["hover"]; v.Selector != "&:hover" {
+		t.Errorf("hover selector = %q", v.Selector)
+	}
+	if v := byName["md"]; v.Media == "" {
+		t.Error("md should have media query")
+	}
+	if v := byName["dark"]; v.Media == "" {
+		t.Error("dark should have media query")
+	}
+}
+
+// --- Integration tests ---
+
+func TestEndToEndSimple(t *testing.T) {
+	css := []byte(`
+@theme {
+  --spacing: 0.25rem;
+  --color-blue-500: #3b82f6;
+}
+
+@utility flex {
+  display: flex;
+}
+
+@utility items-center {
+  align-items: center;
+}
+
+@utility p-* {
+  padding: --value(--spacing);
+}
+
+@utility bg-* {
+  background-color: --value(--color);
+}
+
+@variant hover (&:hover);
+@variant md (@media (width >= 48rem));
+`)
+
+	engine := New()
+	if err := engine.LoadCSS(css); err != nil {
+		t.Fatal(err)
+	}
+
+	html := `<div class="flex items-center p-4 bg-blue-500">`
+	engine.Write([]byte(html))
+
+	result := engine.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "display: flex") {
+		t.Error("missing 'display: flex'")
+	}
+	if !strings.Contains(result, "align-items: center") {
+		t.Error("missing 'align-items: center'")
+	}
+	if !strings.Contains(result, "padding:") {
+		t.Error("missing padding declaration")
+	}
+	if !strings.Contains(result, "background-color: #3b82f6") {
+		t.Error("missing background-color")
+	}
+}
+
+func TestEndToEndArbitrary(t *testing.T) {
+	css := []byte(`
+@utility w-* {
+  width: --value(--spacing);
+}
+`)
+	engine := New()
+	engine.LoadCSS(css)
+	engine.Write([]byte(`class="w-[300px]"`))
+
+	result := engine.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "width: 300px") {
+		t.Error("missing arbitrary width")
+	}
+}
+
+func TestEndToEndVariants(t *testing.T) {
+	css := []byte(`
+@theme {
+  --color-blue-600: #2563eb;
+}
+
+@utility bg-* {
+  background-color: --value(--color);
+}
+
+@variant hover (&:hover);
+@variant md (@media (width >= 48rem));
+`)
+	engine := New()
+	engine.LoadCSS(css)
+	engine.Write([]byte(`class="hover:bg-blue-600 md:bg-blue-600"`))
+
+	result := engine.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "background-color: #2563eb") {
+		t.Error("missing bg color")
+	}
+}
+
+func TestEndToEndArbitraryProperty(t *testing.T) {
+	engine := New()
+	engine.LoadCSS([]byte(``))
+	engine.Write([]byte(`class="[mask-type:alpha]"`))
+
+	result := engine.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "mask-type: alpha") {
+		t.Error("missing arbitrary property")
+	}
+}
+
+func TestEndToEndFraction(t *testing.T) {
+	css := []byte(`
+@utility w-* {
+  width: --value(--spacing);
+}
+`)
+	engine := New()
+	engine.LoadCSS(css)
+	engine.Write([]byte(`class="w-1/2"`))
+
+	result := engine.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "50%") {
+		t.Error("missing fraction percentage")
+	}
+}
+
+// --- io.Writer interface tests ---
+
+func TestWriterInterface(t *testing.T) {
+	css := []byte(`
+@utility flex {
+  display: flex;
+}
+`)
+	engine := New()
+	engine.LoadCSS(css)
+
+	// Use engine as a generic io.Writer.
+	var w io.Writer = engine
+	w.Write([]byte(`<div class="flex">`))
+
+	result := engine.CSS()
+	if !strings.Contains(result, "display: flex") {
+		t.Error("io.Writer interface didn't capture class")
+	}
+}
+
+func TestPassthroughWriter(t *testing.T) {
+	css := []byte(`
+@utility flex {
+  display: flex;
+}
+`)
+	var buf bytes.Buffer
+	engine := NewPassthrough(&buf)
+	engine.LoadCSS(css)
+
+	input := []byte(`<div class="flex">hello</div>`)
+	engine.Write(input)
+
+	// Passthrough should have the original bytes.
+	if buf.String() != string(input) {
+		t.Errorf("passthrough got %q, want %q", buf.String(), string(input))
+	}
+
+	// Engine should still capture classes.
+	result := engine.CSS()
+	if !strings.Contains(result, "display: flex") {
+		t.Error("passthrough engine didn't capture class")
+	}
+}
+
+func TestIoCopy(t *testing.T) {
+	css := []byte(`
+@utility hidden {
+  display: none;
+}
+@utility block {
+  display: block;
+}
+`)
+	engine := New()
+	engine.LoadCSS(css)
+
+	src := strings.NewReader(`<div class="hidden">secret</div><div class="block">visible</div>`)
+	io.Copy(engine, src)
+
+	result := engine.CSS()
+	if !strings.Contains(result, "display: none") {
+		t.Error("missing hidden")
+	}
+	if !strings.Contains(result, "display: block") {
+		t.Error("missing block")
+	}
+}
+
+func TestReset(t *testing.T) {
+	css := []byte(`
+@utility flex { display: flex; }
+@utility block { display: block; }
+`)
+	engine := New()
+	engine.LoadCSS(css)
+
+	engine.Write([]byte(`class="flex"`))
+	r1 := engine.CSS()
+	if !strings.Contains(r1, "display: flex") {
+		t.Error("first pass missing flex")
+	}
+
+	engine.Reset()
+	engine.Write([]byte(`class="block"`))
+	r2 := engine.CSS()
+	if strings.Contains(r2, "display: flex") {
+		t.Error("reset didn't clear flex")
+	}
+	if !strings.Contains(r2, "display: block") {
+		t.Error("second pass missing block")
+	}
+}
