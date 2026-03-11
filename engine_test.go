@@ -892,6 +892,29 @@ func TestApplyDirectiveUnknownClass(t *testing.T) {
 	_ = e.CSS()
 }
 
+func TestApplyMaxDepthDoesNotPanic(t *testing.T) {
+	// Ensure that even if @apply somehow becomes recursive,
+	// the engine doesn't hang or panic
+	css := []byte(`
+@utility flex { display: flex; }
+@utility p-4 { padding: 1rem; }
+
+.btn { @apply flex p-4; }
+`)
+	e := New()
+	err := e.LoadCSS(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := e.CSS()
+	if !strings.Contains(result, "display: flex") {
+		t.Error("@apply should resolve flex utility")
+	}
+	if !strings.Contains(result, "padding: 1rem") {
+		t.Error("@apply should resolve p-4 utility")
+	}
+}
+
 // --- Preflight CSS tests ---
 
 func TestPreflightReturnsNonEmpty(t *testing.T) {

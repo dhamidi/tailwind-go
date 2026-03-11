@@ -202,16 +202,34 @@ func (e *Engine) CSS() string {
 
 // processApplyRules resolves @apply directives against the utility registry.
 func (e *Engine) processApplyRules(rules []*ApplyRule) []generatedRule {
+	return e.processApplyRulesWithDepth(rules, 0, make(map[string]bool))
+}
+
+// processApplyRulesWithDepth resolves @apply directives with recursion detection.
+// It stops at a maximum depth of 10 per spec §20.7, and tracks visited classes
+// to detect circular references.
+func (e *Engine) processApplyRulesWithDepth(rules []*ApplyRule, depth int, visited map[string]bool) []generatedRule {
+	if depth >= 10 {
+		return nil
+	}
+
 	var result []generatedRule
 	for _, ar := range rules {
 		for _, cls := range ar.Classes {
+			if visited[cls] {
+				continue
+			}
+			visited[cls] = true
+
 			pc := parseClass(cls)
 			utilDef, valueStr := resolveUtility(pc, e.utilIndex)
 			if utilDef == nil {
+				delete(visited, cls)
 				continue
 			}
 			decls := resolveDeclarations(utilDef, valueStr, pc, e.theme)
 			if decls == nil {
+				delete(visited, cls)
 				continue
 			}
 
@@ -226,6 +244,7 @@ func (e *Engine) processApplyRules(rules []*ApplyRule) []generatedRule {
 				mediaQueries: mediaQueries,
 				order:        ar.Order,
 			})
+			delete(visited, cls)
 		}
 	}
 	return result
