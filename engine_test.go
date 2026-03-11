@@ -7,6 +7,25 @@ import (
 	"testing"
 )
 
+// --- Auto-load tests ---
+
+func TestNewAutoLoadsCSS(t *testing.T) {
+	engine := New()
+	engine.Write([]byte(`<div class="flex items-center p-4 text-blue-500">`))
+	css := engine.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+
+	if !strings.Contains(css, "display: flex") {
+		t.Error("missing 'display: flex' — embedded CSS not auto-loaded")
+	}
+	if !strings.Contains(css, "align-items: center") {
+		t.Error("missing 'align-items: center'")
+	}
+	if !strings.Contains(css, "padding:") {
+		t.Error("missing padding declaration")
+	}
+}
+
 // --- Scanner tests ---
 
 func TestScannerBasic(t *testing.T) {

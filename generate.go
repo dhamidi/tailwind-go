@@ -177,6 +177,17 @@ func resolveValue(
 		return ""
 	}
 
+	// Fraction support: "1/2" → "50%". Check before theme resolution so that
+	// fractions are not erroneously computed as spacing multipliers.
+	if strings.Contains(valueStr, "/") {
+		if pct := fractionToPercent(valueStr); pct != "" {
+			if pc.Negative {
+				return negateValue(pct)
+			}
+			return pct
+		}
+	}
+
 	// Try to resolve through the theme.
 	// Inspect the utility's declarations for --value() hints.
 	for _, d := range utilDef.Declarations {
@@ -203,13 +214,6 @@ func resolveValue(
 				resolved = negateValue(resolved)
 			}
 			return resolved
-		}
-	}
-
-	// Fraction support: "1/2" → "50%"
-	if strings.Contains(valueStr, "/") {
-		if pct := fractionToPercent(valueStr); pct != "" {
-			return pct
 		}
 	}
 

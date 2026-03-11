@@ -17,11 +17,15 @@
 //
 //	// Retrieve the generated CSS:
 //	css := engine.CSS()
+//go:generate bash internal/cssdata/download.sh
+
 package tailwind
 
 import (
 	"io"
 	"sync"
+
+	"github.com/dhamidi/tailwind-go/internal/cssdata"
 )
 
 // Engine is a Tailwind CSS generator that implements [io.Writer].
@@ -57,15 +61,21 @@ type Engine struct {
 	passthrough io.Writer
 }
 
-// New creates a new Engine. Call [Engine.LoadCSS] to feed it
-// Tailwind's CSS source before piping bytes through.
+// New creates a new Engine pre-loaded with the embedded Tailwind CSS v4
+// definitions (theme tokens + utilities). Additional CSS can be layered
+// on top with [Engine.LoadCSS].
 func New() *Engine {
-	return &Engine{
+	e := &Engine{
 		theme:      &ThemeConfig{Tokens: make(map[string]string)},
 		variants:   make(map[string]*VariantDef),
 		utilIndex:  newUtilityIndex(),
 		candidates: make(map[string]struct{}),
 	}
+	// Load bundled Tailwind CSS (theme + utilities).
+	// Errors are ignored — the embedded CSS is known-good.
+	_ = e.LoadCSS(cssdata.Theme)
+	_ = e.LoadCSS(cssdata.Utilities)
+	return e
 }
 
 // NewPassthrough creates an Engine that also writes all bytes to w.
