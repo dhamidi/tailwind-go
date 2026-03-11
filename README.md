@@ -104,6 +104,24 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Arbitrary variants: `[@media(min-width:900px)]:bg-red-500`
 - `@theme`, `@utility`, `@variant`, `@keyframes` directives
 
+## Current Limitations
+
+The following Tailwind CSS v4 features are **not yet supported**:
+
+- **Compound variants**: `group-*`, `peer-*`, `not-*`, `has-*`, `in-*` (e.g., `group-hover:text-white`, `peer-focus:ring-2`)
+- **Named groups/peers**: slash notation like `group/sidebar`, `group-hover/sidebar:flex`
+- **`@starting-style` variant**
+- **`:merge()` function** in variant selectors
+- **Dark mode class strategy**: only `@media (prefers-color-scheme: dark)` is supported; class-based dark mode (`.dark` selector) is not
+- **Container queries**: `@container`-based variants
+
+The following are **out of scope by design** (see [spec.md §1.2](spec.md)):
+
+- **Preflight / reset styles**: the engine generates utility CSS only
+- **`@import` / `@source` / `@config` directives**: build-tool concerns; the engine uses `io.Writer` for input instead
+- **CSS minification**: the engine emits readable CSS; pipe through a minifier if needed
+- **File watching / CLI**: the engine is a library, not a build tool
+
 ## API Reference
 
 | Symbol | Description |
