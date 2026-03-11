@@ -12,30 +12,30 @@
 // Create an engine pre-loaded with Tailwind v4 definitions, write markup
 // to it, and retrieve the generated CSS:
 //
-//	engine := tailwind.New()
+//	tw := tailwind.New()
 //
 //	// Write any bytes — HTML, templates, source code.
-//	engine.Write([]byte(`<div class="flex items-center p-4 bg-blue-500">`))
+//	tw.Write([]byte(`<div class="flex items-center p-4 bg-blue-500">`))
 //
 //	// Generate the CSS.
-//	css := engine.CSS()
+//	css := tw.CSS()
 //
 // # Pipeline Integration
 //
 // [NewPassthrough] creates an engine that also forwards all bytes to an
 // underlying [io.Writer], making it transparent in a pipeline:
 //
-//	engine := tailwind.NewPassthrough(responseWriter)
-//	tmpl.Execute(engine, data) // bytes flow to both engine and responseWriter
-//	css := engine.CSS()
+//	tw := tailwind.NewPassthrough(responseWriter)
+//	tmpl.Execute(tw, data) // bytes flow to both tw and responseWriter
+//	css := tw.CSS()
 //
 // # Custom Definitions
 //
 // [Engine.LoadCSS] accepts Tailwind v4 CSS directives to extend or override
 // the built-in definitions:
 //
-//	engine := tailwind.New()
-//	engine.LoadCSS([]byte(`
+//	tw := tailwind.New()
+//	tw.LoadCSS([]byte(`
 //		@theme { --color-brand: #e11d48; }
 //		@utility brand-bg { background-color: var(--color-brand); }
 //		@variant hover (&:hover);

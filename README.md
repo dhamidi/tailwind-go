@@ -21,9 +21,9 @@ import (
 )
 
 func main() {
-    engine := tailwind.New()
-    engine.Write([]byte(`<div class="flex items-center p-4 text-blue-500">`))
-    fmt.Println(engine.CSS())
+    tw := tailwind.New()
+    tw.Write([]byte(`<div class="flex items-center p-4 text-blue-500">`))
+    fmt.Println(tw.CSS())
 }
 ```
 
@@ -32,34 +32,34 @@ func main() {
 ### Use with `html/template`
 
 ```go
-engine := tailwind.New()
+tw := tailwind.New()
 tmpl := template.Must(template.ParseFiles("page.html"))
-tmpl.Execute(engine, data)
-css := engine.CSS()
+tmpl.Execute(tw, data)
+css := tw.CSS()
 ```
 
 ### Transparent pipeline with `NewPassthrough`
 
 ```go
-engine := tailwind.NewPassthrough(responseWriter)
-tmpl.Execute(engine, data) // bytes go to responseWriter AND engine
-css := engine.CSS()
+tw := tailwind.NewPassthrough(responseWriter)
+tmpl.Execute(tw, data) // bytes go to responseWriter AND tw
+css := tw.CSS()
 // Inject css into a <style> tag or serve separately
 ```
 
 ### Stream from `io.Reader` with `io.Copy`
 
 ```go
-engine := tailwind.New()
-io.Copy(engine, someReader)
-css := engine.CSS()
+tw := tailwind.New()
+io.Copy(tw, someReader)
+css := tw.CSS()
 ```
 
 ### Add custom utilities
 
 ```go
-engine := tailwind.New()
-engine.LoadCSS([]byte(`
+tw := tailwind.New()
+tw.LoadCSS([]byte(`
 @theme {
   --color-brand: #e11d48;
 }
@@ -69,14 +69,14 @@ engine.LoadCSS([]byte(`
 `))
 ```
 
-### Reuse engine across requests
+### Reuse across requests
 
 ```go
-engine := tailwind.New() // create once at startup
+tw := tailwind.New() // create once at startup
 // per request:
-engine.Reset()
-engine.Write([]byte(pageHTML))
-css := engine.CSS()
+tw.Reset()
+tw.Write([]byte(pageHTML))
+css := tw.CSS()
 ```
 
 ## Explanation
