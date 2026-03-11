@@ -464,8 +464,14 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 
 		// Try compound variant resolution.
 		if v := lookupCompoundVariant(name, defs); v != nil {
-			value := name[len(v.Name)+1:] // e.g., "group-hover" → "hover"
-			selector := resolveCompoundTemplate(v.Template, value)
+			remainder := name[len(v.Name)+1:] // e.g., "group-hover" → "hover", "group-hover/sidebar" → "hover/sidebar"
+			value := remainder
+			groupName := ""
+			if slashIdx := strings.Index(remainder, "/"); slashIdx >= 0 {
+				value = remainder[:slashIdx]
+				groupName = remainder[slashIdx+1:]
+			}
+			selector := resolveCompoundTemplate(v.Template, value, groupName)
 			sel = strings.ReplaceAll(selector, "&", sel)
 		}
 	}
@@ -496,8 +502,9 @@ func lookupCompoundVariant(name string, defs map[string]*VariantDef) *VariantDef
 }
 
 // resolveCompoundTemplate substitutes {value} in a compound variant template
-// and processes :merge() functions.
-func resolveCompoundTemplate(template, value string) string {
+// and processes :merge() functions. If groupName is non-empty, the class inside
+// :merge() is suffixed with \/ and the group name (e.g., .group → .group\/sidebar).
+func resolveCompoundTemplate(template, value, groupName string) string {
 	// Replace {value} with the extracted value.
 	result := strings.ReplaceAll(template, "{value}", value)
 
@@ -520,6 +527,9 @@ func resolveCompoundTemplate(template, value string) string {
 		}
 		// Extract the content inside :merge(...).
 		inner := result[start : end-1]
+		if groupName != "" {
+			inner = inner + `\/` + groupName
+		}
 		result = result[:idx] + inner + result[end:]
 	}
 

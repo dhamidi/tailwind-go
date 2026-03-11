@@ -1312,6 +1312,95 @@ func TestCompoundVariantParserBlockForm(t *testing.T) {
 	}
 }
 
+// --- Named group/peer variant tests ---
+
+func TestNamedGroupHover(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; }
+@utility text-* { color: --value(--color); }
+@utility flex { display: flex; }
+@variant group-* {
+  :merge(.group):{value} & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="group-hover/sidebar:flex"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	// Should contain: .group\/sidebar:hover .group-hover\/sidebar\:flex
+	if !strings.Contains(result, `group\/sidebar:hover`) {
+		t.Errorf("missing named group selector, got: %s", result)
+	}
+	if !strings.Contains(result, "display: flex") {
+		t.Errorf("missing display: flex, got: %s", result)
+	}
+}
+
+func TestNamedPeerFocus(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; }
+@utility text-* { color: --value(--color); }
+@variant peer-* {
+  :merge(.peer):{value} ~ & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="peer-focus/email:text-white"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	if !strings.Contains(result, `peer\/email:focus`) {
+		t.Errorf("missing named peer selector, got: %s", result)
+	}
+	if !strings.Contains(result, "~") {
+		t.Errorf("missing ~ combinator, got: %s", result)
+	}
+	if !strings.Contains(result, "color: #fff") {
+		t.Errorf("missing color: #fff, got: %s", result)
+	}
+}
+
+func TestNamedGroupDoesNotConflictWithOpacityModifier(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; }
+@utility bg-* { background-color: --value(--color); }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="bg-blue-500/75"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	// Should still produce opacity modifier, not named group
+	if !strings.Contains(result, "oklch(from #3b82f6 l c h / 75%)") {
+		t.Errorf("opacity modifier broken, got: %s", result)
+	}
+}
+
+func TestNamedGroupSelectorEscaping(t *testing.T) {
+	css := []byte(`
+@utility flex { display: flex; }
+@variant group-* {
+  :merge(.group):{value} & {
+    @slot;
+  }
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="group-hover/sidebar:flex"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+	// The class name itself should be properly escaped
+	if !strings.Contains(result, `group-hover\/sidebar\:flex`) {
+		t.Errorf("missing properly escaped class selector, got: %s", result)
+	}
+}
+
 func TestScanResetClearsCandidates(t *testing.T) {
 	fs1 := fstest.MapFS{
 		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},
