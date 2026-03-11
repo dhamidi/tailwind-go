@@ -1591,6 +1591,45 @@ func TestBuiltinContainerQueryVariants(t *testing.T) {
 	}
 }
 
+// --- Built-in parameterized variant tests (using New() without LoadCSS) ---
+
+func TestNotVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-hover:opacity-100`))
+	css := e.CSS()
+	// Expect: .not-hover\:opacity-100:not(:hover) { opacity: 1; }
+	if !strings.Contains(css, ":not(:hover)") {
+		t.Errorf("expected :not(:hover) selector, got:\n%s", css)
+	}
+}
+
+func TestHasVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`has-checked:bg-gray-50`))
+	css := e.CSS()
+	if !strings.Contains(css, ":has(:checked)") {
+		t.Errorf("expected :has(:checked) selector, got:\n%s", css)
+	}
+}
+
+func TestStartingStyleVariantBuiltin(t *testing.T) {
+	e := New()
+	e.Write([]byte(`starting:opacity-0`))
+	css := e.CSS()
+	if !strings.Contains(css, "@starting-style") {
+		t.Errorf("expected @starting-style wrapper, got:\n%s", css)
+	}
+}
+
+func TestInVariantBuiltin(t *testing.T) {
+	e := New()
+	e.Write([]byte(`in-data-current:font-bold`))
+	css := e.CSS()
+	if !strings.Contains(css, "[data-current]") {
+		t.Errorf("expected [data-current] ancestor selector, got:\n%s", css)
+	}
+}
+
 func TestScanResetClearsCandidates(t *testing.T) {
 	fs1 := fstest.MapFS{
 		"a.html": &fstest.MapFile{Data: []byte(`<div class="flex">a</div>`)},

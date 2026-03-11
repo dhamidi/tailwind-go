@@ -1587,3 +1587,25 @@
 @variant contrast-more (@media (prefers-contrast: more));
 @variant contrast-less (@media (prefers-contrast: less));
 @variant forced-colors (@media (forced-colors: active));
+
+/* §8.8 Parameterized variants */
+@variant not-* {
+  &:not(:{value}) {
+    @slot;
+  }
+}
+
+@variant has-* {
+  &:has(:{value}) {
+    @slot;
+  }
+}
+
+@variant in-* {
+  [{value}] & {
+    @slot;
+  }
+}
+
+/* §8.10 Starting style variant */
+@variant starting (@starting-style);
