@@ -99,6 +99,43 @@ tw.Write([]byte(pageHTML))
 css := tw.CSS()
 ```
 
+### Serve CSS in production
+
+`NewHandlerFromFS` scans an `fs.FS` for Tailwind class candidates and returns a ready-to-use HTTP handler with content-hashed URLs, immutable cache headers, and gzip compression.
+
+```go
+h, err := tailwind.NewHandlerFromFS(templateFS)
+if err != nil {
+    log.Fatal(err)
+}
+mux.Handle(h.URL(), h)
+// In templates: <link rel="stylesheet" href="{{.TailwindURL}}">
+```
+
+Use `WithPrefix` to customize the URL path prefix (default is `/tailwind`):
+
+```go
+h, err := tailwind.NewHandlerFromFS(templateFS)
+if err != nil {
+    log.Fatal(err)
+}
+h.WithPrefix("/css")
+h.Build()
+mux.Handle(h.URL(), h)
+```
+
+### Serve preflight CSS
+
+The engine provides access to Tailwind's preflight (reset) stylesheet and a combined preflight + utilities output:
+
+```go
+tw := tailwind.New()
+tw.Scan(templateFS)
+preflight := tw.PreflightCSS()  // static reset, cache aggressively
+utilities := tw.CSS()            // regenerated per content scan
+full := tw.FullCSS()             // preflight + utilities combined
+```
+
 ## Explanation
 
 The engine works by ingesting Tailwind's own CSS v4 source as its specification. Rather than hardcoding a list of utilities, it parses `@theme`, `@utility`, `@variant`, and `@keyframes` directives from real Tailwind CSS. This means the engine's behavior is defined entirely by the CSS it loads — the same way Tailwind v4 itself works.
@@ -123,21 +160,19 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Custom properties: `w-[--sidebar-width]`
 - Arbitrary variants: `[@media(min-width:900px)]:bg-red-500`
 - `@theme`, `@utility`, `@variant`, `@keyframes` directives
+- Compound variants: `group-hover:text-white`, `peer-focus:ring-2`, `not-hover:opacity-100`, `has-checked:bg-gray-50`, `in-data-current:font-bold`
+- Named groups/peers: `group/sidebar`, `group-hover/sidebar:flex`, `peer-focus/email:text-white`
+- Dark mode class strategy: both `@media (prefers-color-scheme: dark)` and class-based (`.dark` selector)
+- Container queries: `@md:flex`, `@lg:grid`, built-in `@3xs` through `@7xl`
+- `@supports` variant: `supports-grid:flex`, `[@supports(display:grid)]:flex`
+- `@starting-style` variant: `starting:opacity-0`
+- `:merge()` function in variant selectors
+- `@apply` directive for composing utilities in custom CSS rules
 
 ## Current Limitations
 
-The following Tailwind CSS v4 features are **not yet supported**:
-
-- **Compound variants**: `group-*`, `peer-*`, `not-*`, `has-*`, `in-*` (e.g., `group-hover:text-white`, `peer-focus:ring-2`)
-- **Named groups/peers**: slash notation like `group/sidebar`, `group-hover/sidebar:flex`
-- **`@starting-style` variant**
-- **`:merge()` function** in variant selectors
-- **Dark mode class strategy**: only `@media (prefers-color-scheme: dark)` is supported; class-based dark mode (`.dark` selector) is not
-- **Container queries**: `@container`-based variants
-
 The following are **out of scope by design** (see [spec.md §1.2](spec.md)):
 
-- **Preflight / reset styles**: the engine generates utility CSS only
 - **`@import` / `@source` / `@config` directives**: build-tool concerns; the engine uses `io.Writer` for input instead
 - **CSS minification**: the engine emits readable CSS; pipe through a minifier if needed
 - **File watching / CLI**: the engine is a library, not a build tool
@@ -148,9 +183,19 @@ The following are **out of scope by design** (see [spec.md §1.2](spec.md)):
 |--------|-------------|
 | `New()` | Create engine pre-loaded with Tailwind v4 CSS |
 | `NewPassthrough(w)` | Create engine that also forwards bytes to `w` |
+| `NewHandlerFromFS(fsys)` | Scan an `fs.FS` and return a ready-to-use HTTP handler |
+| `NewHandler(engine)` | Create an HTTP handler from an existing engine |
 | `Engine.Write(p)` | Scan bytes for candidate classes (`io.Writer`) |
 | `Engine.CSS()` | Generate CSS for accumulated candidates |
 | `Engine.LoadCSS(css)` | Parse and load additional Tailwind v4 CSS |
 | `Engine.Candidates()` | Return extracted candidate class names |
 | `Engine.Flush()` | Finalize any buffered partial token |
 | `Engine.Reset()` | Clear candidates, keep definitions |
+| `Engine.Scan(fsys)` | Walk an `fs.FS` and extract class candidates |
+| `Engine.Preflight()` | Get the Tailwind preflight/reset stylesheet |
+| `Engine.PreflightCSS()` | Alias for `Preflight()` |
+| `Engine.FullCSS()` | Get preflight + utility CSS combined |
+| `Handler.Build()` | Recompute cached CSS and content hash |
+| `Handler.URL()` | Get the current content-hashed URL path |
+| `Handler.WithPrefix(p)` | Set URL path prefix (default `/tailwind`) |
+| `Handler.ServeHTTP(w, r)` | Serve CSS with caching, ETag, gzip |
