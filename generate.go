@@ -282,7 +282,7 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 
 	// No namespace — this is a type-based --value() like --value(length, percentage).
 	// Try keyword mapping.
-	if cssVal := keywordToCSS(valueStr); cssVal != "" {
+	if cssVal := keywordToCSS(valueStr, d.Property); cssVal != "" {
 		if pc.Negative {
 			cssVal = negateValue(cssVal)
 			if cssVal == "" {
@@ -635,12 +635,28 @@ func resolveArbitraryProperty(pc ParsedClass, variants map[string]*VariantDef) *
 	}
 }
 
+// isHeightProperty returns true if the CSS property is height-related.
+func isHeightProperty(prop string) bool {
+	switch prop {
+	case "height", "min-height", "max-height",
+		"inset-block", "inset-block-start", "inset-block-end",
+		"top", "bottom":
+		return true
+	}
+	return false
+}
+
 // keywordToCSS maps Tailwind value keywords to CSS values.
-func keywordToCSS(s string) string {
+// The property parameter provides context for keywords like "screen"
+// that map differently depending on the CSS property.
+func keywordToCSS(s string, property string) string {
 	switch s {
 	case "full":
 		return "100%"
 	case "screen":
+		if isHeightProperty(property) {
+			return "100vh"
+		}
 		return "100vw"
 	case "svw":
 		return "100svw"

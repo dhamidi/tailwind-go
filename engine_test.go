@@ -1666,3 +1666,39 @@ func TestScanResetClearsCandidates(t *testing.T) {
 		t.Error("missing 'block' after second scan")
 	}
 }
+
+func TestScreenKeywordWidth(t *testing.T) {
+	e := New()
+	e.Write([]byte(`w-screen`))
+	css := e.CSS()
+	if !strings.Contains(css, "width: 100vw") {
+		t.Errorf("w-screen should produce width: 100vw, got:\n%s", css)
+	}
+}
+
+func TestScreenKeywordHeight(t *testing.T) {
+	e := New()
+	e.Write([]byte(`h-screen`))
+	css := e.CSS()
+	if !strings.Contains(css, "height: 100vh") {
+		t.Errorf("h-screen should produce height: 100vh, got:\n%s", css)
+	}
+}
+
+func TestScreenKeywordMinHeight(t *testing.T) {
+	e := New()
+	e.Write([]byte(`min-h-screen`))
+	css := e.CSS()
+	if !strings.Contains(css, "min-height: 100vh") {
+		t.Errorf("min-h-screen should produce min-height: 100vh, got:\n%s", css)
+	}
+}
+
+func TestScreenKeywordMaxHeight(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-h-screen`))
+	css := e.CSS()
+	if !strings.Contains(css, "max-height: 100vh") {
+		t.Errorf("max-h-screen should produce max-height: 100vh, got:\n%s", css)
+	}
+}
