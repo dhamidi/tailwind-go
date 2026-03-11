@@ -22,7 +22,7 @@ The engine implements `io.Writer`. Any byte stream — template output, HTML fil
 - **Build tool / file watcher.** The engine is a library. CLI tooling, file watching, and build integration are out of scope for the core package (though a `cmd/` subpackage may be provided).
 - **Browser runtime.** This is a build-time / server-side tool. It does not run in WASM or target the browser.
 - **CSS minification / optimization.** The engine generates readable CSS. Minification is a separate concern.
-- **Preflight / reset styles.** The engine generates utility CSS. Base/reset styles from the Tailwind source are passed through verbatim if present, but the engine does not generate them.
+- **Preflight / reset styles generation.** The engine does not generate preflight styles — they come from Tailwind's embedded `preflight.css`. The preflight is available via `PreflightCSS()` with `--theme()` references resolved, but is served independently from the utility CSS.
 
 
 ## 2. Public API
@@ -131,6 +131,24 @@ func (e *Engine) Reset()
 ```
 
 Clears all accumulated candidates and resets the scanner state. Theme, utility, and variant definitions are preserved. Use this to re-scan a different set of source files without reloading the CSS.
+
+#### 2.1.8 Preflight CSS
+
+```go
+func (e *Engine) PreflightCSS() string
+```
+
+Returns the Tailwind preflight (CSS reset) stylesheet with `--theme()` references resolved against the engine's current theme. The preflight is independent of the utility CSS returned by `CSS()` — it must be served separately.
+
+The `--theme()` function syntax is `--theme(--token-name, fallback-value)`. Resolution looks up the token name in the engine's theme tokens; if found, the token value is substituted; if not, the fallback value is used. Resolution is applied recursively so that token values containing `--theme()` are themselves resolved.
+
+Typical usage:
+
+```go
+e := tailwind.New()
+preflightCSS := e.PreflightCSS()  // serve once, cache aggressively
+utilityCSS := e.CSS()              // regenerated per content scan
+```
 
 
 ## 3. Bundled CSS Source

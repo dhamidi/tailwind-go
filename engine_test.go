@@ -890,3 +890,87 @@ func TestApplyDirectiveUnknownClass(t *testing.T) {
 	// Should not panic, just produce no output for unknown classes.
 	_ = e.CSS()
 }
+
+// --- Preflight CSS tests ---
+
+func TestPreflightCSS(t *testing.T) {
+	e := New()
+	css := e.PreflightCSS()
+	if css == "" {
+		t.Fatal("PreflightCSS returned empty string")
+	}
+	if strings.Contains(css, "--theme(") {
+		t.Error("PreflightCSS contains unresolved --theme() references")
+	}
+	// Verify font-family fallback is present (sans)
+	if !strings.Contains(css, "ui-sans-serif") {
+		t.Error("expected default sans font family in preflight")
+	}
+	// Verify mono fallback is present
+	if !strings.Contains(css, "ui-monospace") {
+		t.Error("expected default mono font family in preflight")
+	}
+}
+
+func TestPreflightCSSCustomTheme(t *testing.T) {
+	e := New()
+	e.LoadCSS([]byte(`@theme { --default-font-family: "Inter", sans-serif; }`))
+	css := e.PreflightCSS()
+	if !strings.Contains(css, `"Inter"`) {
+		t.Error("expected custom font family in preflight")
+	}
+	if strings.Contains(css, "--theme(") {
+		t.Error("PreflightCSS contains unresolved --theme() references after custom theme")
+	}
+}
+
+func TestPreflightCSSIndependentOfUtilityCSS(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class="flex p-4">`))
+	utilCSS := e.CSS()
+	preflightCSS := e.PreflightCSS()
+
+	// Utility CSS should not contain preflight reset content
+	if strings.Contains(utilCSS, "box-sizing: border-box") {
+		t.Error("utility CSS should not contain preflight reset styles")
+	}
+	// Preflight should not contain utility rules
+	if strings.Contains(preflightCSS, "display: flex") {
+		t.Error("preflight CSS should not contain utility styles")
+	}
+}
+
+func TestResolveThemeRefs(t *testing.T) {
+	tokens := map[string]string{
+		"--my-font": "Arial, sans-serif",
+	}
+	input := "font-family: --theme(--my-font, Helvetica);"
+	got := resolveThemeRefs(input, tokens)
+	want := "font-family: Arial, sans-serif;"
+	if got != want {
+		t.Errorf("resolveThemeRefs() = %q, want %q", got, want)
+	}
+}
+
+func TestResolveThemeRefsFallback(t *testing.T) {
+	tokens := map[string]string{}
+	input := "font-family: --theme(--missing, Helvetica, Arial);"
+	got := resolveThemeRefs(input, tokens)
+	want := "font-family: Helvetica, Arial;"
+	if got != want {
+		t.Errorf("resolveThemeRefs() = %q, want %q", got, want)
+	}
+}
+
+func TestResolveThemeRefsRecursive(t *testing.T) {
+	tokens := map[string]string{
+		"--base":    "--theme(--actual, fallback)",
+		"--actual":  "resolved-value",
+	}
+	input := "prop: --theme(--base, default);"
+	got := resolveThemeRefs(input, tokens)
+	want := "prop: resolved-value;"
+	if got != want {
+		t.Errorf("resolveThemeRefs() = %q, want %q", got, want)
+	}
+}

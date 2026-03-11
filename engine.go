@@ -4,6 +4,7 @@ package tailwind
 
 import (
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/dhamidi/tailwind-go/internal/cssdata"
@@ -227,6 +228,63 @@ func (e *Engine) processApplyRules(rules []*ApplyRule) []generatedRule {
 		}
 	}
 	return result
+}
+
+// PreflightCSS returns the Tailwind preflight (CSS reset) stylesheet
+// with --theme() references resolved against the engine's current theme
+// configuration. The preflight is independent of the utility CSS
+// returned by CSS() — it must be served separately.
+func (e *Engine) PreflightCSS() string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return resolveThemeRefs(string(cssdata.Preflight), e.theme.Tokens)
+}
+
+// resolveThemeRefs replaces all --theme(--token, fallback) references in
+// css with the corresponding token value from tokens, or the fallback if
+// the token is not found. Resolution is applied recursively so that
+// token values containing --theme() are themselves resolved.
+func resolveThemeRefs(css string, tokens map[string]string) string {
+	const marker = "--theme("
+	// Limit iterations to prevent infinite loops from circular refs.
+	for range 10 {
+		idx := strings.Index(css, marker)
+		if idx < 0 {
+			break
+		}
+		// Find the matching closing paren, accounting for nesting.
+		start := idx + len(marker)
+		depth := 1
+		end := start
+		for end < len(css) && depth > 0 {
+			switch css[end] {
+			case '(':
+				depth++
+			case ')':
+				depth--
+			}
+			if depth > 0 {
+				end++
+			}
+		}
+		if depth != 0 {
+			// Malformed — no matching paren; stop processing.
+			break
+		}
+		inner := strings.TrimSpace(css[start:end])
+		// Split into token name and fallback on the first comma.
+		tokenName, fallback := inner, ""
+		if comma := strings.IndexByte(inner, ','); comma >= 0 {
+			tokenName = strings.TrimSpace(inner[:comma])
+			fallback = strings.TrimSpace(inner[comma+1:])
+		}
+		replacement := fallback
+		if v, ok := tokens[tokenName]; ok {
+			replacement = v
+		}
+		css = css[:idx] + replacement + css[end+1:]
+	}
+	return css
 }
 
 // Reset clears all accumulated candidates, allowing the engine to be

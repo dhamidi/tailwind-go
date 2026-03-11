@@ -20,6 +20,16 @@
 //	// Generate the CSS.
 //	css := tw.CSS()
 //
+// # Preflight CSS
+//
+// The engine provides the Tailwind preflight (CSS reset) stylesheet via
+// [Engine.PreflightCSS]. The preflight is independent of the utility CSS
+// and should be served separately:
+//
+//	tw := tailwind.New()
+//	preflight := tw.PreflightCSS()  // serve once, cache aggressively
+//	utilities := tw.CSS()            // regenerated per content scan
+//
 // # Pipeline Integration
 //
 // [NewPassthrough] creates an engine that also forwards all bytes to an
