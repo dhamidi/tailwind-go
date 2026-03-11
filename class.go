@@ -23,6 +23,7 @@ type ParsedClass struct {
 	Value     string   // Value portion (e.g., "4", "blue-500", "1/2").
 	Arbitrary string   // Content of [...] if present, with _ → space.
 	ArbitraryProperty bool // True for [mask-type:alpha] style classes.
+	TypeHint  string   // e.g., "length", "color" from text-[length:1.5em].
 	Modifier  string   // Opacity modifier: "75", "[.5]", etc.
 }
 
@@ -73,7 +74,7 @@ func parseClass(raw string) ParsedClass {
 		if strings.HasSuffix(bracket, "]") {
 			pc.Utility = s[:idx]
 			inner := bracket[1 : len(bracket)-1]
-			pc.Arbitrary = strings.ReplaceAll(inner, "_", " ")
+			pc.Arbitrary, pc.TypeHint = processArbitraryValue(inner)
 			return pc
 		}
 	}
@@ -276,4 +277,34 @@ func parseSimpleInt(s string) int {
 		n = n*10 + int(b-'0')
 	}
 	return n
+}
+
+// processArbitraryValue normalizes arbitrary value content:
+// - Replaces _ with space
+// - Extracts type hints (e.g., "length:1.5em" → hint="length", val="1.5em")
+// - Wraps bare --custom-properties in var()
+func processArbitraryValue(inner string) (value, typeHint string) {
+	inner = strings.ReplaceAll(inner, "_", " ")
+
+	// Known CSS type hint keywords.
+	knownTypes := map[string]bool{
+		"length": true, "percentage": true, "color": true, "number": true,
+		"integer": true, "url": true, "image": true, "shadow": true,
+		"position": true, "angle": true, "time": true, "frequency": true,
+		"ratio": true, "any": true,
+	}
+	if idx := strings.Index(inner, ":"); idx > 0 {
+		prefix := inner[:idx]
+		if knownTypes[prefix] {
+			typeHint = prefix
+			inner = inner[idx+1:]
+		}
+	}
+
+	// Wrap bare --custom-property references in var().
+	if strings.HasPrefix(inner, "--") {
+		inner = "var(" + inner + ")"
+	}
+
+	return inner, typeHint
 }

@@ -365,10 +365,15 @@ func escapeSelector(s string) string {
 func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 	var media []string
 	for _, name := range names {
-		// Handle arbitrary variants: [&:nth-child(3)]
+		// Handle arbitrary variants: [&:nth-child(3)] or [@media(min-width:900px)]
 		if strings.HasPrefix(name, "[") && strings.HasSuffix(name, "]") {
-			// These modify the selector rather than adding media queries.
-			// For now, we don't emit media for them.
+			inner := name[1 : len(name)-1]
+			inner = strings.ReplaceAll(inner, "_", " ")
+			if strings.HasPrefix(inner, "@media") ||
+				strings.HasPrefix(inner, "@supports") ||
+				strings.HasPrefix(inner, "@container") {
+				media = append(media, inner)
+			}
 			continue
 		}
 

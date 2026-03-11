@@ -757,3 +757,41 @@ func TestReset(t *testing.T) {
 		t.Error("second pass missing block")
 	}
 }
+
+func TestParseClassTypeHintedArbitrary(t *testing.T) {
+	pc := parseClass("text-[length:1.5em]")
+	if pc.Arbitrary != "1.5em" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "1.5em")
+	}
+	if pc.TypeHint != "length" {
+		t.Errorf("typeHint = %q, want %q", pc.TypeHint, "length")
+	}
+}
+
+func TestParseClassCustomPropertyArbitrary(t *testing.T) {
+	pc := parseClass("w-[--sidebar-width]")
+	if pc.Arbitrary != "var(--sidebar-width)" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "var(--sidebar-width)")
+	}
+}
+
+func TestParseClassCustomPropertyWithTypeHint(t *testing.T) {
+	pc := parseClass("text-[length:--my-size]")
+	if pc.Arbitrary != "var(--my-size)" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "var(--my-size)")
+	}
+	if pc.TypeHint != "length" {
+		t.Errorf("typeHint = %q, want %q", pc.TypeHint, "length")
+	}
+}
+
+func TestArbitraryAtMediaVariant(t *testing.T) {
+	css := []byte(`@utility bg-* { background-color: --value(--color); }`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="[@media(min-width:900px)]:bg-[red]"`))
+	result := e.CSS()
+	if !strings.Contains(result, "@media") {
+		t.Errorf("expected @media wrapper in output, got: %s", result)
+	}
+}
