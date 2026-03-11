@@ -434,11 +434,15 @@ func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 		}
 
 		v := lookupVariant(name, defs)
-		if v != nil && v.Media != "" {
-			if v.AtRule != "" {
-				media = append(media, "@"+v.AtRule+" "+v.Media)
-			} else {
-				media = append(media, "@media "+v.Media)
+		if v != nil {
+			if v.AtRule != "" && v.Media == "" {
+				media = append(media, "@"+v.AtRule)
+			} else if v.Media != "" {
+				if v.AtRule != "" {
+					media = append(media, "@"+v.AtRule+" "+v.Media)
+				} else {
+					media = append(media, "@media "+v.Media)
+				}
 			}
 		}
 	}

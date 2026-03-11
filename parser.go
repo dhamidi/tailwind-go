@@ -204,6 +204,8 @@ func (p *parser) parseVariant(ss *Stylesheet) {
 			} else if strings.HasPrefix(content, "@container") {
 				v.AtRule = "container"
 				v.Media = strings.TrimPrefix(content, "@container ")
+			} else if content == "@starting-style" {
+				v.AtRule = "starting-style"
 			} else {
 				v.Selector = content
 			}

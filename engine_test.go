@@ -1312,6 +1312,50 @@ func TestCompoundVariantParserBlockForm(t *testing.T) {
 	}
 }
 
+// --- @starting-style variant tests ---
+
+func TestStartingStyleVariant(t *testing.T) {
+	css := []byte(`
+@utility opacity-* {
+	opacity: --value(integer);
+}
+@variant starting (@starting-style);
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="starting:opacity-0"`))
+	result := e.CSS()
+	if !strings.Contains(result, "@starting-style") {
+		t.Errorf("missing @starting-style wrapper, got: %s", result)
+	}
+	if !strings.Contains(result, "opacity: 0") {
+		t.Errorf("missing opacity declaration, got: %s", result)
+	}
+}
+
+func TestStartingStyleVariantStacking(t *testing.T) {
+	css := []byte(`
+@utility opacity-* {
+	opacity: --value(integer);
+}
+@variant starting (@starting-style);
+@variant hover (&:hover);
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="hover:starting:opacity-0"`))
+	result := e.CSS()
+	if !strings.Contains(result, "@starting-style") {
+		t.Errorf("missing @starting-style wrapper, got: %s", result)
+	}
+	if !strings.Contains(result, ":hover") {
+		t.Errorf("missing :hover selector, got: %s", result)
+	}
+	if !strings.Contains(result, "opacity: 0") {
+		t.Errorf("missing opacity declaration, got: %s", result)
+	}
+}
+
 // --- Named group/peer variant tests ---
 
 func TestNamedGroupHover(t *testing.T) {
