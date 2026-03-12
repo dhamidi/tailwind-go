@@ -129,4 +129,5 @@ func registerGoUtilities(idx *utilityIndex) {
 	}
 
 	registerStaticUtilities(idx, register)
+	registerColorUtilities(idx, register)
 }

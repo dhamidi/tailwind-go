@@ -285,19 +285,6 @@
   font-weight: --value(number);
 }
 
-/* ===== Text Color / Size ===== */
-@utility text-* {
-  font-size: --value(--font-size, length, percentage);
-  color: --value(--color);
-  color: --value(color);
-}
-
-/* ===== Text Decoration Color ===== */
-@utility decoration-* {
-  text-decoration-color: --value(--color);
-  text-decoration-color: --value(color);
-}
-
 /* ===== Text Indent ===== */
 @utility indent-* {
   text-indent: --value(--spacing);
@@ -327,31 +314,6 @@
   letter-spacing: --value(length);
 }
 
-/* ===== Background Color ===== */
-@utility bg-* {
-  background-color: --value(--color);
-  background-color: --value(color);
-}
-
-/* ===== Gradient Color Stops ===== */
-@utility from-* {
-  --tw-gradient-from: --value(--color);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
-}
-@utility via-* {
-  --tw-gradient-via: --value(--color);
-  --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent);
-}
-@utility to-* {
-  --tw-gradient-to: --value(--color);
-}
-
-/* ===== Border Color ===== */
-@utility border-* {
-  border-color: --value(--color);
-  border-color: --value(color);
-}
-
 /* ===== Border Spacing ===== */
 @utility border-spacing-* {
   border-spacing: --value(--spacing);
@@ -372,12 +334,6 @@
   border-radius: --value(length, percentage);
 }
 
-/* ===== Divide ===== */
-@utility divide-* > :not(:last-child) {
-  border-color: --value(--color);
-  border-color: --value(color);
-}
-
 /* ===== Opacity ===== */
 @utility opacity-* {
   opacity: --value(--opacity);
@@ -385,38 +341,6 @@
   opacity: --value(number);
 }
 
-/* ===== Shadow ===== */
-@utility shadow-* {
-  box-shadow: --value(--shadow);
-}
-
-/* ===== Ring ===== */
-@utility ring-* {
-  --tw-ring-color: --value(--color);
-}
-
-/* ===== Ring Offset ===== */
-@utility ring-offset-* {
-  --tw-ring-offset-color: --value(--color);
-}
-
-/* ===== Outline ===== */
-@utility outline-* {
-  outline-color: --value(--color);
-  outline-color: --value(color);
-}
-
-/* ===== Caret Color ===== */
-@utility caret-* {
-  caret-color: --value(--color);
-  caret-color: --value(color);
-}
-
-/* ===== Accent Color ===== */
-@utility accent-* {
-  accent-color: --value(--color);
-  accent-color: --value(color);
-}
 
 /* ===== Scroll Margin ===== */
 @utility scroll-m-* {
@@ -457,18 +381,6 @@
 @utility scroll-pr-* { scroll-padding-right: --value(--spacing); }
 @utility scroll-pb-* { scroll-padding-bottom: --value(--spacing); }
 @utility scroll-pl-* { scroll-padding-left: --value(--spacing); }
-
-/* ===== Fill ===== */
-@utility fill-* {
-  fill: --value(--color);
-  fill: --value(color);
-}
-
-/* ===== Stroke ===== */
-@utility stroke-* {
-  stroke: --value(--color);
-  stroke: --value(color);
-}
 
 /* ===== Filter ===== */
 @utility blur-* {
