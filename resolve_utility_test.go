@@ -123,6 +123,117 @@ func TestSpaceXWithEmbeddedCSS(t *testing.T) {
 	}
 }
 
+func TestDivideXChildSelector(t *testing.T) {
+	css := []byte(`
+@utility divide-x > :not(:last-child) {
+  --tw-divide-x-reverse: 0;
+  border-inline-start-width: calc(1px * calc(1 - var(--tw-divide-x-reverse)));
+  border-inline-end-width: calc(1px * var(--tw-divide-x-reverse));
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="divide-x"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("divide-x should use child selector > :not(:last-child): %s", result)
+	}
+	if !strings.Contains(result, "border-inline-start-width") {
+		t.Errorf("divide-x should use border-inline-start-width: %s", result)
+	}
+	if !strings.Contains(result, "border-inline-end-width") {
+		t.Errorf("divide-x should use border-inline-end-width: %s", result)
+	}
+	if strings.Contains(result, "border-left-width") {
+		t.Errorf("divide-x should NOT use border-left-width: %s", result)
+	}
+	if !strings.Contains(result, "--tw-divide-x-reverse: 0") {
+		t.Errorf("divide-x should include --tw-divide-x-reverse: 0: %s", result)
+	}
+}
+
+func TestDivideYChildSelector(t *testing.T) {
+	css := []byte(`
+@utility divide-y > :not(:last-child) {
+  --tw-divide-y-reverse: 0;
+  border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));
+  border-bottom-width: calc(1px * var(--tw-divide-y-reverse));
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="divide-y"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("divide-y should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "border-top-width") {
+		t.Errorf("divide-y should use border-top-width: %s", result)
+	}
+	if !strings.Contains(result, "border-bottom-width") {
+		t.Errorf("divide-y should use border-bottom-width: %s", result)
+	}
+	if !strings.Contains(result, "--tw-divide-y-reverse: 0") {
+		t.Errorf("divide-y should include --tw-divide-y-reverse: 0: %s", result)
+	}
+}
+
+func TestDivideXReverseChildSelector(t *testing.T) {
+	css := []byte(`
+@utility divide-x-reverse > :not(:last-child) { --tw-divide-x-reverse: 1; }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="divide-x-reverse"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("divide-x-reverse should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "--tw-divide-x-reverse: 1") {
+		t.Errorf("divide-x-reverse should set --tw-divide-x-reverse: 1: %s", result)
+	}
+}
+
+func TestDivideXWithEmbeddedCSS(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="divide-x"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("divide-x should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "border-inline-start-width") {
+		t.Errorf("divide-x should use border-inline-start-width: %s", result)
+	}
+	if strings.Contains(result, "border-left-width") {
+		t.Errorf("divide-x should NOT use border-left-width: %s", result)
+	}
+}
+
+func TestDivideYWithEmbeddedCSS(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="divide-y-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("divide-y-4 should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "border-top-width") {
+		t.Errorf("divide-y-4 should use border-top-width: %s", result)
+	}
+	if !strings.Contains(result, "border-bottom-width") {
+		t.Errorf("divide-y-4 should use border-bottom-width: %s", result)
+	}
+}
+
 func TestResolveUtilityBorderVariants(t *testing.T) {
 	css := []byte(`
 @theme { --spacing: 0.25rem; }
