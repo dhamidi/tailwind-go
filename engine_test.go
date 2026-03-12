@@ -1853,3 +1853,37 @@ func TestArbitraryValueWithoutTypeHintStillWorks(t *testing.T) {
 		t.Errorf("text-[#ff0000] without type hint should still work, got:\n%s", css)
 	}
 }
+
+func TestMarkerVariantMultiSelector(t *testing.T) {
+	e := New()
+	e.Write([]byte(`marker:text-red-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+
+	// Should target both descendants and self with ::marker
+	if !strings.Contains(css, "*::marker") {
+		t.Errorf("marker variant should target descendants with *::marker, got:\n%s", css)
+	}
+	if !strings.Contains(css, `marker\:text-red-500::marker`) {
+		t.Errorf("marker variant should target self with ::marker, got:\n%s", css)
+	}
+	// Should include webkit prefix
+	if !strings.Contains(css, "::-webkit-details-marker") {
+		t.Errorf("marker variant should include -webkit-details-marker, got:\n%s", css)
+	}
+}
+
+func TestSelectionVariantMultiSelector(t *testing.T) {
+	e := New()
+	e.Write([]byte(`selection:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+
+	// Should target both descendants and self with ::selection
+	if !strings.Contains(css, "*::selection") {
+		t.Errorf("selection variant should target descendants with *::selection, got:\n%s", css)
+	}
+	if !strings.Contains(css, `selection\:bg-blue-500::selection`) {
+		t.Errorf("selection variant should target self with ::selection, got:\n%s", css)
+	}
+}

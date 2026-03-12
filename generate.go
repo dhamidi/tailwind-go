@@ -569,7 +569,7 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 		}
 
 		if v, ok := defs[name]; ok && v.Selector != "" {
-			sel = strings.ReplaceAll(v.Selector, "&", sel)
+			sel = resolveMultiSelector(v.Selector, sel)
 			continue
 		}
 
@@ -587,6 +587,17 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 		}
 	}
 	return sel
+}
+
+// resolveMultiSelector handles comma-separated selector templates.
+// For example, "& *::marker, &::marker" with base ".foo" produces
+// ".foo *::marker, .foo::marker".
+func resolveMultiSelector(template, base string) string {
+	parts := strings.Split(template, ",")
+	for i, p := range parts {
+		parts[i] = strings.ReplaceAll(strings.TrimSpace(p), "&", base)
+	}
+	return strings.Join(parts, ",\n")
 }
 
 // lookupVariant finds a variant by exact name or compound match.

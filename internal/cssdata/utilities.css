@@ -1605,8 +1605,8 @@
 @variant after (&::after);
 @variant placeholder (&::placeholder);
 @variant file (&::file-selector-button);
-@variant marker (&::marker);
-@variant selection (&::selection);
+@variant marker (& *::marker, & *::-webkit-details-marker, &::marker, &::-webkit-details-marker);
+@variant selection (& *::selection, &::selection);
 @variant first-line (&::first-line);
 @variant first-letter (&::first-letter);
 @variant backdrop (&::backdrop);
