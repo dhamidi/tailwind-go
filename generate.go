@@ -45,7 +45,18 @@ func generate(
 	}
 
 	// Sort rules by definition order for stable, correct cascade.
+	// Per spec §10.1:
+	// 1. Utility definition's Order field (source order from the CSS)
+	// 2. Within same utility, variant-wrapped rules come after unwrapped ones
+	// 3. Responsive variants are ordered by breakpoint size (ascending)
+	// All variant-wrapped rules come after all unwrapped rules to ensure
+	// responsive overrides always win in the cascade.
 	sort.SliceStable(rules, func(i, j int) bool {
+		iHasMedia := len(rules[i].mediaQueries) > 0
+		jHasMedia := len(rules[j].mediaQueries) > 0
+		if iHasMedia != jHasMedia {
+			return !iHasMedia // unwrapped first
+		}
 		return rules[i].order < rules[j].order
 	})
 
