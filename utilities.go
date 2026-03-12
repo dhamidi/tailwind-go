@@ -108,7 +108,7 @@ func resolveEntryDeclarations(entry utilityEntry, valueStr string, pc ParsedClas
 	return nil
 }
 
-// registerGoUtilities registers proof-of-concept Go-based static utilities.
+// registerGoUtilities registers all Go-based utilities.
 // These replace the equivalent CSS-parsed definitions and produce identical output.
 func registerGoUtilities(idx *utilityIndex) {
 	register := func(reg *UtilityRegistration) {
@@ -128,7 +128,5 @@ func registerGoUtilities(idx *utilityIndex) {
 		idx.add(reg)
 	}
 
-	register(staticUtility("flex", []Declaration{{Property: "display", Value: "flex"}}))
-	register(staticUtility("block", []Declaration{{Property: "display", Value: "block"}}))
-	register(staticUtility("hidden", []Declaration{{Property: "display", Value: "none"}}))
+	registerStaticUtilities(idx, register)
 }
