@@ -359,6 +359,17 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 
 	// Try type-based resolution.
 	valueTypes := extractValueTypes(d.Value)
+	// If --value() has no args at all, accept any value (e.g., col-span-*)
+	if len(valueTypes) == 0 && strings.Contains(d.Value, "--value()") {
+		if isNumeric(valueStr) {
+			v := valueStr
+			if pc.Negative {
+				v = negateValue(v)
+			}
+			return v
+		}
+		return valueStr
+	}
 	return resolveRawValue(valueStr, valueTypes, pc, d)
 }
 
@@ -399,12 +410,11 @@ func resolveRawValue(valueStr string, types []string, pc ParsedClass, d Declarat
 		case "integer", "number":
 			if isNumeric(valueStr) {
 				v := valueStr
-				if pc.Negative {
-					v = "-" + v
-				}
-				// Apply bare value unit suffix based on property/value context.
-				// This matches upstream Tailwind's handleBareValue callbacks.
+				// Apply bare value unit suffix first, then negate.
 				v = applyBareValueUnit(v, d)
+				if pc.Negative {
+					v = negateValue(v)
+				}
 				return v
 			}
 		case "percentage":
@@ -490,28 +500,37 @@ func extractNamespace(value string) string {
 	return ""
 }
 
-// substituteValue replaces --value(...) in a declaration with the resolved value.
+// substituteValue replaces all --value(...) occurrences in a declaration with the resolved value.
 func substituteValue(template, resolved string) string {
-	idx := strings.Index(template, "--value(")
-	if idx < 0 {
-		// No placeholder — return as-is (shouldn't happen for dynamic utils).
-		return template
-	}
-	// Find the matching closing paren.
-	depth := 0
-	end := idx + len("--value(")
-	for end < len(template) {
-		if template[end] == '(' {
-			depth++
-		} else if template[end] == ')' {
-			if depth == 0 {
-				return template[:idx] + resolved + template[end+1:]
-			}
-			depth--
+	result := template
+	for {
+		idx := strings.Index(result, "--value(")
+		if idx < 0 {
+			return result
 		}
-		end++
+		// Find the matching closing paren.
+		depth := 0
+		end := idx + len("--value(")
+		found := false
+		for end < len(result) {
+			if result[end] == '(' {
+				depth++
+			} else if result[end] == ')' {
+				if depth == 0 {
+					result = result[:idx] + resolved + result[end+1:]
+					found = true
+					break
+				}
+				depth--
+			}
+			end++
+		}
+		if !found {
+			result = result[:idx] + resolved
+			break
+		}
 	}
-	return template[:idx] + resolved
+	return result
 }
 
 // buildSelector constructs the CSS selector for a class.
@@ -880,18 +899,19 @@ func negateValue(v string) string {
 	}
 	if strings.HasPrefix(v, "calc(") && strings.HasSuffix(v, ")") {
 		inner := v[5 : len(v)-1]
-		// For "base * N" patterns (e.g. spacing calc), negate the multiplier directly.
+		// For "var(--X) * N" patterns (e.g. spacing calc), negate the multiplier directly.
 		if idx := strings.LastIndex(inner, " * "); idx >= 0 {
+			base := inner[:idx]
 			multiplier := inner[idx+3:]
-			if len(multiplier) > 0 && (multiplier[0] >= '0' && multiplier[0] <= '9' || multiplier[0] == '.') {
-				return "calc(" + inner[:idx+3] + "-" + multiplier + ")"
+			if strings.HasPrefix(base, "var(") && len(multiplier) > 0 && (multiplier[0] >= '0' && multiplier[0] <= '9' || multiplier[0] == '.') {
+				return "calc(" + base + " * -" + multiplier + ")"
 			}
 		}
-		return "calc(-1 * " + inner + ")"
+		return "calc(" + v + " * -1)"
 	}
 	// Only negate values that start with a digit or a dimension-like token.
 	if len(v) > 0 && (v[0] >= '0' && v[0] <= '9' || v[0] == '.') {
-		return "-" + v
+		return "calc(" + v + " * -1)"
 	}
 	// Cannot negate keyword values like "auto", "none", etc.
 	return ""
@@ -906,21 +926,53 @@ func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
 	if strings.HasPrefix(modifier, "[") && strings.HasSuffix(modifier, "]") {
 		opacityStr = modifier[1 : len(modifier)-1]
 		opacityStr = strings.ReplaceAll(opacityStr, "_", " ")
+		// Convert bare decimal to percentage (e.g. ".5" → "50%")
+		opacityStr = normalizeOpacity(opacityStr)
 	} else {
 		opacityStr = resolveModifierOpacity(modifier, theme)
 	}
 	return "color-mix(in srgb, " + cssValue + " " + opacityStr + ", transparent)"
 }
 
-// resolveModifierOpacity resolves an opacity modifier value.
-// It checks the theme for --opacity-{modifier} first, then falls back
-// to treating numeric modifiers as percentages.
-func resolveModifierOpacity(modifier string, theme *ThemeConfig) string {
-	if v, ok := theme.Resolve("opacity", modifier); ok {
-		return v
+// normalizeOpacity converts bare decimal opacity values to percentages.
+// e.g., ".5" → "50%", "0.75" → "75%"
+func normalizeOpacity(s string) string {
+	if len(s) == 0 {
+		return s
 	}
+	// Check if it's a bare decimal (starts with digit or dot, no unit)
+	if (s[0] >= '0' && s[0] <= '9') || s[0] == '.' {
+		// Check that it's purely numeric (no units like "px" etc.)
+		allNumeric := true
+		for _, c := range s {
+			if c != '.' && (c < '0' || c > '9') {
+				allNumeric = false
+				break
+			}
+		}
+		if allNumeric && !strings.HasSuffix(s, "%") {
+			var f float64
+			fmt.Sscanf(s, "%f", &f)
+			if f >= 0 && f <= 1 {
+				pct := f * 100
+				// Format without unnecessary trailing zeros
+				formatted := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.6f", pct), "0"), ".")
+				return formatted + "%"
+			}
+		}
+	}
+	return s
+}
+
+// resolveModifierOpacity resolves an opacity modifier value.
+// Numeric modifiers are always treated as percentages for color-mix().
+// Non-numeric modifiers check the theme for --opacity-{modifier}.
+func resolveModifierOpacity(modifier string, theme *ThemeConfig) string {
 	if isNumeric(modifier) {
 		return modifier + "%"
+	}
+	if v, ok := theme.Resolve("opacity", modifier); ok {
+		return v
 	}
 	return modifier
 }

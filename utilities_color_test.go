@@ -50,17 +50,17 @@ func assertNoCSS(t *testing.T, e *Engine, class string) {
 
 func TestColorUtility_BgColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-red-500", "background-color", "#ef4444")
+	assertCSS(t, e, "bg-red-500", "background-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_BgColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-red-500/50", "background-color", "color-mix(in srgb, #ef4444 0.5, transparent)")
+	assertCSS(t, e, "bg-red-500/50", "background-color", "color-mix(in srgb, #ef4444 50%, transparent)")
 }
 
 func TestColorUtility_BgColorArbitraryOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-red-500/[.3]", "background-color", "color-mix(in srgb, #ef4444 .3, transparent)")
+	assertCSS(t, e, "bg-red-500/[.3]", "background-color", "color-mix(in srgb, #ef4444 30%, transparent)")
 }
 
 func TestColorUtility_BgTransparent(t *testing.T) {
@@ -100,19 +100,19 @@ func TestColorUtility_BgArbitraryGradient(t *testing.T) {
 
 func TestColorUtility_TextColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "text-red-500", "color", "#ef4444")
+	assertCSS(t, e, "text-red-500", "color", "var(--color-red-500)")
 }
 
 func TestColorUtility_TextFontSize(t *testing.T) {
 	// text-lg is a static utility (registered in utilities_static.go)
 	// that includes both font-size and line-height.
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "text-lg", "font-size", "var(--text-lg, 1.125rem)")
+	assertCSS(t, e, "text-lg", "font-size", "var(--text-lg)")
 }
 
 func TestColorUtility_TextColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "text-red-500/50", "color", "color-mix(in srgb, #ef4444 0.5, transparent)")
+	assertCSS(t, e, "text-red-500/50", "color", "color-mix(in srgb, #ef4444 50%, transparent)")
 }
 
 func TestColorUtility_TextCurrent(t *testing.T) {
@@ -137,42 +137,42 @@ func TestColorUtility_TextArbitraryColor(t *testing.T) {
 
 func TestColorUtility_BorderColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-green-300", "border-color", "#86efac")
+	assertCSS(t, e, "border-green-300", "border-color", "var(--color-green-300)")
 }
 
 func TestColorUtility_BorderColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-red-500/50", "border-color", "color-mix(in srgb, #ef4444 0.5, transparent)")
+	assertCSS(t, e, "border-red-500/50", "border-color", "color-mix(in srgb, #ef4444 50%, transparent)")
 }
 
 func TestColorUtility_BorderTopColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-t-red-500", "border-top-color", "#ef4444")
+	assertCSS(t, e, "border-t-red-500", "border-top-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_BorderRightColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-r-red-500", "border-right-color", "#ef4444")
+	assertCSS(t, e, "border-r-red-500", "border-right-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_BorderBottomColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-b-red-500", "border-bottom-color", "#ef4444")
+	assertCSS(t, e, "border-b-red-500", "border-bottom-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_BorderLeftColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-l-red-500", "border-left-color", "#ef4444")
+	assertCSS(t, e, "border-l-red-500", "border-left-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_BorderXColor(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("border-x-red-500"))
 	result := e.CSS()
-	if !strings.Contains(result, "border-left-color: #ef4444") {
+	if !strings.Contains(result, "border-left-color: var(--color-red-500)") {
 		t.Errorf("border-x-red-500 missing left color:\n%s", result)
 	}
-	if !strings.Contains(result, "border-right-color: #ef4444") {
+	if !strings.Contains(result, "border-right-color: var(--color-red-500)") {
 		t.Errorf("border-x-red-500 missing right color:\n%s", result)
 	}
 }
@@ -181,57 +181,57 @@ func TestColorUtility_BorderYColor(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("border-y-red-500"))
 	result := e.CSS()
-	if !strings.Contains(result, "border-top-color: #ef4444") {
+	if !strings.Contains(result, "border-top-color: var(--color-red-500)") {
 		t.Errorf("border-y-red-500 missing top color:\n%s", result)
 	}
-	if !strings.Contains(result, "border-bottom-color: #ef4444") {
+	if !strings.Contains(result, "border-bottom-color: var(--color-red-500)") {
 		t.Errorf("border-y-red-500 missing bottom color:\n%s", result)
 	}
 }
 
 func TestColorUtility_BorderStartColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-s-red-500", "border-inline-start-color", "#ef4444")
+	assertCSS(t, e, "border-s-red-500", "border-inline-start-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_BorderEndColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-e-red-500", "border-inline-end-color", "#ef4444")
+	assertCSS(t, e, "border-e-red-500", "border-inline-end-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_OutlineColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "outline-red-500", "outline-color", "#ef4444")
+	assertCSS(t, e, "outline-red-500", "outline-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_RingColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "ring-red-500", "--tw-ring-color", "#ef4444")
+	assertCSS(t, e, "ring-red-500", "--tw-ring-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_RingOffsetColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "ring-offset-red-500", "--tw-ring-offset-color", "#ef4444")
+	assertCSS(t, e, "ring-offset-red-500", "--tw-ring-offset-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_AccentColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "accent-red-500", "accent-color", "#ef4444")
+	assertCSS(t, e, "accent-red-500", "accent-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_CaretColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "caret-red-500", "caret-color", "#ef4444")
+	assertCSS(t, e, "caret-red-500", "caret-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_FillColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "fill-red-500", "fill", "#ef4444")
+	assertCSS(t, e, "fill-red-500", "fill", "var(--color-red-500)")
 }
 
 func TestColorUtility_StrokeColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "stroke-red-500", "stroke", "#ef4444")
+	assertCSS(t, e, "stroke-red-500", "stroke", "var(--color-red-500)")
 }
 
 func TestColorUtility_StrokeWidth(t *testing.T) {
@@ -241,14 +241,14 @@ func TestColorUtility_StrokeWidth(t *testing.T) {
 
 func TestColorUtility_DecorationColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "decoration-red-500", "text-decoration-color", "#ef4444")
+	assertCSS(t, e, "decoration-red-500", "text-decoration-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_DivideColor(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("divide-red-500"))
 	result := e.CSS()
-	if !strings.Contains(result, "border-color: #ef4444") {
+	if !strings.Contains(result, "border-color: var(--color-red-500)") {
 		t.Errorf("divide-red-500 missing border-color:\n%s", result)
 	}
 	if !strings.Contains(result, "> :not(:last-child)") {
@@ -267,14 +267,14 @@ func TestColorUtility_ShadowValue(t *testing.T) {
 
 func TestColorUtility_ShadowColor(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "shadow-red-500", "--tw-shadow-color", "#ef4444")
+	assertCSS(t, e, "shadow-red-500", "--tw-shadow-color", "var(--color-red-500)")
 }
 
 func TestColorUtility_GradientFrom(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("from-red-500"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-gradient-from: #ef4444") {
+	if !strings.Contains(result, "--tw-gradient-from: var(--color-red-500)") {
 		t.Errorf("from-red-500 missing gradient-from:\n%s", result)
 	}
 	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent)") {
@@ -286,7 +286,7 @@ func TestColorUtility_GradientVia(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("via-red-500"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-gradient-via: #ef4444") {
+	if !strings.Contains(result, "--tw-gradient-via: var(--color-red-500)") {
 		t.Errorf("via-red-500 missing gradient-via:\n%s", result)
 	}
 	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent)") {
@@ -296,14 +296,14 @@ func TestColorUtility_GradientVia(t *testing.T) {
 
 func TestColorUtility_GradientTo(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "to-red-500", "--tw-gradient-to", "#ef4444")
+	assertCSS(t, e, "to-red-500", "--tw-gradient-to", "var(--color-red-500)")
 }
 
 func TestColorUtility_GradientFromOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("from-red-500/50"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-gradient-from: color-mix(in srgb, #ef4444 0.5, transparent)") {
+	if !strings.Contains(result, "--tw-gradient-from: color-mix(in srgb, #ef4444 50%, transparent)") {
 		t.Errorf("from-red-500/50 missing opacity:\n%s", result)
 	}
 }
@@ -325,7 +325,7 @@ func TestColorUtility_StrokeCurrent(t *testing.T) {
 
 func TestColorUtility_BgArbitraryWithOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-[#ff0000]/50", "background-color", "color-mix(in srgb, #ff0000 0.5, transparent)")
+	assertCSS(t, e, "bg-[#ff0000]/50", "background-color", "color-mix(in srgb, #ff0000 50%, transparent)")
 }
 
 func TestColorUtility_ShadowArbitrary(t *testing.T) {

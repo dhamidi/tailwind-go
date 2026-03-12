@@ -336,7 +336,7 @@ func TestEndToEndOpacityModifierArbitrary(t *testing.T) {
 	e.LoadCSS(css)
 	e.Write([]byte(`class="bg-blue-500/[.5]"`))
 	result := e.CSS()
-	if !strings.Contains(result, "color-mix(in srgb, #3b82f6 .5, transparent)") {
+	if !strings.Contains(result, "color-mix(in srgb, #3b82f6 50%, transparent)") {
 		t.Errorf("unexpected output: %s", result)
 	}
 }
@@ -353,7 +353,7 @@ func TestEndToEndOpacityTheme(t *testing.T) {
 	e.LoadCSS(css)
 	e.Write([]byte(`class="text-white/50"`))
 	result := e.CSS()
-	if !strings.Contains(result, "color-mix(in srgb, white 0.5, transparent)") {
+	if !strings.Contains(result, "color-mix(in srgb, white 50%, transparent)") {
 		t.Errorf("unexpected output: %s", result)
 	}
 }

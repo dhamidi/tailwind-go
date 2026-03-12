@@ -31,11 +31,13 @@ func resolveColorValue(c ResolvedCandidate, themeKeys ...string) string {
 
 	// Theme resolution: try each namespace in order
 	for _, ns := range themeKeys {
-		if val, ok := c.Theme.Resolve(ns, c.Value); ok {
+		if resolved, ok := c.Theme.Resolve(ns, c.Value); ok {
 			if c.Modifier != "" {
-				val = applyModifier(val, c.Modifier, c.Theme)
+				// With opacity modifier, use the resolved literal value for color-mix fallback.
+				return applyModifier(resolved, c.Modifier, c.Theme)
 			}
-			return val
+			// Without modifier, emit CSS variable reference.
+			return "var(--" + ns + "-" + c.Value + ")"
 		}
 	}
 	return ""
@@ -292,11 +294,11 @@ func resolveTextColorValue(c ResolvedCandidate) string {
 
 	// Theme resolution: --text-color, then --color
 	for _, ns := range []string{"text-color", "color"} {
-		if val, ok := c.Theme.Resolve(ns, c.Value); ok {
+		if resolved, ok := c.Theme.Resolve(ns, c.Value); ok {
 			if c.Modifier != "" {
-				val = applyModifier(val, c.Modifier, c.Theme)
+				return applyModifier(resolved, c.Modifier, c.Theme)
 			}
-			return val
+			return "var(--" + ns + "-" + c.Value + ")"
 		}
 	}
 	return ""

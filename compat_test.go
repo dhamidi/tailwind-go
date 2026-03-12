@@ -37,7 +37,7 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 
 		// Spacing (padding/margin)
 		{"p-4", "padding", "calc(var(--spacing) * 4)"},
-		{"px-4", "padding-left", "calc(var(--spacing) * 4)"},
+		{"px-4", "padding-inline", "calc(var(--spacing) * 4)"},
 		{"py-2", "padding-top", "calc(var(--spacing) * 2)"},
 		{"m-4", "margin", "calc(var(--spacing) * 4)"},
 		{"mt-2", "margin-top", "calc(var(--spacing) * 2)"},
@@ -53,8 +53,8 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		// Typography
 		{"text-sm", "font-size", ""},  // some rem value
 		{"text-lg", "font-size", ""},
-		{"font-bold", "font-weight", "700"},
-		{"font-normal", "font-weight", "400"},
+		{"font-bold", "font-weight", "var(--font-weight-bold)"},
+		{"font-normal", "font-weight", "var(--font-weight-normal)"},
 		{"text-center", "text-align", "center"},
 		{"text-left", "text-align", "left"},
 		{"italic", "font-style", "italic"},
@@ -71,7 +71,7 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		// Border
 		{"border", "border-width", "1px"},
 		{"rounded", "border-radius", ""},
-		{"rounded-full", "border-radius", "9999px"},
+		{"rounded-full", "border-radius", "calc(infinity * 1px)"},
 
 		// Position
 		{"relative", "position", "relative"},
@@ -101,12 +101,12 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		{"sr-only", "position", "absolute"},
 
 		// Ring utilities
-		{"ring", "box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)"},
-		{"ring-2", "box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)"},
-		{"ring-0", "box-shadow", "calc(0px + var(--tw-ring-offset-width, 0px))"},
-		{"ring-1", "box-shadow", "calc(1px + var(--tw-ring-offset-width, 0px))"},
-		{"ring-4", "box-shadow", "calc(4px + var(--tw-ring-offset-width, 0px))"},
-		{"ring-8", "box-shadow", "calc(8px + var(--tw-ring-offset-width, 0px))"},
+		{"ring", "--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)"},
+		{"ring-2", "--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)"},
+		{"ring-0", "--tw-ring-shadow", "calc(0px + var(--tw-ring-offset-width))"},
+		{"ring-1", "--tw-ring-shadow", "calc(1px + var(--tw-ring-offset-width))"},
+		{"ring-4", "--tw-ring-shadow", "calc(4px + var(--tw-ring-offset-width))"},
+		{"ring-8", "--tw-ring-shadow", "calc(8px + var(--tw-ring-offset-width))"},
 		{"ring-inset", "--tw-ring-inset", "inset"},
 
 		// Transitions

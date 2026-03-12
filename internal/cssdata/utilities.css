@@ -129,10 +129,8 @@
   padding: --value(length, percentage);
 }
 @utility px-* {
-  padding-left: --value(--spacing);
-  padding-left: --value(length, percentage);
-  padding-right: --value(--spacing);
-  padding-right: --value(length, percentage);
+  padding-inline: --value(--spacing);
+  padding-inline: --value(length, percentage);
 }
 @utility py-* {
   padding-top: --value(--spacing);
@@ -488,8 +486,13 @@
 
 /* ===== Transform ===== */
 @utility scale-* {
-  scale: --value(--scale);
-  scale: --value(percentage, number);
+  --tw-scale-x: --value(--scale);
+  --tw-scale-x: --value(percentage, number);
+  --tw-scale-y: --value(--scale);
+  --tw-scale-y: --value(percentage, number);
+  --tw-scale-z: --value(--scale);
+  --tw-scale-z: --value(percentage, number);
+  scale: var(--tw-scale-x) var(--tw-scale-y);
 }
 @utility scale-x-* {
   --tw-scale-x: --value(--scale);
@@ -510,12 +513,12 @@
 @utility translate-x-* {
   --tw-translate-x: --value(--spacing);
   --tw-translate-x: --value(length, percentage);
-  translate: var(--tw-translate-x) var(--tw-translate-y, 0);
+  translate: var(--tw-translate-x) var(--tw-translate-y);
 }
 @utility translate-y-* {
   --tw-translate-y: --value(--spacing);
   --tw-translate-y: --value(length, percentage);
-  translate: var(--tw-translate-x, 0) var(--tw-translate-y);
+  translate: var(--tw-translate-x) var(--tw-translate-y);
 }
 
 @utility skew-x-* {

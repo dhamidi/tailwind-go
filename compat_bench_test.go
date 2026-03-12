@@ -87,12 +87,13 @@ func parseCSSRules(css string) []cssRule {
 			i++ // skip closing '}'
 		}
 
-		// If selector starts with '@' and body contains '{', recurse
-		if strings.HasPrefix(selector, "@") && strings.Contains(body, "{") {
+		// If body contains '{', recurse into nested rules
+		if strings.Contains(body, "{") {
 			innerRules := parseCSSRules(body)
 			for _, ir := range innerRules {
+				combined := combineSelectors(selector, ir.selector)
 				rules = append(rules, cssRule{
-					selector:     selector + " " + ir.selector,
+					selector:     combined,
 					declarations: ir.declarations,
 				})
 			}
@@ -108,6 +109,17 @@ func parseCSSRules(css string) []cssRule {
 		}
 	}
 	return rules
+}
+
+// combineSelectors combines a parent and child selector for CSS nesting.
+// If the child starts with "&", the "&" is replaced with the parent selector.
+// For @-rules, they are concatenated with a space.
+func combineSelectors(parent, child string) string {
+	if strings.HasPrefix(child, "&") {
+		// Replace & with parent selector
+		return normalizeSelector(parent + child[1:])
+	}
+	return normalizeSelector(parent + " " + child)
 }
 
 // normalizeSelector normalizes whitespace in a CSS selector.

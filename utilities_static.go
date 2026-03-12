@@ -186,7 +186,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("flex-wrap", decls("flex-wrap", "wrap")))
 	register(staticUtility("flex-wrap-reverse", decls("flex-wrap", "wrap-reverse")))
 	register(staticUtility("flex-nowrap", decls("flex-wrap", "nowrap")))
-	register(staticUtility("flex-1", decls("flex", "1 1 0%")))
+	register(staticUtility("flex-1", decls("flex", "1")))
 	register(staticUtility("flex-auto", decls("flex", "1 1 auto")))
 	register(staticUtility("flex-initial", decls("flex", "0 1 auto")))
 	register(staticUtility("flex-none", decls("flex", "none")))
@@ -374,30 +374,30 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("size-fit", decls("width", "fit-content", "height", "fit-content")))
 
 	// ===== Font Size =====
-	register(staticUtility("text-xs", decls("font-size", "var(--text-xs, 0.75rem)", "line-height", "var(--tw-leading, var(--text-xs--line-height, 1rem))")))
-	register(staticUtility("text-sm", decls("font-size", "var(--text-sm, 0.875rem)", "line-height", "var(--tw-leading, var(--text-sm--line-height, 1.25rem))")))
-	register(staticUtility("text-base", decls("font-size", "var(--text-base, 1rem)", "line-height", "var(--tw-leading, var(--text-base--line-height, 1.5rem))")))
-	register(staticUtility("text-lg", decls("font-size", "var(--text-lg, 1.125rem)", "line-height", "var(--tw-leading, var(--text-lg--line-height, 1.75rem))")))
-	register(staticUtility("text-xl", decls("font-size", "var(--text-xl, 1.25rem)", "line-height", "var(--tw-leading, var(--text-xl--line-height, 1.75rem))")))
-	register(staticUtility("text-2xl", decls("font-size", "var(--text-2xl, 1.5rem)", "line-height", "var(--tw-leading, var(--text-2xl--line-height, 2rem))")))
-	register(staticUtility("text-3xl", decls("font-size", "var(--text-3xl, 1.875rem)", "line-height", "var(--tw-leading, var(--text-3xl--line-height, 2.25rem))")))
-	register(staticUtility("text-4xl", decls("font-size", "var(--text-4xl, 2.25rem)", "line-height", "var(--tw-leading, var(--text-4xl--line-height, 2.5rem))")))
-	register(staticUtility("text-5xl", decls("font-size", "var(--text-5xl, 3rem)", "line-height", "var(--tw-leading, var(--text-5xl--line-height, 1))")))
-	register(staticUtility("text-6xl", decls("font-size", "var(--text-6xl, 3.75rem)", "line-height", "var(--tw-leading, var(--text-6xl--line-height, 1))")))
-	register(staticUtility("text-7xl", decls("font-size", "var(--text-7xl, 4.5rem)", "line-height", "var(--tw-leading, var(--text-7xl--line-height, 1))")))
-	register(staticUtility("text-8xl", decls("font-size", "var(--text-8xl, 6rem)", "line-height", "var(--tw-leading, var(--text-8xl--line-height, 1))")))
-	register(staticUtility("text-9xl", decls("font-size", "var(--text-9xl, 8rem)", "line-height", "var(--tw-leading, var(--text-9xl--line-height, 1))")))
+	register(staticUtility("text-xs", decls("font-size", "var(--text-xs)", "line-height", "var(--tw-leading, var(--text-xs--line-height))")))
+	register(staticUtility("text-sm", decls("font-size", "var(--text-sm)", "line-height", "var(--tw-leading, var(--text-sm--line-height))")))
+	register(staticUtility("text-base", decls("font-size", "var(--text-base)", "line-height", "var(--tw-leading, var(--text-base--line-height))")))
+	register(staticUtility("text-lg", decls("font-size", "var(--text-lg)", "line-height", "var(--tw-leading, var(--text-lg--line-height))")))
+	register(staticUtility("text-xl", decls("font-size", "var(--text-xl)", "line-height", "var(--tw-leading, var(--text-xl--line-height))")))
+	register(staticUtility("text-2xl", decls("font-size", "var(--text-2xl)", "line-height", "var(--tw-leading, var(--text-2xl--line-height))")))
+	register(staticUtility("text-3xl", decls("font-size", "var(--text-3xl)", "line-height", "var(--tw-leading, var(--text-3xl--line-height))")))
+	register(staticUtility("text-4xl", decls("font-size", "var(--text-4xl)", "line-height", "var(--tw-leading, var(--text-4xl--line-height))")))
+	register(staticUtility("text-5xl", decls("font-size", "var(--text-5xl)", "line-height", "var(--tw-leading, var(--text-5xl--line-height))")))
+	register(staticUtility("text-6xl", decls("font-size", "var(--text-6xl)", "line-height", "var(--tw-leading, var(--text-6xl--line-height))")))
+	register(staticUtility("text-7xl", decls("font-size", "var(--text-7xl)", "line-height", "var(--tw-leading, var(--text-7xl--line-height))")))
+	register(staticUtility("text-8xl", decls("font-size", "var(--text-8xl)", "line-height", "var(--tw-leading, var(--text-8xl--line-height))")))
+	register(staticUtility("text-9xl", decls("font-size", "var(--text-9xl)", "line-height", "var(--tw-leading, var(--text-9xl--line-height))")))
 
 	// ===== Font Weight =====
-	register(staticUtility("font-thin", decls("font-weight", "100")))
-	register(staticUtility("font-extralight", decls("font-weight", "200")))
-	register(staticUtility("font-light", decls("font-weight", "300")))
-	register(staticUtility("font-normal", decls("font-weight", "400")))
-	register(staticUtility("font-medium", decls("font-weight", "500")))
-	register(staticUtility("font-semibold", decls("font-weight", "600")))
-	register(staticUtility("font-bold", decls("font-weight", "700")))
-	register(staticUtility("font-extrabold", decls("font-weight", "800")))
-	register(staticUtility("font-black", decls("font-weight", "900")))
+	register(staticUtility("font-thin", decls("--tw-font-weight", "var(--font-weight-thin)", "font-weight", "var(--font-weight-thin)")))
+	register(staticUtility("font-extralight", decls("--tw-font-weight", "var(--font-weight-extralight)", "font-weight", "var(--font-weight-extralight)")))
+	register(staticUtility("font-light", decls("--tw-font-weight", "var(--font-weight-light)", "font-weight", "var(--font-weight-light)")))
+	register(staticUtility("font-normal", decls("--tw-font-weight", "var(--font-weight-normal)", "font-weight", "var(--font-weight-normal)")))
+	register(staticUtility("font-medium", decls("--tw-font-weight", "var(--font-weight-medium)", "font-weight", "var(--font-weight-medium)")))
+	register(staticUtility("font-semibold", decls("--tw-font-weight", "var(--font-weight-semibold)", "font-weight", "var(--font-weight-semibold)")))
+	register(staticUtility("font-bold", decls("--tw-font-weight", "var(--font-weight-bold)", "font-weight", "var(--font-weight-bold)")))
+	register(staticUtility("font-extrabold", decls("--tw-font-weight", "var(--font-weight-extrabold)", "font-weight", "var(--font-weight-extrabold)")))
+	register(staticUtility("font-black", decls("--tw-font-weight", "var(--font-weight-black)", "font-weight", "var(--font-weight-black)")))
 
 	// ===== Font Style =====
 	register(staticUtility("italic", decls("font-style", "italic")))
@@ -478,20 +478,20 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("line-clamp-none", decls("-webkit-line-clamp", "unset", "overflow", "visible", "display", "block")))
 
 	// ===== Line Height =====
-	register(staticUtility("leading-none", decls("line-height", "1")))
-	register(staticUtility("leading-tight", decls("line-height", "var(--leading-tight, 1.25)")))
-	register(staticUtility("leading-snug", decls("line-height", "var(--leading-snug, 1.375)")))
-	register(staticUtility("leading-normal", decls("line-height", "var(--leading-normal, 1.5)")))
-	register(staticUtility("leading-relaxed", decls("line-height", "var(--leading-relaxed, 1.625)")))
-	register(staticUtility("leading-loose", decls("line-height", "var(--leading-loose, 2)")))
+	register(staticUtility("leading-none", decls("--tw-leading", "1", "line-height", "1")))
+	register(staticUtility("leading-tight", decls("--tw-leading", "var(--leading-tight)", "line-height", "var(--leading-tight)")))
+	register(staticUtility("leading-snug", decls("--tw-leading", "var(--leading-snug)", "line-height", "var(--leading-snug)")))
+	register(staticUtility("leading-normal", decls("--tw-leading", "var(--leading-normal)", "line-height", "var(--leading-normal)")))
+	register(staticUtility("leading-relaxed", decls("--tw-leading", "var(--leading-relaxed)", "line-height", "var(--leading-relaxed)")))
+	register(staticUtility("leading-loose", decls("--tw-leading", "var(--leading-loose)", "line-height", "var(--leading-loose)")))
 
 	// ===== Letter Spacing =====
-	register(staticUtility("tracking-tighter", decls("letter-spacing", "var(--tracking-tighter, -0.05em)")))
-	register(staticUtility("tracking-tight", decls("letter-spacing", "var(--tracking-tight, -0.025em)")))
-	register(staticUtility("tracking-normal", decls("letter-spacing", "var(--tracking-normal, 0em)")))
-	register(staticUtility("tracking-wide", decls("letter-spacing", "var(--tracking-wide, 0.025em)")))
-	register(staticUtility("tracking-wider", decls("letter-spacing", "var(--tracking-wider, 0.05em)")))
-	register(staticUtility("tracking-widest", decls("letter-spacing", "var(--tracking-widest, 0.1em)")))
+	register(staticUtility("tracking-tighter", decls("--tw-tracking", "var(--tracking-tighter)", "letter-spacing", "var(--tracking-tighter)")))
+	register(staticUtility("tracking-tight", decls("--tw-tracking", "var(--tracking-tight)", "letter-spacing", "var(--tracking-tight)")))
+	register(staticUtility("tracking-normal", decls("--tw-tracking", "var(--tracking-normal)", "letter-spacing", "var(--tracking-normal)")))
+	register(staticUtility("tracking-wide", decls("--tw-tracking", "var(--tracking-wide)", "letter-spacing", "var(--tracking-wide)")))
+	register(staticUtility("tracking-wider", decls("--tw-tracking", "var(--tracking-wider)", "letter-spacing", "var(--tracking-wider)")))
+	register(staticUtility("tracking-widest", decls("--tw-tracking", "var(--tracking-widest)", "letter-spacing", "var(--tracking-widest)")))
 
 	// ===== Hyphens =====
 	register(staticUtility("hyphens-none", decls("hyphens", "none")))
@@ -555,11 +555,11 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("bg-none", decls("background-image", "none")))
 
 	// ===== Border Width =====
-	register(staticUtility("border", decls("border-width", "1px")))
-	register(staticUtility("border-0", decls("border-width", "0px")))
-	register(staticUtility("border-2", decls("border-width", "2px")))
-	register(staticUtility("border-4", decls("border-width", "4px")))
-	register(staticUtility("border-8", decls("border-width", "8px")))
+	register(staticUtility("border", decls("border-style", "var(--tw-border-style)", "border-width", "1px")))
+	register(staticUtility("border-0", decls("border-style", "var(--tw-border-style)", "border-width", "0px")))
+	register(staticUtility("border-2", decls("border-style", "var(--tw-border-style)", "border-width", "2px")))
+	register(staticUtility("border-4", decls("border-style", "var(--tw-border-style)", "border-width", "4px")))
+	register(staticUtility("border-8", decls("border-style", "var(--tw-border-style)", "border-width", "8px")))
 	register(staticUtility("border-x", decls("border-left-width", "1px", "border-right-width", "1px")))
 	register(staticUtility("border-x-0", decls("border-left-width", "0px", "border-right-width", "0px")))
 	register(staticUtility("border-x-2", decls("border-left-width", "2px", "border-right-width", "2px")))
@@ -615,51 +615,51 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("caption-bottom", decls("caption-side", "bottom")))
 
 	// ===== Border Radius =====
-	register(staticUtility("rounded", decls("border-radius", "var(--radius-sm, 0.25rem)")))
+	register(staticUtility("rounded", decls("border-radius", "var(--radius-sm)")))
 	register(staticUtility("rounded-none", decls("border-radius", "0px")))
-	register(staticUtility("rounded-sm", decls("border-radius", "var(--radius-xs, 0.125rem)")))
-	register(staticUtility("rounded-md", decls("border-radius", "var(--radius-md, 0.375rem)")))
-	register(staticUtility("rounded-lg", decls("border-radius", "var(--radius-lg, 0.5rem)")))
-	register(staticUtility("rounded-xl", decls("border-radius", "var(--radius-xl, 0.75rem)")))
-	register(staticUtility("rounded-2xl", decls("border-radius", "var(--radius-2xl, 1rem)")))
-	register(staticUtility("rounded-3xl", decls("border-radius", "var(--radius-3xl, 1.5rem)")))
-	register(staticUtility("rounded-full", decls("border-radius", "9999px")))
+	register(staticUtility("rounded-sm", decls("border-radius", "var(--radius-xs)")))
+	register(staticUtility("rounded-md", decls("border-radius", "var(--radius-md)")))
+	register(staticUtility("rounded-lg", decls("border-radius", "var(--radius-lg)")))
+	register(staticUtility("rounded-xl", decls("border-radius", "var(--radius-xl)")))
+	register(staticUtility("rounded-2xl", decls("border-radius", "var(--radius-2xl)")))
+	register(staticUtility("rounded-3xl", decls("border-radius", "var(--radius-3xl)")))
+	register(staticUtility("rounded-full", decls("border-radius", "calc(infinity * 1px)")))
 	register(staticUtility("rounded-t-none", decls("border-top-left-radius", "0px", "border-top-right-radius", "0px")))
-	register(staticUtility("rounded-t-sm", decls("border-top-left-radius", "var(--radius-xs, 0.125rem)", "border-top-right-radius", "var(--radius-xs, 0.125rem)")))
-	register(staticUtility("rounded-t", decls("border-top-left-radius", "var(--radius-sm, 0.25rem)", "border-top-right-radius", "var(--radius-sm, 0.25rem)")))
-	register(staticUtility("rounded-t-md", decls("border-top-left-radius", "var(--radius-md, 0.375rem)", "border-top-right-radius", "var(--radius-md, 0.375rem)")))
-	register(staticUtility("rounded-t-lg", decls("border-top-left-radius", "var(--radius-lg, 0.5rem)", "border-top-right-radius", "var(--radius-lg, 0.5rem)")))
-	register(staticUtility("rounded-t-xl", decls("border-top-left-radius", "var(--radius-xl, 0.75rem)", "border-top-right-radius", "var(--radius-xl, 0.75rem)")))
-	register(staticUtility("rounded-t-2xl", decls("border-top-left-radius", "var(--radius-2xl, 1rem)", "border-top-right-radius", "var(--radius-2xl, 1rem)")))
-	register(staticUtility("rounded-t-3xl", decls("border-top-left-radius", "var(--radius-3xl, 1.5rem)", "border-top-right-radius", "var(--radius-3xl, 1.5rem)")))
-	register(staticUtility("rounded-t-full", decls("border-top-left-radius", "9999px", "border-top-right-radius", "9999px")))
+	register(staticUtility("rounded-t-sm", decls("border-top-left-radius", "var(--radius-xs)", "border-top-right-radius", "var(--radius-xs)")))
+	register(staticUtility("rounded-t", decls("border-top-left-radius", "var(--radius-sm)", "border-top-right-radius", "var(--radius-sm)")))
+	register(staticUtility("rounded-t-md", decls("border-top-left-radius", "var(--radius-md)", "border-top-right-radius", "var(--radius-md)")))
+	register(staticUtility("rounded-t-lg", decls("border-top-left-radius", "var(--radius-lg)", "border-top-right-radius", "var(--radius-lg)")))
+	register(staticUtility("rounded-t-xl", decls("border-top-left-radius", "var(--radius-xl)", "border-top-right-radius", "var(--radius-xl)")))
+	register(staticUtility("rounded-t-2xl", decls("border-top-left-radius", "var(--radius-2xl)", "border-top-right-radius", "var(--radius-2xl)")))
+	register(staticUtility("rounded-t-3xl", decls("border-top-left-radius", "var(--radius-3xl)", "border-top-right-radius", "var(--radius-3xl)")))
+	register(staticUtility("rounded-t-full", decls("border-top-left-radius", "calc(infinity * 1px)", "border-top-right-radius", "calc(infinity * 1px)")))
 	register(staticUtility("rounded-r-none", decls("border-top-right-radius", "0px", "border-bottom-right-radius", "0px")))
-	register(staticUtility("rounded-r-sm", decls("border-top-right-radius", "var(--radius-xs, 0.125rem)", "border-bottom-right-radius", "var(--radius-xs, 0.125rem)")))
-	register(staticUtility("rounded-r", decls("border-top-right-radius", "var(--radius-sm, 0.25rem)", "border-bottom-right-radius", "var(--radius-sm, 0.25rem)")))
-	register(staticUtility("rounded-r-md", decls("border-top-right-radius", "var(--radius-md, 0.375rem)", "border-bottom-right-radius", "var(--radius-md, 0.375rem)")))
-	register(staticUtility("rounded-r-lg", decls("border-top-right-radius", "var(--radius-lg, 0.5rem)", "border-bottom-right-radius", "var(--radius-lg, 0.5rem)")))
-	register(staticUtility("rounded-r-xl", decls("border-top-right-radius", "var(--radius-xl, 0.75rem)", "border-bottom-right-radius", "var(--radius-xl, 0.75rem)")))
-	register(staticUtility("rounded-r-2xl", decls("border-top-right-radius", "var(--radius-2xl, 1rem)", "border-bottom-right-radius", "var(--radius-2xl, 1rem)")))
-	register(staticUtility("rounded-r-3xl", decls("border-top-right-radius", "var(--radius-3xl, 1.5rem)", "border-bottom-right-radius", "var(--radius-3xl, 1.5rem)")))
-	register(staticUtility("rounded-r-full", decls("border-top-right-radius", "9999px", "border-bottom-right-radius", "9999px")))
+	register(staticUtility("rounded-r-sm", decls("border-top-right-radius", "var(--radius-xs)", "border-bottom-right-radius", "var(--radius-xs)")))
+	register(staticUtility("rounded-r", decls("border-top-right-radius", "var(--radius-sm)", "border-bottom-right-radius", "var(--radius-sm)")))
+	register(staticUtility("rounded-r-md", decls("border-top-right-radius", "var(--radius-md)", "border-bottom-right-radius", "var(--radius-md)")))
+	register(staticUtility("rounded-r-lg", decls("border-top-right-radius", "var(--radius-lg)", "border-bottom-right-radius", "var(--radius-lg)")))
+	register(staticUtility("rounded-r-xl", decls("border-top-right-radius", "var(--radius-xl)", "border-bottom-right-radius", "var(--radius-xl)")))
+	register(staticUtility("rounded-r-2xl", decls("border-top-right-radius", "var(--radius-2xl)", "border-bottom-right-radius", "var(--radius-2xl)")))
+	register(staticUtility("rounded-r-3xl", decls("border-top-right-radius", "var(--radius-3xl)", "border-bottom-right-radius", "var(--radius-3xl)")))
+	register(staticUtility("rounded-r-full", decls("border-top-right-radius", "calc(infinity * 1px)", "border-bottom-right-radius", "calc(infinity * 1px)")))
 	register(staticUtility("rounded-b-none", decls("border-bottom-left-radius", "0px", "border-bottom-right-radius", "0px")))
-	register(staticUtility("rounded-b-sm", decls("border-bottom-left-radius", "var(--radius-xs, 0.125rem)", "border-bottom-right-radius", "var(--radius-xs, 0.125rem)")))
-	register(staticUtility("rounded-b", decls("border-bottom-left-radius", "var(--radius-sm, 0.25rem)", "border-bottom-right-radius", "var(--radius-sm, 0.25rem)")))
-	register(staticUtility("rounded-b-md", decls("border-bottom-left-radius", "var(--radius-md, 0.375rem)", "border-bottom-right-radius", "var(--radius-md, 0.375rem)")))
-	register(staticUtility("rounded-b-lg", decls("border-bottom-left-radius", "var(--radius-lg, 0.5rem)", "border-bottom-right-radius", "var(--radius-lg, 0.5rem)")))
-	register(staticUtility("rounded-b-xl", decls("border-bottom-left-radius", "var(--radius-xl, 0.75rem)", "border-bottom-right-radius", "var(--radius-xl, 0.75rem)")))
-	register(staticUtility("rounded-b-2xl", decls("border-bottom-left-radius", "var(--radius-2xl, 1rem)", "border-bottom-right-radius", "var(--radius-2xl, 1rem)")))
-	register(staticUtility("rounded-b-3xl", decls("border-bottom-left-radius", "var(--radius-3xl, 1.5rem)", "border-bottom-right-radius", "var(--radius-3xl, 1.5rem)")))
-	register(staticUtility("rounded-b-full", decls("border-bottom-left-radius", "9999px", "border-bottom-right-radius", "9999px")))
+	register(staticUtility("rounded-b-sm", decls("border-bottom-left-radius", "var(--radius-xs)", "border-bottom-right-radius", "var(--radius-xs)")))
+	register(staticUtility("rounded-b", decls("border-bottom-left-radius", "var(--radius-sm)", "border-bottom-right-radius", "var(--radius-sm)")))
+	register(staticUtility("rounded-b-md", decls("border-bottom-left-radius", "var(--radius-md)", "border-bottom-right-radius", "var(--radius-md)")))
+	register(staticUtility("rounded-b-lg", decls("border-bottom-left-radius", "var(--radius-lg)", "border-bottom-right-radius", "var(--radius-lg)")))
+	register(staticUtility("rounded-b-xl", decls("border-bottom-left-radius", "var(--radius-xl)", "border-bottom-right-radius", "var(--radius-xl)")))
+	register(staticUtility("rounded-b-2xl", decls("border-bottom-left-radius", "var(--radius-2xl)", "border-bottom-right-radius", "var(--radius-2xl)")))
+	register(staticUtility("rounded-b-3xl", decls("border-bottom-left-radius", "var(--radius-3xl)", "border-bottom-right-radius", "var(--radius-3xl)")))
+	register(staticUtility("rounded-b-full", decls("border-bottom-left-radius", "calc(infinity * 1px)", "border-bottom-right-radius", "calc(infinity * 1px)")))
 	register(staticUtility("rounded-l-none", decls("border-top-left-radius", "0px", "border-bottom-left-radius", "0px")))
-	register(staticUtility("rounded-l-sm", decls("border-top-left-radius", "var(--radius-xs, 0.125rem)", "border-bottom-left-radius", "var(--radius-xs, 0.125rem)")))
-	register(staticUtility("rounded-l", decls("border-top-left-radius", "var(--radius-sm, 0.25rem)", "border-bottom-left-radius", "var(--radius-sm, 0.25rem)")))
-	register(staticUtility("rounded-l-md", decls("border-top-left-radius", "var(--radius-md, 0.375rem)", "border-bottom-left-radius", "var(--radius-md, 0.375rem)")))
-	register(staticUtility("rounded-l-lg", decls("border-top-left-radius", "var(--radius-lg, 0.5rem)", "border-bottom-left-radius", "var(--radius-lg, 0.5rem)")))
-	register(staticUtility("rounded-l-xl", decls("border-top-left-radius", "var(--radius-xl, 0.75rem)", "border-bottom-left-radius", "var(--radius-xl, 0.75rem)")))
-	register(staticUtility("rounded-l-2xl", decls("border-top-left-radius", "var(--radius-2xl, 1rem)", "border-bottom-left-radius", "var(--radius-2xl, 1rem)")))
-	register(staticUtility("rounded-l-3xl", decls("border-top-left-radius", "var(--radius-3xl, 1.5rem)", "border-bottom-left-radius", "var(--radius-3xl, 1.5rem)")))
-	register(staticUtility("rounded-l-full", decls("border-top-left-radius", "9999px", "border-bottom-left-radius", "9999px")))
+	register(staticUtility("rounded-l-sm", decls("border-top-left-radius", "var(--radius-xs)", "border-bottom-left-radius", "var(--radius-xs)")))
+	register(staticUtility("rounded-l", decls("border-top-left-radius", "var(--radius-sm)", "border-bottom-left-radius", "var(--radius-sm)")))
+	register(staticUtility("rounded-l-md", decls("border-top-left-radius", "var(--radius-md)", "border-bottom-left-radius", "var(--radius-md)")))
+	register(staticUtility("rounded-l-lg", decls("border-top-left-radius", "var(--radius-lg)", "border-bottom-left-radius", "var(--radius-lg)")))
+	register(staticUtility("rounded-l-xl", decls("border-top-left-radius", "var(--radius-xl)", "border-bottom-left-radius", "var(--radius-xl)")))
+	register(staticUtility("rounded-l-2xl", decls("border-top-left-radius", "var(--radius-2xl)", "border-bottom-left-radius", "var(--radius-2xl)")))
+	register(staticUtility("rounded-l-3xl", decls("border-top-left-radius", "var(--radius-3xl)", "border-bottom-left-radius", "var(--radius-3xl)")))
+	register(staticUtility("rounded-l-full", decls("border-top-left-radius", "calc(infinity * 1px)", "border-bottom-left-radius", "calc(infinity * 1px)")))
 
 	// ===== Divide (child selector) =====
 	register(staticUtilityWithSelector("divide-x", childSel, decls(
@@ -738,12 +738,30 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("inset-shadow-sm", decls("box-shadow", "var(--inset-shadow-sm, inset 0 2px 4px rgb(0 0 0 / 0.05))")))
 
 	// ===== Ring =====
-	register(staticUtility("ring", decls("box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)")))
-	register(staticUtility("ring-0", decls("box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)")))
-	register(staticUtility("ring-1", decls("box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)")))
-	register(staticUtility("ring-2", decls("box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)")))
-	register(staticUtility("ring-4", decls("box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(4px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)")))
-	register(staticUtility("ring-8", decls("box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(8px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)")))
+	register(staticUtility("ring", decls(
+		"--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("ring-0", decls(
+		"--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("ring-1", decls(
+		"--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("ring-2", decls(
+		"--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("ring-4", decls(
+		"--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("ring-8", decls(
+		"--tw-ring-shadow", "var(--tw-ring-inset,) 0 0 0 calc(8px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
 	register(staticUtility("ring-inset", decls("--tw-ring-inset", "inset")))
 
 	// ===== Ring Offset =====
@@ -944,13 +962,13 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	// ===== Filter =====
 	filterChain := "var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,)"
 	register(staticUtility("blur-none", decls("--tw-blur", "blur(0)", "filter", filterChain)))
-	register(staticUtility("blur-sm", decls("--tw-blur", "blur(var(--blur-sm, 4px))", "filter", filterChain)))
-	register(staticUtility("blur", decls("--tw-blur", "blur(var(--blur-md, 8px))", "filter", filterChain)))
-	register(staticUtility("blur-md", decls("--tw-blur", "blur(var(--blur-md, 12px))", "filter", filterChain)))
-	register(staticUtility("blur-lg", decls("--tw-blur", "blur(var(--blur-lg, 16px))", "filter", filterChain)))
-	register(staticUtility("blur-xl", decls("--tw-blur", "blur(var(--blur-xl, 24px))", "filter", filterChain)))
-	register(staticUtility("blur-2xl", decls("--tw-blur", "blur(var(--blur-2xl, 40px))", "filter", filterChain)))
-	register(staticUtility("blur-3xl", decls("--tw-blur", "blur(var(--blur-3xl, 64px))", "filter", filterChain)))
+	register(staticUtility("blur-sm", decls("--tw-blur", "blur(var(--blur-sm))", "filter", filterChain)))
+	register(staticUtility("blur", decls("--tw-blur", "blur(var(--blur-md))", "filter", filterChain)))
+	register(staticUtility("blur-md", decls("--tw-blur", "blur(var(--blur-md))", "filter", filterChain)))
+	register(staticUtility("blur-lg", decls("--tw-blur", "blur(var(--blur-lg))", "filter", filterChain)))
+	register(staticUtility("blur-xl", decls("--tw-blur", "blur(var(--blur-xl))", "filter", filterChain)))
+	register(staticUtility("blur-2xl", decls("--tw-blur", "blur(var(--blur-2xl))", "filter", filterChain)))
+	register(staticUtility("blur-3xl", decls("--tw-blur", "blur(var(--blur-3xl))", "filter", filterChain)))
 	register(staticUtility("grayscale", decls("--tw-grayscale", "grayscale(100%)", "filter", filterChain)))
 	register(staticUtility("grayscale-0", decls("--tw-grayscale", "grayscale(0)", "filter", filterChain)))
 	register(staticUtility("invert", decls("--tw-invert", "invert(100%)", "filter", filterChain)))
@@ -969,13 +987,13 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	// ===== Backdrop Filter =====
 	backdropChain := "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,) var(--tw-backdrop-opacity,)"
 	register(staticUtility("backdrop-blur-none", decls("--tw-backdrop-blur", "blur(0)", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur-sm", decls("--tw-backdrop-blur", "blur(var(--blur-sm, 4px))", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur", decls("--tw-backdrop-blur", "blur(var(--blur-md, 8px))", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur-md", decls("--tw-backdrop-blur", "blur(var(--blur-md, 12px))", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur-lg", decls("--tw-backdrop-blur", "blur(var(--blur-lg, 16px))", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur-xl", decls("--tw-backdrop-blur", "blur(var(--blur-xl, 24px))", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur-2xl", decls("--tw-backdrop-blur", "blur(var(--blur-2xl, 40px))", "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-blur-3xl", decls("--tw-backdrop-blur", "blur(var(--blur-3xl, 64px))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur-sm", decls("--tw-backdrop-blur", "blur(var(--blur-sm))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur", decls("--tw-backdrop-blur", "blur(var(--blur-md))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur-md", decls("--tw-backdrop-blur", "blur(var(--blur-md))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur-lg", decls("--tw-backdrop-blur", "blur(var(--blur-lg))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur-xl", decls("--tw-backdrop-blur", "blur(var(--blur-xl))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur-2xl", decls("--tw-backdrop-blur", "blur(var(--blur-2xl))", "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-blur-3xl", decls("--tw-backdrop-blur", "blur(var(--blur-3xl))", "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-grayscale", decls("--tw-backdrop-grayscale", "grayscale(100%)", "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-grayscale-0", decls("--tw-backdrop-grayscale", "grayscale(0)", "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-invert", decls("--tw-backdrop-invert", "invert(100%)", "backdrop-filter", backdropChain)))
@@ -1025,45 +1043,45 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("transition-none", decls("transition-property", "none")))
 	register(staticUtility("transition-all", decls(
 		"transition-property", "all",
-		"transition-timing-function", "var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))",
-		"transition-duration", "var(--default-transition-duration, 150ms)",
+		"transition-timing-function", "var(--tw-ease, var(--default-transition-timing-function))",
+		"transition-duration", "var(--tw-duration, var(--default-transition-duration))",
 	)))
 	register(staticUtility("transition", decls(
-		"transition-property", "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, translate, scale, rotate, filter, backdrop-filter",
-		"transition-timing-function", "var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))",
-		"transition-duration", "var(--default-transition-duration, 150ms)",
+		"transition-property", "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events",
+		"transition-timing-function", "var(--tw-ease, var(--default-transition-timing-function))",
+		"transition-duration", "var(--tw-duration, var(--default-transition-duration))",
 	)))
 	register(staticUtility("transition-colors", decls(
 		"transition-property", "color, background-color, border-color, text-decoration-color, fill, stroke",
-		"transition-timing-function", "var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))",
-		"transition-duration", "var(--default-transition-duration, 150ms)",
+		"transition-timing-function", "var(--tw-ease, var(--default-transition-timing-function))",
+		"transition-duration", "var(--tw-duration, var(--default-transition-duration))",
 	)))
 	register(staticUtility("transition-opacity", decls(
 		"transition-property", "opacity",
-		"transition-timing-function", "var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))",
-		"transition-duration", "var(--default-transition-duration, 150ms)",
+		"transition-timing-function", "var(--tw-ease, var(--default-transition-timing-function))",
+		"transition-duration", "var(--tw-duration, var(--default-transition-duration))",
 	)))
 	register(staticUtility("transition-shadow", decls(
 		"transition-property", "box-shadow",
-		"transition-timing-function", "var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))",
-		"transition-duration", "var(--default-transition-duration, 150ms)",
+		"transition-timing-function", "var(--tw-ease, var(--default-transition-timing-function))",
+		"transition-duration", "var(--tw-duration, var(--default-transition-duration))",
 	)))
 	register(staticUtility("transition-transform", decls(
 		"transition-property", "transform, translate, scale, rotate",
-		"transition-timing-function", "var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1))",
-		"transition-duration", "var(--default-transition-duration, 150ms)",
+		"transition-timing-function", "var(--tw-ease, var(--default-transition-timing-function))",
+		"transition-duration", "var(--tw-duration, var(--default-transition-duration))",
 	)))
 
 	// ===== Duration =====
-	register(staticUtility("duration-0", decls("transition-duration", "0s")))
-	register(staticUtility("duration-75", decls("transition-duration", "75ms")))
-	register(staticUtility("duration-100", decls("transition-duration", "100ms")))
-	register(staticUtility("duration-150", decls("transition-duration", "150ms")))
-	register(staticUtility("duration-200", decls("transition-duration", "200ms")))
-	register(staticUtility("duration-300", decls("transition-duration", "300ms")))
-	register(staticUtility("duration-500", decls("transition-duration", "500ms")))
-	register(staticUtility("duration-700", decls("transition-duration", "700ms")))
-	register(staticUtility("duration-1000", decls("transition-duration", "1000ms")))
+	register(staticUtility("duration-0", decls("--tw-duration", "0s", "transition-duration", "0s")))
+	register(staticUtility("duration-75", decls("--tw-duration", "75ms", "transition-duration", "75ms")))
+	register(staticUtility("duration-100", decls("--tw-duration", "100ms", "transition-duration", "100ms")))
+	register(staticUtility("duration-150", decls("--tw-duration", "150ms", "transition-duration", "150ms")))
+	register(staticUtility("duration-200", decls("--tw-duration", "200ms", "transition-duration", "200ms")))
+	register(staticUtility("duration-300", decls("--tw-duration", "300ms", "transition-duration", "300ms")))
+	register(staticUtility("duration-500", decls("--tw-duration", "500ms", "transition-duration", "500ms")))
+	register(staticUtility("duration-700", decls("--tw-duration", "700ms", "transition-duration", "700ms")))
+	register(staticUtility("duration-1000", decls("--tw-duration", "1000ms", "transition-duration", "1000ms")))
 
 	// ===== Delay =====
 	register(staticUtility("delay-0", decls("transition-delay", "0s")))
@@ -1077,10 +1095,10 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("delay-1000", decls("transition-delay", "1000ms")))
 
 	// ===== Ease =====
-	register(staticUtility("ease-linear", decls("transition-timing-function", "linear")))
-	register(staticUtility("ease-in", decls("transition-timing-function", "var(--ease-in, cubic-bezier(0.4, 0, 1, 1))")))
-	register(staticUtility("ease-out", decls("transition-timing-function", "var(--ease-out, cubic-bezier(0, 0, 0.2, 1))")))
-	register(staticUtility("ease-in-out", decls("transition-timing-function", "var(--ease-in-out, cubic-bezier(0.4, 0, 0.2, 1))")))
+	register(staticUtility("ease-linear", decls("--tw-ease", "linear", "transition-timing-function", "linear")))
+	register(staticUtility("ease-in", decls("--tw-ease", "var(--ease-in)", "transition-timing-function", "var(--ease-in)")))
+	register(staticUtility("ease-out", decls("--tw-ease", "var(--ease-out)", "transition-timing-function", "var(--ease-out)")))
+	register(staticUtility("ease-in-out", decls("--tw-ease", "var(--ease-in-out)", "transition-timing-function", "var(--ease-in-out)")))
 
 	// ===== Animation =====
 	register(staticUtility("animate-none", decls("animation", "none")))
