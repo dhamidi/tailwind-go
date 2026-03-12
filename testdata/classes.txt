@@ -1,0 +1,87 @@
+# Static utilities
+flex
+hidden
+sr-only
+truncate
+italic
+
+# Spacing
+p-4
+m-2
+px-8
+-mt-4
+p-0
+p-px
+p-0.5
+
+# Sizing
+w-1/2
+w-full
+w-screen
+h-64
+size-4
+
+# Colors
+bg-blue-500
+text-red-500/75
+border-green-300
+
+# Typography
+text-lg
+text-xl
+font-bold
+leading-tight
+tracking-wide
+
+# Borders
+rounded-lg
+rounded-full
+border
+border-2
+
+# Flexbox/Grid
+flex-1
+grid-cols-3
+gap-4
+col-span-2
+
+# Transforms
+translate-x-4
+rotate-45
+scale-50
+-translate-y-1/2
+
+# Transitions
+transition
+duration-300
+ease-in-out
+
+# Filters
+blur-md
+brightness-75
+grayscale
+
+# Variants
+hover:bg-blue-500
+md:flex
+dark:text-white
+focus:ring-2
+
+# Arbitrary values
+w-[300px]
+bg-[#ff0000]
+grid-cols-[1fr_auto_2fr]
+
+# Modifiers
+bg-blue-500/50
+text-black/[.5]
+
+# Negative
+-m-4
+-translate-x-4
+-rotate-12
+
+# Fractions
+w-2/3
+w-1/4
+translate-x-1/2
