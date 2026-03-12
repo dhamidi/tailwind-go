@@ -286,6 +286,83 @@ func TestGridRowsRepeat(t *testing.T) {
 	}
 }
 
+func TestResolveGradientFromComposition(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; }
+@utility from-* {
+  --tw-gradient-from: --value(--color);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="from-blue-500"`))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-gradient-from: #3b82f6") {
+		t.Errorf("from-blue-500 should set --tw-gradient-from: %s", result)
+	}
+	if !strings.Contains(result, "--tw-gradient-stops:") {
+		t.Errorf("from-blue-500 should set --tw-gradient-stops: %s", result)
+	}
+}
+
+func TestResolveGradientViaComposition(t *testing.T) {
+	css := []byte(`
+@theme { --color-green-500: #22c55e; }
+@utility via-* {
+  --tw-gradient-via: --value(--color);
+  --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent);
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="via-green-500"`))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-gradient-via: #22c55e") {
+		t.Errorf("via-green-500 should set --tw-gradient-via: %s", result)
+	}
+	if !strings.Contains(result, "--tw-gradient-stops:") {
+		t.Errorf("via-green-500 should set --tw-gradient-stops: %s", result)
+	}
+	if !strings.Contains(result, "var(--tw-gradient-via)") {
+		t.Errorf("via-green-500 stops should include var(--tw-gradient-via): %s", result)
+	}
+}
+
+func TestResolveGradientFullComposition(t *testing.T) {
+	css := []byte(`
+@theme { --color-blue-500: #3b82f6; --color-green-500: #22c55e; --color-red-500: #ef4444; }
+@utility from-* {
+  --tw-gradient-from: --value(--color);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+}
+@utility via-* {
+  --tw-gradient-via: --value(--color);
+  --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent);
+}
+@utility to-* {
+  --tw-gradient-to: --value(--color);
+}
+@utility bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="from-blue-500 via-green-500 to-red-500 bg-gradient-to-r"`))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-gradient-from: #3b82f6") {
+		t.Errorf("should contain --tw-gradient-from: %s", result)
+	}
+	if !strings.Contains(result, "--tw-gradient-via: #22c55e") {
+		t.Errorf("should contain --tw-gradient-via: %s", result)
+	}
+	if !strings.Contains(result, "--tw-gradient-to: #ef4444") {
+		t.Errorf("should contain --tw-gradient-to: %s", result)
+	}
+	if !strings.Contains(result, "linear-gradient(to right, var(--tw-gradient-stops))") {
+		t.Errorf("should contain linear-gradient: %s", result)
+	}
+}
+
 func TestResolveUtilityBorderVariants(t *testing.T) {
 	css := []byte(`
 @theme { --spacing: 0.25rem; }

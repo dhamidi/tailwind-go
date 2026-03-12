@@ -812,9 +812,11 @@
 /* ===== Gradient Color Stops ===== */
 @utility from-* {
   --tw-gradient-from: --value(--color);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
 }
 @utility via-* {
   --tw-gradient-via: --value(--color);
+  --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent);
 }
 @utility to-* {
   --tw-gradient-to: --value(--color);
