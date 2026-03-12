@@ -36,11 +36,11 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		{"flex-1", "flex", "1"},
 
 		// Spacing (padding/margin)
-		{"p-4", "padding", "calc(4 * 0.25rem)"},
-		{"px-4", "padding-left", "calc(4 * 0.25rem)"},
-		{"py-2", "padding-top", "calc(2 * 0.25rem)"},
-		{"m-4", "margin", "calc(4 * 0.25rem)"},
-		{"mt-2", "margin-top", "calc(2 * 0.25rem)"},
+		{"p-4", "padding", "calc(var(--spacing) * 4)"},
+		{"px-4", "padding-left", "calc(var(--spacing) * 4)"},
+		{"py-2", "padding-top", "calc(var(--spacing) * 2)"},
+		{"m-4", "margin", "calc(var(--spacing) * 4)"},
+		{"mt-2", "margin-top", "calc(var(--spacing) * 2)"},
 		{"mx-auto", "margin-left", "auto"},
 
 		// Sizing

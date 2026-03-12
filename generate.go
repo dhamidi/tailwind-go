@@ -841,18 +841,26 @@ func parseFloat(s string) float64 {
 	return f
 }
 
-// negateValue prepends calc(-1 * ...) for numeric/calc values.
+// negateValue negates a CSS value.
 // Returns "" if the value cannot be negated (e.g. keywords like "auto").
 func negateValue(v string) string {
 	if v == "" {
 		return ""
 	}
-	if strings.HasPrefix(v, "calc(") {
-		return "calc(-1 * " + v[5:]
+	if strings.HasPrefix(v, "calc(") && strings.HasSuffix(v, ")") {
+		inner := v[5 : len(v)-1]
+		// For "base * N" patterns (e.g. spacing calc), negate the multiplier directly.
+		if idx := strings.LastIndex(inner, " * "); idx >= 0 {
+			multiplier := inner[idx+3:]
+			if len(multiplier) > 0 && (multiplier[0] >= '0' && multiplier[0] <= '9' || multiplier[0] == '.') {
+				return "calc(" + inner[:idx+3] + "-" + multiplier + ")"
+			}
+		}
+		return "calc(-1 * " + inner + ")"
 	}
 	// Only negate values that start with a digit or a dimension-like token.
 	if len(v) > 0 && (v[0] >= '0' && v[0] <= '9' || v[0] == '.') {
-		return "calc(-1 * " + v + ")"
+		return "-" + v
 	}
 	// Cannot negate keyword values like "auto", "none", etc.
 	return ""

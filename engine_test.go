@@ -712,7 +712,7 @@ func TestMultiDeclarationPrioritySpacing(t *testing.T) {
 	e.Write([]byte(`class="w-4"`))
 	result := e.CSS()
 	t.Logf("Generated CSS:\n%s", result)
-	if !strings.Contains(result, "calc(4") {
+	if !strings.Contains(result, "calc(var(--spacing) * 4)") {
 		t.Errorf("expected spacing calc, got: %s", result)
 	}
 	// Should only have one width declaration

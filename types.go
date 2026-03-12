@@ -25,9 +25,10 @@ func (tc *ThemeConfig) Resolve(namespace, key string) (string, bool) {
 	}
 
 	// For spacing, compute from the base multiplier (numeric keys only).
+	// Use var(--spacing) to reference the CSS custom property directly.
 	if namespace == "spacing" && isNumeric(key) {
-		if base, ok := tc.Tokens["--spacing"]; ok {
-			return "calc(" + key + " * " + base + ")", true
+		if _, ok := tc.Tokens["--spacing"]; ok {
+			return "calc(var(--spacing) * " + key + ")", true
 		}
 	}
 
