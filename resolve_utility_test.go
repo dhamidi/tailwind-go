@@ -234,6 +234,58 @@ func TestDivideYWithEmbeddedCSS(t *testing.T) {
 	}
 }
 
+func TestGridColsRepeat(t *testing.T) {
+	e := New()
+	tests := []struct {
+		class string
+		want  string
+	}{
+		{"grid-cols-1", "repeat(1, minmax(0, 1fr))"},
+		{"grid-cols-3", "repeat(3, minmax(0, 1fr))"},
+		{"grid-cols-12", "repeat(12, minmax(0, 1fr))"},
+		{"grid-cols-none", "none"},
+		{"grid-cols-subgrid", "subgrid"},
+		{"grid-cols-[1fr_auto_2fr]", "1fr auto 2fr"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			if !strings.Contains(result, tt.want) {
+				t.Errorf("%s: expected %q in CSS output:\n%s", tt.class, tt.want, result)
+			}
+			if strings.Contains(result, "grid-template-columns") != true {
+				t.Errorf("%s: expected grid-template-columns property in CSS output:\n%s", tt.class, result)
+			}
+		})
+	}
+}
+
+func TestGridRowsRepeat(t *testing.T) {
+	e := New()
+	tests := []struct {
+		class string
+		want  string
+	}{
+		{"grid-rows-2", "repeat(2, minmax(0, 1fr))"},
+		{"grid-rows-4", "repeat(4, minmax(0, 1fr))"},
+		{"grid-rows-none", "none"},
+		{"grid-rows-subgrid", "subgrid"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			if !strings.Contains(result, tt.want) {
+				t.Errorf("%s: expected %q in CSS output:\n%s", tt.class, tt.want, result)
+			}
+			if !strings.Contains(result, "grid-template-rows") {
+				t.Errorf("%s: expected grid-template-rows property in CSS output:\n%s", tt.class, result)
+			}
+		})
+	}
+}
+
 func TestResolveUtilityBorderVariants(t *testing.T) {
 	css := []byte(`
 @theme { --spacing: 0.25rem; }
