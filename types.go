@@ -31,7 +31,27 @@ func (tc *ThemeConfig) Resolve(namespace, key string) (string, bool) {
 		}
 	}
 
+	// For grid-template-columns and grid-template-rows, positive integers
+	// produce repeat(N, minmax(0, 1fr)). This matches upstream Tailwind's
+	// handleBareValue for grid-cols-* / grid-rows-*.
+	if (namespace == "grid-template-columns" || namespace == "grid-template-rows") && isPositiveInteger(key) {
+		return "repeat(" + key + ", minmax(0, 1fr))", true
+	}
+
 	return "", false
+}
+
+// isPositiveInteger returns true if s is an integer > 0 with no leading zeros.
+func isPositiveInteger(s string) bool {
+	if s == "" || s == "0" {
+		return false
+	}
+	for _, b := range []byte(s) {
+		if !isDigit(b) {
+			return false
+		}
+	}
+	return true
 }
 
 // NamespaceValues returns all tokens under a given namespace prefix.

@@ -732,6 +732,7 @@
 @utility leading-* {
   line-height: --value(--leading);
   line-height: --value(--line-height);
+  line-height: --value(--spacing);
   line-height: --value(length, number);
 }
 
