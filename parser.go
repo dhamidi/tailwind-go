@@ -236,6 +236,23 @@ func (p *parser) parseVariant(ss *Stylesheet) {
 			}
 		}
 
+		// Check for a second parenthesized group, allowing combined
+		// selector + media variants like: @variant hover (&:hover) (@media (hover: hover));
+		p.skipWhitespace()
+		if p.peek().typ == tokParenOpen {
+			content := p.consumeParenContent()
+			content = strings.TrimSpace(content)
+			if strings.HasPrefix(content, "@media") {
+				v.Media = strings.TrimPrefix(content, "@media ")
+			} else if strings.HasPrefix(content, "@supports") {
+				v.AtRule = "supports"
+				v.Media = strings.TrimPrefix(content, "@supports ")
+			} else if strings.HasPrefix(content, "@container") {
+				v.AtRule = "container"
+				v.Media = strings.TrimPrefix(content, "@container ")
+			}
+		}
+
 		// Consume trailing semicolon if present.
 		p.skipWhitespace()
 		if p.peek().typ == tokSemicolon {

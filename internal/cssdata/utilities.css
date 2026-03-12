@@ -1573,7 +1573,7 @@
 @utility contain-style { contain: style; }
 
 /* ===== Variants ===== */
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 @variant focus (&:focus);
 @variant focus-within (&:focus-within);
 @variant focus-visible (&:focus-visible);

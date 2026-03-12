@@ -470,7 +470,7 @@ func TestParseUtilityStatic(t *testing.T) {
 
 func TestParseVariant(t *testing.T) {
 	css := []byte(`
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 @variant md (@media (width >= 48rem));
 @variant dark (@media (prefers-color-scheme: dark));
 `)
@@ -490,6 +490,9 @@ func TestParseVariant(t *testing.T) {
 
 	if v := byName["hover"]; v.Selector != "&:hover" {
 		t.Errorf("hover selector = %q", v.Selector)
+	}
+	if v := byName["hover"]; v.Media != "(hover: hover)" {
+		t.Errorf("hover media = %q, want %q", v.Media, "(hover: hover)")
 	}
 	if v := byName["md"]; v.Media == "" {
 		t.Error("md should have media query")
@@ -524,7 +527,7 @@ func TestEndToEndSimple(t *testing.T) {
   background-color: --value(--color);
 }
 
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 @variant md (@media (width >= 48rem));
 `)
 
@@ -581,7 +584,7 @@ func TestEndToEndVariants(t *testing.T) {
   background-color: --value(--color);
 }
 
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 @variant md (@media (width >= 48rem));
 `)
 	engine := New()
@@ -593,6 +596,9 @@ func TestEndToEndVariants(t *testing.T) {
 
 	if !strings.Contains(result, "background-color: #2563eb") {
 		t.Error("missing bg color")
+	}
+	if !strings.Contains(result, "@media (hover: hover)") {
+		t.Error("missing @media (hover: hover) wrapper for hover variant")
 	}
 }
 
@@ -861,7 +867,7 @@ func TestApplyDirectiveWithVariant(t *testing.T) {
 	css := []byte(`
 @theme { --color-blue-700: #1d4ed8; }
 @utility bg-* { background-color: --value(--color); }
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 
 .btn {
   @apply hover:bg-blue-700;
@@ -884,7 +890,7 @@ func TestDiagnosticsBasic(t *testing.T) {
 @theme { --color-blue-500: #3b82f6; }
 @utility flex { display: flex; }
 @utility bg-* { background-color: --value(--color); }
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 `)
 	e := New()
 	e.LoadCSS(css)
@@ -1395,7 +1401,7 @@ func TestStartingStyleVariantStacking(t *testing.T) {
 	opacity: --value(integer);
 }
 @variant starting (@starting-style);
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 `)
 	e := New()
 	e.LoadCSS(css)
@@ -1565,7 +1571,7 @@ func TestContainerQueryStacking(t *testing.T) {
 @theme { --spacing: 0.25rem; }
 @utility p-* { padding: --value(--spacing); }
 @variant @md (@container (width >= 48rem));
-@variant hover (&:hover);
+@variant hover (&:hover) (@media (hover: hover));
 `)
 	e := New()
 	e.LoadCSS(css)
@@ -1727,6 +1733,32 @@ func TestStartingStyleVariantBuiltin(t *testing.T) {
 	css := e.CSS()
 	if !strings.Contains(css, "@starting-style") {
 		t.Errorf("expected @starting-style wrapper, got:\n%s", css)
+	}
+}
+
+func TestHoverVariantMediaQuery(t *testing.T) {
+	e := New()
+	e.Write([]byte(`hover:bg-blue-500 focus:bg-blue-500 dark:md:hover:bg-blue-500`))
+	css := e.CSS()
+
+	// hover:bg-blue-500 should be wrapped in @media (hover: hover)
+	if !strings.Contains(css, "@media (hover: hover)") {
+		t.Errorf("hover variant missing @media (hover: hover) wrapper, got:\n%s", css)
+	}
+	if !strings.Contains(css, ":hover") {
+		t.Errorf("hover variant missing :hover selector, got:\n%s", css)
+	}
+
+	// focus:bg-blue-500 should NOT have hover media query
+	// Check that focus rule does not contain hover media
+	focusIdx := strings.Index(css, ".focus\\:bg-blue-500")
+	if focusIdx < 0 {
+		t.Errorf("missing focus rule, got:\n%s", css)
+	}
+
+	// dark:md:hover:bg-blue-500 should compose media queries
+	if !strings.Contains(css, "@media (prefers-color-scheme: dark)") {
+		t.Errorf("missing dark media query, got:\n%s", css)
 	}
 }
 
