@@ -2,6 +2,7 @@ package tailwind
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -724,6 +725,44 @@ func TestMultiDeclarationPrioritySpacing(t *testing.T) {
 	// Should only have one width declaration
 	if strings.Count(result, "width:") != 1 {
 		t.Errorf("expected exactly one width declaration, got: %s", result)
+	}
+}
+
+func TestSpacingMultiplierValidationEmbeddedCSS(t *testing.T) {
+	// Verify that invalid spacing multipliers are rejected even with the
+	// full embedded CSS which has fallback --value(length, percentage) alternatives.
+	validClasses := []string{"p-4", "p-0.5", "p-1.5", "p-2.75", "m-4", "m-0.75"}
+	invalidClasses := []string{"p-0.3", "p-0.7", "p-1.6", "m-0.1", "m-0.33"}
+
+	for _, class := range validClasses {
+		tw := New()
+		tw.Write([]byte(fmt.Sprintf(`<div class="%s">`, class)))
+		css := tw.CSS()
+		if strings.TrimSpace(css) == "" {
+			t.Errorf("valid spacing %s should generate CSS but didn't", class)
+		}
+	}
+
+	for _, class := range invalidClasses {
+		tw := New()
+		tw.Write([]byte(fmt.Sprintf(`<div class="%s">`, class)))
+		css := tw.CSS()
+		if strings.TrimSpace(css) != "" {
+			t.Errorf("invalid spacing %s should be rejected but generated CSS: %s", class, css)
+		}
+	}
+
+	// Edge cases: arbitrary values and zero should still work.
+	tw := New()
+	tw.Write([]byte(`<div class="p-[13px]">`))
+	if strings.TrimSpace(tw.CSS()) == "" {
+		t.Error("p-[13px] arbitrary value should still generate CSS")
+	}
+
+	tw2 := New()
+	tw2.Write([]byte(`<div class="p-0">`))
+	if strings.TrimSpace(tw2.CSS()) == "" {
+		t.Error("p-0 should still generate CSS")
 	}
 }
 

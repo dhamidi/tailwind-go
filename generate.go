@@ -240,6 +240,12 @@ func resolveDeclarations(
 // resolvePropertyGroup tries each alternative declaration for a property
 // and returns the first one that successfully resolves.
 func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, theme *ThemeConfig) *Declaration {
+	// Track whether a spacing namespace alternative exists and rejected the value.
+	// When this happens, bare numeric values must not be accepted by fallback
+	// alternatives (e.g., --value(length, percentage)) to prevent bypassing
+	// spacing multiplier validation.
+	spacingRejected := false
+
 	for _, d := range alts {
 		if !strings.Contains(d.Value, "--value(") {
 			// No placeholder — emit verbatim.
@@ -253,14 +259,27 @@ func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, t
 			}
 		}
 
+		ns := extractNamespace(d.Value)
+
+		// If a spacing namespace already rejected this bare numeric value,
+		// skip non-namespace alternatives that would accept it as length/percentage.
+		if spacingRejected && ns == "" && pc.Arbitrary == "" && isNumeric(valueStr) {
+			continue
+		}
+
 		cssValue := resolveValueForDecl(d, valueStr, pc, theme)
 		if cssValue != "" {
 			resolved := substituteValue(d.Value, cssValue)
 			// Apply opacity modifier if the declaration used a color namespace.
-			if pc.Modifier != "" && extractNamespace(d.Value) == "color" {
+			if pc.Modifier != "" && ns == "color" {
 				resolved = applyModifier(resolved, pc.Modifier, theme)
 			}
 			return &Declaration{Property: d.Property, Value: resolved}
+		}
+
+		// Track if the spacing namespace rejected this value.
+		if ns == "spacing" && isNumeric(valueStr) {
+			spacingRejected = true
 		}
 	}
 	return nil

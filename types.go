@@ -26,7 +26,11 @@ func (tc *ThemeConfig) Resolve(namespace, key string) (string, bool) {
 
 	// For spacing, compute from the base multiplier (numeric keys only).
 	// Use var(--spacing) to reference the CSS custom property directly.
+	// Only accept multiples of 0.25 to match Tailwind's spacing scale.
 	if namespace == "spacing" && isNumeric(key) {
+		if !isValidSpacingMultiplier(key) {
+			return "", false
+		}
 		if _, ok := tc.Tokens["--spacing"]; ok {
 			return "calc(var(--spacing) * " + key + ")", true
 		}
@@ -53,6 +57,29 @@ func isPositiveInteger(s string) bool {
 		}
 	}
 	return true
+}
+
+// isValidSpacingMultiplier returns true if s is a numeric value that is
+// a multiple of 0.25. This validates Tailwind's spacing scale where only
+// values like 0, 0.25, 0.5, 0.75, 1, 1.25, ... are valid.
+func isValidSpacingMultiplier(s string) bool {
+	// Parse the numeric value by splitting on decimal point.
+	parts := strings.SplitN(s, ".", 2)
+	if len(parts) == 1 {
+		// Integer — always a valid multiple of 0.25.
+		return true
+	}
+	// Has a fractional part. Valid fractional parts for multiples of 0.25
+	// are: .25, .5, .75, .0 (and equivalents like .50, .250, etc.)
+	frac := parts[1]
+	// Normalize by removing trailing zeros.
+	frac = strings.TrimRight(frac, "0")
+	if frac == "" {
+		// e.g., "1.0" — integer, valid.
+		return true
+	}
+	// Valid fractional parts after trimming trailing zeros: "25", "5", "75"
+	return frac == "25" || frac == "5" || frac == "75"
 }
 
 // NamespaceValues returns all tokens under a given namespace prefix.
