@@ -88,13 +88,14 @@ func resolveClass(
 	}
 
 	// Look up the utility.
-	utilDef, valueStr := resolveUtility(pc, utils)
-	if utilDef == nil {
+	entry, valueStr := resolveUtility(pc, utils)
+	if entry == nil {
 		return nil
 	}
 
-	// Resolve the declarations by substituting the value.
-	decls := resolveDeclarations(utilDef, valueStr, pc, theme)
+	// Resolve declarations: dispatch to CompileFn for Go-registered
+	// utilities or resolveDeclarations for CSS-parsed ones.
+	decls := resolveEntryDeclarations(entry, valueStr, pc, theme)
 	if decls == nil {
 		return nil
 	}
@@ -104,8 +105,8 @@ func resolveClass(
 	selector = resolveVariantSelector(selector, pc.Variants, variants)
 
 	// Append child selector suffix if the utility defines one.
-	if utilDef.Selector != "" {
-		selector = selector + " " + utilDef.Selector
+	if entry.utilitySelector() != "" {
+		selector = selector + " " + entry.utilitySelector()
 	}
 
 	// Apply variant media query wrapping.
@@ -116,20 +117,20 @@ func resolveClass(
 		declarations: decls,
 		important:    pc.Important,
 		mediaQueries: mediaQueries,
-		order:        utilDef.Order,
+		order:        entry.utilityOrder(),
 	}
 }
 
-// resolveUtility finds the matching UtilityDef for a parsed class.
+// resolveUtility finds the matching utilityEntry for a parsed class.
 // It reconstructs the full utility-value string and uses the index's
 // longest-prefix matching to disambiguate patterns like "bg" vs "bg-x".
-func resolveUtility(pc ParsedClass, utils *utilityIndex) (*UtilityDef, string) {
+func resolveUtility(pc ParsedClass, utils *utilityIndex) (utilityEntry, string) {
 	// Arbitrary values: the class parser already knows the utility name.
 	// We just need to match it against a pattern.
 	if pc.Arbitrary != "" {
 		// Direct pattern match (dynamic utilities).
 		for _, u := range utils.dynamic {
-			if pc.Utility == u.Pattern {
+			if pc.Utility == u.utilityPattern() {
 				return u, pc.Arbitrary
 			}
 		}
@@ -173,7 +174,7 @@ func resolveUtility(pc ParsedClass, utils *utilityIndex) (*UtilityDef, string) {
 
 		// Try dynamic patterns for this split.
 		for _, u := range utils.dynamic {
-			if utilPart == u.Pattern {
+			if utilPart == u.utilityPattern() {
 				return u, valPart
 			}
 		}

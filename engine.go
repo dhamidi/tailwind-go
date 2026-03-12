@@ -65,6 +65,11 @@ func New() *Engine {
 	// Errors are ignored — the embedded CSS is known-good.
 	_ = e.LoadCSS(cssdata.Theme)
 	_ = e.LoadCSS(cssdata.Utilities)
+
+	// Register Go-based utilities (proof-of-concept).
+	// These replace the equivalent CSS-parsed definitions.
+	registerGoUtilities(e.utilIndex)
+
 	return e
 }
 
@@ -222,12 +227,12 @@ func (e *Engine) processApplyRulesWithDepth(rules []*ApplyRule, depth int, visit
 			visited[cls] = true
 
 			pc := parseClass(cls)
-			utilDef, valueStr := resolveUtility(pc, e.utilIndex)
-			if utilDef == nil {
+			entry, valueStr := resolveUtility(pc, e.utilIndex)
+			if entry == nil {
 				delete(visited, cls)
 				continue
 			}
-			decls := resolveDeclarations(utilDef, valueStr, pc, e.theme)
+			decls := resolveEntryDeclarations(entry, valueStr, pc, e.theme)
 			if decls == nil {
 				delete(visited, cls)
 				continue

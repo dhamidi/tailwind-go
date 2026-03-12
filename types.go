@@ -95,6 +95,15 @@ func (tc *ThemeConfig) NamespaceValues(namespace string) map[string]string {
 	return out
 }
 
+// utilityEntry is the interface for both CSS-parsed and Go-registered utilities.
+// It provides the common fields needed for indexing and resolution.
+type utilityEntry interface {
+	utilityPattern() string
+	utilityIsStatic() bool
+	utilityOrder() int
+	utilitySelector() string
+}
+
 // UtilityDef defines a utility pattern parsed from @utility blocks.
 type UtilityDef struct {
 	// Pattern is the utility name pattern, e.g., "w", "bg", "translate-x".
@@ -116,6 +125,11 @@ type UtilityDef struct {
 	// the rule to target children rather than the element itself.
 	Selector string
 }
+
+func (u *UtilityDef) utilityPattern() string  { return u.Pattern }
+func (u *UtilityDef) utilityIsStatic() bool   { return u.Static }
+func (u *UtilityDef) utilityOrder() int       { return u.Order }
+func (u *UtilityDef) utilitySelector() string { return u.Selector }
 
 // Declaration is a single CSS property: value pair.
 // The Value field may contain "--value(...)" placeholders that are resolved
@@ -167,48 +181,50 @@ type Stylesheet struct {
 }
 
 // utilityIndex provides fast lookup of utility definitions by class prefix.
+// It supports both CSS-parsed UtilityDef entries and Go-registered
+// UtilityRegistration entries via the utilityEntry interface.
 type utilityIndex struct {
 	// static maps exact utility names to their definitions.
-	// e.g., "flex" → &UtilityDef{...}
-	static map[string]*UtilityDef
+	// e.g., "flex" → utilityEntry
+	static map[string]utilityEntry
 
 	// dynamic holds pattern-based utilities, sorted longest-first.
 	// e.g., "translate-x" before "translate" before "t".
-	dynamic []*UtilityDef
+	dynamic []utilityEntry
 }
 
 func newUtilityIndex() *utilityIndex {
 	return &utilityIndex{
-		static: make(map[string]*UtilityDef),
+		static: make(map[string]utilityEntry),
 	}
 }
 
-func (idx *utilityIndex) add(u *UtilityDef) {
-	if u.Static {
-		idx.static[u.Pattern] = u
+func (idx *utilityIndex) add(entry utilityEntry) {
+	if entry.utilityIsStatic() {
+		idx.static[entry.utilityPattern()] = entry
 	} else {
 		// Replace existing dynamic utility with the same pattern.
 		replaced := false
 		for i, existing := range idx.dynamic {
-			if existing.Pattern == u.Pattern {
-				idx.dynamic[i] = u
+			if existing.utilityPattern() == entry.utilityPattern() {
+				idx.dynamic[i] = entry
 				replaced = true
 				break
 			}
 		}
 		if !replaced {
-			idx.dynamic = append(idx.dynamic, u)
+			idx.dynamic = append(idx.dynamic, entry)
 		}
 		// Keep sorted longest-pattern-first for greedy matching.
 		sort.Slice(idx.dynamic, func(i, j int) bool {
-			return len(idx.dynamic[i].Pattern) > len(idx.dynamic[j].Pattern)
+			return len(idx.dynamic[i].utilityPattern()) > len(idx.dynamic[j].utilityPattern())
 		})
 	}
 }
 
-// lookup finds the utility definition for a given utility name and
-// value string. Returns the definition and the extracted value portion.
-func (idx *utilityIndex) lookup(utility string) (*UtilityDef, string) {
+// lookup finds the utility entry for a given utility name and
+// value string. Returns the entry and the extracted value portion.
+func (idx *utilityIndex) lookup(utility string) (utilityEntry, string) {
 	// Try static first (exact match, no value).
 	if u, ok := idx.static[utility]; ok {
 		return u, ""
@@ -216,12 +232,12 @@ func (idx *utilityIndex) lookup(utility string) (*UtilityDef, string) {
 
 	// Try dynamic patterns (longest prefix match).
 	for _, u := range idx.dynamic {
-		if utility == u.Pattern {
+		if utility == u.utilityPattern() {
 			// Exact match on pattern name but it's dynamic — no value.
 			// This shouldn't normally happen; skip.
 			continue
 		}
-		prefix := u.Pattern + "-"
+		prefix := u.utilityPattern() + "-"
 		if strings.HasPrefix(utility, prefix) {
 			value := strings.TrimPrefix(utility, prefix)
 			return u, value
