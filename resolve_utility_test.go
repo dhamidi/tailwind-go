@@ -380,3 +380,68 @@ func TestResolveUtilityBorderVariants(t *testing.T) {
 		t.Errorf("border-t-4 not resolved: %s", result)
 	}
 }
+
+func TestFilterComposition(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="blur-md brightness-75"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// Both utilities should set their own CSS variable.
+	if !strings.Contains(result, "--tw-blur: blur(") {
+		t.Errorf("blur-md should set --tw-blur variable: %s", result)
+	}
+	if !strings.Contains(result, "--tw-brightness: brightness(75%)") {
+		t.Errorf("brightness-75 should set --tw-brightness variable: %s", result)
+	}
+
+	// Both utilities should output the composed filter property.
+	composedFilter := "var(--tw-blur,) var(--tw-brightness,)"
+	if !strings.Contains(result, composedFilter) {
+		t.Errorf("filter utilities should output composed filter with CSS variables: %s", result)
+	}
+
+	// The filter property should NOT be a bare blur() or brightness() value.
+	if strings.Contains(result, "filter: blur(") {
+		t.Errorf("filter should use CSS variable composition, not bare filter functions: %s", result)
+	}
+	if strings.Contains(result, "filter: brightness(") {
+		t.Errorf("filter should use CSS variable composition, not bare filter functions: %s", result)
+	}
+}
+
+func TestFilterCompositionSingleUtility(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="blur-md"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// Single filter utility should still use composed pattern.
+	if !strings.Contains(result, "--tw-blur:") {
+		t.Errorf("blur-md should set --tw-blur: %s", result)
+	}
+	if !strings.Contains(result, "var(--tw-blur,)") {
+		t.Errorf("blur-md should use composed filter: %s", result)
+	}
+}
+
+func TestBackdropFilterComposition(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="backdrop-blur-lg backdrop-brightness-50"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// Both utilities should set their own CSS variable.
+	if !strings.Contains(result, "--tw-backdrop-blur: blur(") {
+		t.Errorf("backdrop-blur-lg should set --tw-backdrop-blur variable: %s", result)
+	}
+	if !strings.Contains(result, "--tw-backdrop-brightness: brightness(50%)") {
+		t.Errorf("backdrop-brightness-50 should set --tw-backdrop-brightness variable: %s", result)
+	}
+
+	// Both should use composed backdrop-filter.
+	composedFilter := "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,)"
+	if !strings.Contains(result, composedFilter) {
+		t.Errorf("backdrop-filter utilities should output composed filter: %s", result)
+	}
+}
