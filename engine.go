@@ -61,14 +61,16 @@ func New() *Engine {
 		utilIndex:  newUtilityIndex(),
 		candidates: make(map[string]struct{}),
 	}
-	// Load bundled Tailwind CSS (theme + utilities).
+	// Load bundled Tailwind CSS (theme tokens).
 	// Errors are ignored — the embedded CSS is known-good.
 	_ = e.LoadCSS(cssdata.Theme)
 	_ = e.LoadCSS(cssdata.Utilities)
 
-	// Register Go-based utilities (proof-of-concept).
-	// These replace the equivalent CSS-parsed definitions.
+	// Register Go-based utilities (replaces CSS-parsed definitions).
 	registerGoUtilities(e.utilIndex)
+
+	// Register Go-based variants (replaces CSS-parsed definitions).
+	registerGoVariants(e.variants, 1000)
 
 	return e
 }
