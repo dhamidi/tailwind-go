@@ -100,6 +100,15 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		// Accessibility
 		{"sr-only", "position", "absolute"},
 
+		// Ring utilities
+		{"ring", "box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)"},
+		{"ring-2", "box-shadow", "var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, currentColor)"},
+		{"ring-0", "box-shadow", "calc(0px + var(--tw-ring-offset-width, 0px))"},
+		{"ring-1", "box-shadow", "calc(1px + var(--tw-ring-offset-width, 0px))"},
+		{"ring-4", "box-shadow", "calc(4px + var(--tw-ring-offset-width, 0px))"},
+		{"ring-8", "box-shadow", "calc(8px + var(--tw-ring-offset-width, 0px))"},
+		{"ring-inset", "--tw-ring-inset", "inset"},
+
 		// Transitions
 		{"transition", "transition-property", ""},
 
