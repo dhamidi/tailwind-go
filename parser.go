@@ -133,6 +133,16 @@ func (p *parser) parseUtility(ss *Stylesheet) {
 		return
 	}
 
+	// Collect any selector suffix between the pattern and the opening brace.
+	// e.g., @utility space-x-* > :not(:last-child) { ... }
+	//                           ^^^^^^^^^^^^^^^^^^^^
+	var selectorParts []string
+	for p.peek().typ != tokBraceOpen && p.peek().typ != tokEOF {
+		selectorParts = append(selectorParts, p.peek().value)
+		p.advance()
+	}
+	selector := strings.TrimSpace(strings.Join(selectorParts, ""))
+
 	if p.peek().typ != tokBraceOpen {
 		return
 	}
@@ -160,6 +170,7 @@ func (p *parser) parseUtility(ss *Stylesheet) {
 		Static:       static,
 		Declarations: decls,
 		Order:        p.order,
+		Selector:     selector,
 	})
 }
 

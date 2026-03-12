@@ -82,6 +82,11 @@ type UtilityDef struct {
 
 	// Order tracks definition order for stable CSS output sorting.
 	Order int
+
+	// Selector is an optional child selector suffix appended to the
+	// generated CSS selector. For example, "> :not(:last-child)" causes
+	// the rule to target children rather than the element itself.
+	Selector string
 }
 
 // Declaration is a single CSS property: value pair.

@@ -473,16 +473,22 @@
 @utility ml-auto { margin-left: auto; }
 
 /* ===== Space Between ===== */
-@utility space-x-* {
-  margin-left: --value(--spacing);
-  margin-left: --value(length, percentage);
+@utility space-x-* > :not(:last-child) {
+  --tw-space-x-reverse: 0;
+  margin-inline-end: calc(--value(--spacing) * var(--tw-space-x-reverse));
+  margin-inline-start: calc(--value(--spacing) * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(--value(length, percentage) * var(--tw-space-x-reverse));
+  margin-inline-start: calc(--value(length, percentage) * calc(1 - var(--tw-space-x-reverse)));
 }
-@utility space-y-* {
-  margin-top: --value(--spacing);
-  margin-top: --value(length, percentage);
+@utility space-y-* > :not(:last-child) {
+  --tw-space-y-reverse: 0;
+  margin-block-end: calc(--value(--spacing) * var(--tw-space-y-reverse));
+  margin-block-start: calc(--value(--spacing) * calc(1 - var(--tw-space-y-reverse)));
+  margin-block-end: calc(--value(length, percentage) * var(--tw-space-y-reverse));
+  margin-block-start: calc(--value(length, percentage) * calc(1 - var(--tw-space-y-reverse)));
 }
-@utility space-x-reverse { --tw-space-x-reverse: 1; }
-@utility space-y-reverse { --tw-space-y-reverse: 1; }
+@utility space-x-reverse > :not(:last-child) { --tw-space-x-reverse: 1; }
+@utility space-y-reverse > :not(:last-child) { --tw-space-y-reverse: 1; }
 
 /* ===== Width ===== */
 @utility w-* {

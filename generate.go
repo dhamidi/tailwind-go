@@ -103,6 +103,11 @@ func resolveClass(
 	selector := buildSelector(pc)
 	selector = resolveVariantSelector(selector, pc.Variants, variants)
 
+	// Append child selector suffix if the utility defines one.
+	if utilDef.Selector != "" {
+		selector = selector + " " + utilDef.Selector
+	}
+
 	// Apply variant media query wrapping.
 	mediaQueries := resolveVariants(pc.Variants, variants)
 

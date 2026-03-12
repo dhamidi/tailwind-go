@@ -23,6 +23,106 @@ func TestResolveUtilityColorClass(t *testing.T) {
 	}
 }
 
+func TestSpaceXChildSelector(t *testing.T) {
+	css := []byte(`
+@theme { --spacing: 0.25rem; }
+@utility space-x-* > :not(:last-child) {
+  --tw-space-x-reverse: 0;
+  margin-inline-end: calc(--value(--spacing) * var(--tw-space-x-reverse));
+  margin-inline-start: calc(--value(--spacing) * calc(1 - var(--tw-space-x-reverse)));
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="space-x-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// Must target children, not the parent element.
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("space-x-4 should use child selector > :not(:last-child): %s", result)
+	}
+	// Must use logical properties.
+	if !strings.Contains(result, "margin-inline-start") {
+		t.Errorf("space-x-4 should use margin-inline-start: %s", result)
+	}
+	if !strings.Contains(result, "margin-inline-end") {
+		t.Errorf("space-x-4 should use margin-inline-end: %s", result)
+	}
+	// Must NOT use margin-left (old behavior).
+	if strings.Contains(result, "margin-left") {
+		t.Errorf("space-x-4 should NOT use margin-left: %s", result)
+	}
+	// Must include the reverse variable declaration.
+	if !strings.Contains(result, "--tw-space-x-reverse: 0") {
+		t.Errorf("space-x-4 should include --tw-space-x-reverse: 0: %s", result)
+	}
+}
+
+func TestSpaceYChildSelector(t *testing.T) {
+	css := []byte(`
+@theme { --spacing: 0.25rem; }
+@utility space-y-* > :not(:last-child) {
+  --tw-space-y-reverse: 0;
+  margin-block-end: calc(--value(--spacing) * var(--tw-space-y-reverse));
+  margin-block-start: calc(--value(--spacing) * calc(1 - var(--tw-space-y-reverse)));
+}
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="space-y-2"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("space-y-2 should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "margin-block-start") {
+		t.Errorf("space-y-2 should use margin-block-start: %s", result)
+	}
+	if !strings.Contains(result, "margin-block-end") {
+		t.Errorf("space-y-2 should use margin-block-end: %s", result)
+	}
+	if strings.Contains(result, "margin-top") {
+		t.Errorf("space-y-2 should NOT use margin-top: %s", result)
+	}
+}
+
+func TestSpaceXReverseChildSelector(t *testing.T) {
+	css := []byte(`
+@utility space-x-reverse > :not(:last-child) { --tw-space-x-reverse: 1; }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="space-x-reverse"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("space-x-reverse should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "--tw-space-x-reverse: 1") {
+		t.Errorf("space-x-reverse should set --tw-space-x-reverse: 1: %s", result)
+	}
+}
+
+func TestSpaceXWithEmbeddedCSS(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="space-x-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "> :not(:last-child)") {
+		t.Errorf("space-x-4 should use child selector: %s", result)
+	}
+	if !strings.Contains(result, "margin-inline-start") {
+		t.Errorf("space-x-4 should use margin-inline-start: %s", result)
+	}
+	if strings.Contains(result, "margin-left") {
+		t.Errorf("space-x-4 should NOT use margin-left: %s", result)
+	}
+}
+
 func TestResolveUtilityBorderVariants(t *testing.T) {
 	css := []byte(`
 @theme { --spacing: 0.25rem; }

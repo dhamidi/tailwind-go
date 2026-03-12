@@ -413,6 +413,39 @@ func TestParseUtilityDynamic(t *testing.T) {
 	}
 }
 
+func TestParseUtilityWithChildSelector(t *testing.T) {
+	css := []byte(`
+@utility space-x-* > :not(:last-child) {
+  margin-inline-start: --value(--spacing);
+}
+`)
+	ss, err := parseStylesheet(css)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(ss.Utilities) != 1 {
+		t.Fatalf("got %d utilities, want 1", len(ss.Utilities))
+	}
+
+	u := ss.Utilities[0]
+	if u.Pattern != "space-x" {
+		t.Errorf("pattern = %q, want %q", u.Pattern, "space-x")
+	}
+	if u.Static {
+		t.Error("expected dynamic utility")
+	}
+	if u.Selector != "> :not(:last-child)" {
+		t.Errorf("selector = %q, want %q", u.Selector, "> :not(:last-child)")
+	}
+	if len(u.Declarations) != 1 {
+		t.Fatalf("got %d declarations", len(u.Declarations))
+	}
+	if u.Declarations[0].Property != "margin-inline-start" {
+		t.Errorf("property = %q", u.Declarations[0].Property)
+	}
+}
+
 func TestParseUtilityStatic(t *testing.T) {
 	css := []byte(`
 @utility flex {
