@@ -889,7 +889,7 @@ func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
 	} else {
 		opacityStr = resolveModifierOpacity(modifier, theme)
 	}
-	return "oklch(from " + cssValue + " l c h / " + opacityStr + ")"
+	return "color-mix(in srgb, " + cssValue + " " + opacityStr + ", transparent)"
 }
 
 // resolveModifierOpacity resolves an opacity modifier value.

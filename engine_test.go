@@ -321,7 +321,7 @@ func TestEndToEndOpacityModifier(t *testing.T) {
 	e.LoadCSS(css)
 	e.Write([]byte(`class="bg-blue-500/75"`))
 	result := e.CSS()
-	if !strings.Contains(result, "oklch(from #3b82f6 l c h / 75%)") {
+	if !strings.Contains(result, "color-mix(in srgb, #3b82f6 75%, transparent)") {
 		t.Errorf("unexpected output: %s", result)
 	}
 }
@@ -335,7 +335,7 @@ func TestEndToEndOpacityModifierArbitrary(t *testing.T) {
 	e.LoadCSS(css)
 	e.Write([]byte(`class="bg-blue-500/[.5]"`))
 	result := e.CSS()
-	if !strings.Contains(result, "oklch(from #3b82f6 l c h / .5)") {
+	if !strings.Contains(result, "color-mix(in srgb, #3b82f6 .5, transparent)") {
 		t.Errorf("unexpected output: %s", result)
 	}
 }
@@ -352,7 +352,7 @@ func TestEndToEndOpacityTheme(t *testing.T) {
 	e.LoadCSS(css)
 	e.Write([]byte(`class="text-white/50"`))
 	result := e.CSS()
-	if !strings.Contains(result, "oklch(from white l c h / 0.5)") {
+	if !strings.Contains(result, "color-mix(in srgb, white 0.5, transparent)") {
 		t.Errorf("unexpected output: %s", result)
 	}
 }
@@ -1482,7 +1482,7 @@ func TestNamedGroupDoesNotConflictWithOpacityModifier(t *testing.T) {
 	result := e.CSS()
 	t.Logf("Generated CSS:\n%s", result)
 	// Should still produce opacity modifier, not named group
-	if !strings.Contains(result, "oklch(from #3b82f6 l c h / 75%)") {
+	if !strings.Contains(result, "color-mix(in srgb, #3b82f6 75%, transparent)") {
 		t.Errorf("opacity modifier broken, got: %s", result)
 	}
 }
