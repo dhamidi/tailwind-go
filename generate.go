@@ -57,7 +57,10 @@ func generate(
 		if iHasMedia != jHasMedia {
 			return !iHasMedia // unwrapped first
 		}
-		return rules[i].order < rules[j].order
+		if rules[i].order != rules[j].order {
+			return rules[i].order < rules[j].order
+		}
+		return rules[i].selector < rules[j].selector
 	})
 
 	return emitCSS(rules, referencedKeyframes, keyframes)
