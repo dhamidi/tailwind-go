@@ -317,7 +317,7 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 			return "" // namespace-only but didn't resolve — try next alt
 		}
 		// Fall through to type-based resolution with the extracted types.
-		return resolveRawValue(valueStr, valueTypes, pc)
+		return resolveRawValue(valueStr, valueTypes, pc, d)
 	}
 
 	// No namespace — this is a type-based --value() like --value(length, percentage).
@@ -334,7 +334,7 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 
 	// Try type-based resolution.
 	valueTypes := extractValueTypes(d.Value)
-	return resolveRawValue(valueStr, valueTypes, pc)
+	return resolveRawValue(valueStr, valueTypes, pc, d)
 }
 
 // extractValueTypes parses --value(length, percentage) → ["length", "percentage"]
@@ -368,7 +368,7 @@ func extractValueTypes(value string) []string {
 
 // resolveRawValue handles type-based --value() resolution for non-arbitrary,
 // non-theme values (e.g., --value(length), --value(integer), --value(any)).
-func resolveRawValue(valueStr string, types []string, pc ParsedClass) string {
+func resolveRawValue(valueStr string, types []string, pc ParsedClass, d Declaration) string {
 	for _, t := range types {
 		switch t {
 		case "integer", "number":
@@ -377,13 +377,30 @@ func resolveRawValue(valueStr string, types []string, pc ParsedClass) string {
 				if pc.Negative {
 					v = "-" + v
 				}
+				// Apply bare value unit suffix based on property/value context.
+				// This matches upstream Tailwind's handleBareValue callbacks.
+				v = applyBareValueUnit(v, d)
 				return v
+			}
+		case "percentage":
+			// For bare integers in percentage context, append %.
+			// This handles scale-50 → 50%, brightness-75 → 75%, etc.
+			if isNumeric(valueStr) {
+				v := valueStr
+				if pc.Negative {
+					v = "-" + v
+				}
+				return v + "%"
+			}
+			// For non-arbitrary values, try raw value conversion.
+			if raw := rawValue(valueStr); raw != "" {
+				return raw
 			}
 		case "any":
 			if valueStr != "" {
 				return valueStr
 			}
-		case "length", "percentage":
+		case "length":
 			// For non-arbitrary values, try raw value conversion.
 			if raw := rawValue(valueStr); raw != "" {
 				return raw
@@ -391,6 +408,31 @@ func resolveRawValue(valueStr string, types []string, pc ParsedClass) string {
 		}
 	}
 	return ""
+}
+
+// applyBareValueUnit adds a CSS unit suffix to a bare integer/number value
+// based on the declaration's property and value template context.
+// This matches upstream Tailwind's handleBareValue callbacks which append
+// units like deg, ms, px to bare integer values.
+func applyBareValueUnit(v string, d Declaration) string {
+	prop := d.Property
+	valTemplate := d.Value
+
+	// Degree-based properties: rotate, skew, hue-rotate
+	if prop == "rotate" || strings.HasPrefix(prop, "--tw-skew") {
+		return v + "deg"
+	}
+	if strings.Contains(valTemplate, "hue-rotate(") {
+		return v + "deg"
+	}
+
+	// Time-based properties: transition-duration, transition-delay
+	if prop == "transition-duration" || prop == "transition-delay" ||
+		prop == "animation-duration" || prop == "animation-delay" {
+		return v + "ms"
+	}
+
+	return v
 }
 
 // extractNamespace pulls the theme namespace from a --value() expression.
