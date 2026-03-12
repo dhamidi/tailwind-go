@@ -105,6 +105,26 @@ func (e *Engine) LoadCSS(css []byte) error {
 		e.theme.Tokens[k] = v
 	}
 
+	// Register font-family utilities for custom --font-* theme tokens.
+	// Excludes --font-weight-* (handled by the "font" dynamic utility).
+	for k := range stylesheet.Theme.Tokens {
+		if !strings.HasPrefix(k, "--font-") {
+			continue
+		}
+		suffix := k[len("--font-"):]
+		// Skip sub-namespaced tokens that map to other utilities.
+		if strings.HasPrefix(suffix, "weight") || strings.HasPrefix(suffix, "size") {
+			continue
+		}
+		utilName := "font-" + suffix
+		// Don't override already-registered utilities.
+		if _, exists := e.utilIndex.static[utilName]; exists {
+			continue
+		}
+		reg := staticUtility(utilName, decls("font-family", "var("+k+")"))
+		e.utilIndex.add(reg)
+	}
+
 	// Register utilities
 	for _, u := range stylesheet.Utilities {
 		e.utilities = append(e.utilities, u)

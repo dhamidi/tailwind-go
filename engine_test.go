@@ -1958,3 +1958,40 @@ func TestSelectionVariantMultiSelector(t *testing.T) {
 		t.Errorf("selection variant should target self with ::selection, got:\n%s", css)
 	}
 }
+
+func TestCustomFontUtility(t *testing.T) {
+	e := New()
+	e.LoadCSS([]byte(`@theme { --font-display: "Cal Sans", "Inter", sans-serif; }`))
+	e.Write([]byte(`<div class="font-display">`))
+	css := e.CSS()
+	if !strings.Contains(css, "font-family") {
+		t.Errorf("expected font-display utility to produce font-family, got:\n%s", css)
+	}
+	if !strings.Contains(css, "var(--font-display)") {
+		t.Errorf("expected var(--font-display), got:\n%s", css)
+	}
+}
+
+func TestCustomFontUtilityDoesNotOverrideBuiltins(t *testing.T) {
+	e := New()
+	// Built-in font-sans should still work after loading custom theme
+	e.LoadCSS([]byte(`@theme { --font-display: "Cal Sans", sans-serif; }`))
+	e.Write([]byte(`<div class="font-sans font-display">`))
+	css := e.CSS()
+	if !strings.Contains(css, "var(--font-sans)") {
+		t.Errorf("expected built-in font-sans to still work, got:\n%s", css)
+	}
+	if !strings.Contains(css, "var(--font-display)") {
+		t.Errorf("expected custom font-display utility, got:\n%s", css)
+	}
+}
+
+func TestFontWeightTokenNotRegisteredAsFontFamily(t *testing.T) {
+	e := New()
+	e.LoadCSS([]byte(`@theme { --font-weight-custom: 450; }`))
+	e.Write([]byte(`<div class="font-weight-custom">`))
+	css := e.CSS()
+	if strings.Contains(css, "font-family") {
+		t.Errorf("--font-weight-* tokens should not create font-family utilities, got:\n%s", css)
+	}
+}
