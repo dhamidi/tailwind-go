@@ -622,7 +622,7 @@ func TestEndToEndFraction(t *testing.T) {
 	result := engine.CSS()
 	t.Logf("Generated CSS:\n%s", result)
 
-	if !strings.Contains(result, "50%") {
+	if !strings.Contains(result, "calc(1 / 2 * 100%)") {
 		t.Error("missing fraction percentage")
 	}
 }

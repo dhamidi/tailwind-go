@@ -46,7 +46,7 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		// Sizing
 		{"w-full", "width", "100%"},
 		{"h-full", "height", "100%"},
-		{"w-1/2", "width", "50%"},
+		{"w-1/2", "width", "calc(1 / 2 * 100%)"},
 		{"min-w-0", "min-width", "0"},
 		{"max-w-full", "max-width", "100%"},
 

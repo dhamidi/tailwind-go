@@ -805,19 +805,34 @@ func keywordToCSS(s string, property string) string {
 	return ""
 }
 
-// fractionToPercent converts "1/2" → "50%", "2/3" → "66.666667%", etc.
+// fractionToPercent converts "1/2" → "calc(1 / 2 * 100%)", etc.
 func fractionToPercent(s string) string {
 	parts := strings.SplitN(s, "/", 2)
 	if len(parts) != 2 {
 		return ""
 	}
-	num := parseFloat(parts[0])
-	den := parseFloat(parts[1])
-	if den == 0 {
+	num := parts[0]
+	den := parts[1]
+	if !isPositiveInt(num) || !isPositiveInt(den) {
 		return ""
 	}
-	pct := (num / den) * 100
-	return fmt.Sprintf("%.6g%%", pct)
+	if den == "0" {
+		return ""
+	}
+	return "calc(" + num + " / " + den + " * 100%)"
+}
+
+// isPositiveInt returns true if s is a non-empty string of digits representing a positive integer.
+func isPositiveInt(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func parseFloat(s string) float64 {
