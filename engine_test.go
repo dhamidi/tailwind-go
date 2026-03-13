@@ -3542,6 +3542,106 @@ func TestEndToEndNegativeArbitraryValues(t *testing.T) {
 	}
 }
 
+func TestFontSmoothing(t *testing.T) {
+	e := New()
+	e.Write([]byte(`antialiased subpixel-antialiased`))
+	css := e.CSS()
+	for _, tc := range []struct {
+		class, want string
+	}{
+		{"antialiased", "-webkit-font-smoothing: antialiased"},
+		{"antialiased", "-moz-osx-font-smoothing: grayscale"},
+		{"subpixel-antialiased", "-webkit-font-smoothing: auto"},
+		{"subpixel-antialiased", "-moz-osx-font-smoothing: auto"},
+	} {
+		if !strings.Contains(css, tc.want) {
+			t.Errorf("%s should produce %s, got:\n%s", tc.class, tc.want, css)
+		}
+	}
+}
+
+func TestWrapUtilities(t *testing.T) {
+	e := New()
+	e.Write([]byte(`wrap-anywhere wrap-break-word wrap-normal`))
+	css := e.CSS()
+	for _, tc := range []struct {
+		class, want string
+	}{
+		{"wrap-anywhere", "overflow-wrap: anywhere"},
+		{"wrap-break-word", "overflow-wrap: break-word"},
+		{"wrap-normal", "overflow-wrap: normal"},
+	} {
+		if !strings.Contains(css, tc.want) {
+			t.Errorf("%s should produce %s, got:\n%s", tc.class, tc.want, css)
+		}
+	}
+}
+
+func TestSafeAlignment(t *testing.T) {
+	e := New()
+	e.Write([]byte(`items-center-safe items-end-safe justify-center-safe justify-end-safe place-items-center-safe place-items-end-safe place-content-center-safe place-content-end-safe content-center-safe content-end-safe self-center-safe self-end-safe justify-self-center-safe justify-self-end-safe place-self-center-safe place-self-end-safe`))
+	css := e.CSS()
+	for _, tc := range []struct {
+		class, want string
+	}{
+		{"items-center-safe", "align-items: safe center"},
+		{"items-end-safe", "align-items: safe end"},
+		{"justify-center-safe", "justify-content: safe center"},
+		{"justify-end-safe", "justify-content: safe end"},
+		{"place-items-center-safe", "place-items: safe center"},
+		{"place-items-end-safe", "place-items: safe end"},
+		{"place-content-center-safe", "place-content: safe center"},
+		{"place-content-end-safe", "place-content: safe end"},
+		{"content-center-safe", "align-content: safe center"},
+		{"content-end-safe", "align-content: safe end"},
+		{"self-center-safe", "align-self: safe center"},
+		{"self-end-safe", "align-self: safe end"},
+		{"justify-self-center-safe", "justify-self: safe center"},
+		{"justify-self-end-safe", "justify-self: safe end"},
+		{"place-self-center-safe", "place-self: safe center"},
+		{"place-self-end-safe", "place-self: safe end"},
+	} {
+		if !strings.Contains(css, tc.want) {
+			t.Errorf("%s should produce %s, got:\n%s", tc.class, tc.want, css)
+		}
+	}
+}
+
+func TestBaselineLast(t *testing.T) {
+	e := New()
+	e.Write([]byte(`items-baseline-last self-baseline-last`))
+	css := e.CSS()
+	for _, tc := range []struct {
+		class, want string
+	}{
+		{"items-baseline-last", "align-items: baseline last"},
+		{"self-baseline-last", "align-self: baseline last"},
+	} {
+		if !strings.Contains(css, tc.want) {
+			t.Errorf("%s should produce %s, got:\n%s", tc.class, tc.want, css)
+		}
+	}
+}
+
+func TestTransformBox(t *testing.T) {
+	e := New()
+	e.Write([]byte(`transform-content transform-border transform-fill transform-stroke transform-view`))
+	css := e.CSS()
+	for _, tc := range []struct {
+		class, want string
+	}{
+		{"transform-content", "transform-box: content-box"},
+		{"transform-border", "transform-box: border-box"},
+		{"transform-fill", "transform-box: fill-box"},
+		{"transform-stroke", "transform-box: stroke-box"},
+		{"transform-view", "transform-box: view-box"},
+	} {
+		if !strings.Contains(css, tc.want) {
+			t.Errorf("%s should produce %s, got:\n%s", tc.class, tc.want, css)
+		}
+	}
+}
+
 func TestEndToEndOpacityModifierOnArbitraryColor(t *testing.T) {
 	css := []byte(`@utility bg-* { background-color: --value(--color); }`)
 	e := New()

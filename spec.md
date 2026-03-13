@@ -1749,6 +1749,61 @@ inset-ring-[3px]     → arbitrary width
 These compose with box shadow and ring utilities using CSS custom properties for shadow stacking.
 
 
+### 16.12 Font Smoothing Utilities
+
+```
+antialiased          → -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+subpixel-antialiased → -webkit-font-smoothing: auto; -moz-osx-font-smoothing: auto;
+```
+
+### 16.13 Wrap Utilities
+
+```
+wrap-anywhere  → overflow-wrap: anywhere;
+wrap-break-word → overflow-wrap: break-word;
+wrap-normal    → overflow-wrap: normal;
+```
+
+### 16.14 Safe Alignment Utilities
+
+Safe alignment variants prevent content from becoming inaccessible by falling back when the container is too small:
+
+```
+items-center-safe          → align-items: safe center;
+items-end-safe             → align-items: safe end;
+justify-center-safe        → justify-content: safe center;
+justify-end-safe           → justify-content: safe end;
+place-items-center-safe    → place-items: safe center;
+place-items-end-safe       → place-items: safe end;
+place-content-center-safe  → place-content: safe center;
+place-content-end-safe     → place-content: safe end;
+content-center-safe        → align-content: safe center;
+content-end-safe           → align-content: safe end;
+self-center-safe           → align-self: safe center;
+self-end-safe              → align-self: safe end;
+justify-self-center-safe   → justify-self: safe center;
+justify-self-end-safe      → justify-self: safe end;
+place-self-center-safe     → place-self: safe center;
+place-self-end-safe        → place-self: safe end;
+```
+
+### 16.15 Baseline Last Utilities
+
+```
+items-baseline-last → align-items: baseline last;
+self-baseline-last  → align-self: baseline last;
+```
+
+### 16.16 Transform Box Utilities
+
+```
+transform-content → transform-box: content-box;
+transform-border  → transform-box: border-box;
+transform-fill    → transform-box: fill-box;
+transform-stroke  → transform-box: stroke-box;
+transform-view    → transform-box: view-box;
+```
+
 ## 17. Dark Mode
 
 ### 17.1 Media-Based (Default)

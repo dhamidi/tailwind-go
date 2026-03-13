@@ -1277,6 +1277,50 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("transform-3d", decls("transform-style", "preserve-3d")))
 	register(staticUtility("transform-flat", decls("transform-style", "flat")))
 
+	// ===== Font Smoothing =====
+	register(staticUtility("antialiased", decls(
+		"-webkit-font-smoothing", "antialiased",
+		"-moz-osx-font-smoothing", "grayscale",
+	)))
+	register(staticUtility("subpixel-antialiased", decls(
+		"-webkit-font-smoothing", "auto",
+		"-moz-osx-font-smoothing", "auto",
+	)))
+
+	// ===== Wrap =====
+	register(staticUtility("wrap-anywhere", decls("overflow-wrap", "anywhere")))
+	register(staticUtility("wrap-break-word", decls("overflow-wrap", "break-word")))
+	register(staticUtility("wrap-normal", decls("overflow-wrap", "normal")))
+
+	// ===== Safe Alignment =====
+	register(staticUtility("items-center-safe", decls("align-items", "safe center")))
+	register(staticUtility("items-end-safe", decls("align-items", "safe end")))
+	register(staticUtility("justify-center-safe", decls("justify-content", "safe center")))
+	register(staticUtility("justify-end-safe", decls("justify-content", "safe end")))
+	register(staticUtility("place-items-center-safe", decls("place-items", "safe center")))
+	register(staticUtility("place-items-end-safe", decls("place-items", "safe end")))
+	register(staticUtility("place-content-center-safe", decls("place-content", "safe center")))
+	register(staticUtility("place-content-end-safe", decls("place-content", "safe end")))
+	register(staticUtility("content-center-safe", decls("align-content", "safe center")))
+	register(staticUtility("content-end-safe", decls("align-content", "safe end")))
+	register(staticUtility("self-center-safe", decls("align-self", "safe center")))
+	register(staticUtility("self-end-safe", decls("align-self", "safe end")))
+	register(staticUtility("justify-self-center-safe", decls("justify-self", "safe center")))
+	register(staticUtility("justify-self-end-safe", decls("justify-self", "safe end")))
+	register(staticUtility("place-self-center-safe", decls("place-self", "safe center")))
+	register(staticUtility("place-self-end-safe", decls("place-self", "safe end")))
+
+	// ===== Baseline Last =====
+	register(staticUtility("items-baseline-last", decls("align-items", "baseline last")))
+	register(staticUtility("self-baseline-last", decls("align-self", "baseline last")))
+
+	// ===== Transform Box =====
+	register(staticUtility("transform-content", decls("transform-box", "content-box")))
+	register(staticUtility("transform-border", decls("transform-box", "border-box")))
+	register(staticUtility("transform-fill", decls("transform-box", "fill-box")))
+	register(staticUtility("transform-stroke", decls("transform-box", "stroke-box")))
+	register(staticUtility("transform-view", decls("transform-box", "view-box")))
+
 	// ===== Contain =====
 	register(staticUtility("contain-none", decls("contain", "none")))
 	register(staticUtility("contain-content", decls("contain", "content")))
