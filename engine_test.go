@@ -3782,6 +3782,48 @@ func TestBlockDirectionBorderColor(t *testing.T) {
 	}
 }
 
+func TestContainerUtility(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class="@container @container/sidebar @container-normal @container-size">`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+
+	if !strings.Contains(css, "container-type: inline-size") {
+		t.Errorf("@container should produce container-type: inline-size, got:\n%s", css)
+	}
+	if !strings.Contains(css, "container-name: sidebar") {
+		t.Errorf("@container/sidebar should produce container-name: sidebar, got:\n%s", css)
+	}
+	if !strings.Contains(css, "container-type: normal") {
+		t.Errorf("@container-normal should produce container-type: normal, got:\n%s", css)
+	}
+	if !strings.Contains(css, "container-type: size") {
+		t.Errorf("@container-size should produce container-type: size, got:\n%s", css)
+	}
+}
+
+func TestFontFeatureSettings(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class="font-features-[smcp]">`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+
+	if !strings.Contains(css, `font-feature-settings: "smcp"`) {
+		t.Errorf(`font-features-[smcp] should produce font-feature-settings: "smcp", got:\n%s`, css)
+	}
+}
+
+func TestFontFeatureSettingsQuoted(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class='font-features-["liga"_0]'>`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+
+	if !strings.Contains(css, "font-feature-settings:") {
+		t.Errorf("font-features with quoted value should produce font-feature-settings, got:\n%s", css)
+	}
+}
+
 func TestBorderRadiusArbitraryCorners(t *testing.T) {
 	tests := []struct {
 		class    string

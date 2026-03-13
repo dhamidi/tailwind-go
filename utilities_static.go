@@ -1454,4 +1454,23 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("contain-layout", decls("contain", "layout")))
 	register(staticUtility("contain-paint", decls("contain", "paint")))
 	register(staticUtility("contain-style", decls("contain", "style")))
+
+	// ===== @container (Container Query Context) =====
+	// @container makes an element a container query context.
+	// Named containers use /name modifier: @container/sidebar
+	register(&UtilityRegistration{
+		Name: "@container",
+		Kind: "static",
+		CompileFn: func(c ResolvedCandidate) []Declaration {
+			if c.Modifier != "" {
+				return decls(
+					"container-type", "inline-size",
+					"container-name", c.Modifier,
+				)
+			}
+			return decls("container-type", "inline-size")
+		},
+	})
+	register(staticUtility("@container-normal", decls("container-type", "normal")))
+	register(staticUtility("@container-size", decls("container-type", "size")))
 }

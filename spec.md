@@ -1638,6 +1638,17 @@ font-stretch-ultra-expanded   → font-stretch: ultra-expanded
 font-stretch-[75%]            → font-stretch: 75%
 ```
 
+### 16.3.1 Font Feature Settings
+
+The `font-features` utility sets OpenType font feature settings via arbitrary values:
+
+```
+font-features-[smcp]        → font-feature-settings: "smcp"
+font-features-["liga"_0]    → font-feature-settings: "liga" 0
+```
+
+Bare feature tags are automatically quoted. Already-quoted values are passed through.
+
 ### 16.4 Color Scheme Utilities
 
 ```
@@ -1721,6 +1732,7 @@ The `@container` utility marks an element as a container query context:
 @container         → container-type: inline-size
 @container/sidebar → container-type: inline-size; container-name: sidebar
 @container-normal  → container-type: normal
+@container-size    → container-type: size
 ```
 
 Container query variants (§8.4) target these containers.

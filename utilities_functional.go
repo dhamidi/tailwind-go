@@ -837,6 +837,19 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"content", "--value(any)",
 	)))
 
+	// ===== Font Feature Settings =====
+	register(functionalUtility("font-features", func(c ResolvedCandidate) []Declaration {
+		if c.Arbitrary != "" {
+			// Wrap bare tags in quotes: font-features-[smcp] → "smcp"
+			val := c.Arbitrary
+			if len(val) > 0 && val[0] != '"' && val[0] != '\'' {
+				val = `"` + val + `"`
+			}
+			return decls("font-feature-settings", val)
+		}
+		return nil
+	}))
+
 	// ===== Font Stretch =====
 	register(functionalUtility("font-stretch", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {
