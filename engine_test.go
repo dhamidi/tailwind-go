@@ -1995,3 +1995,473 @@ func TestFontWeightTokenNotRegisteredAsFontFamily(t *testing.T) {
 		t.Errorf("--font-weight-* tokens should not create font-family utilities, got:\n%s", css)
 	}
 }
+
+// --- ARIA attribute variant tests ---
+
+func TestAriaCheckedVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`aria-checked:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-checked="true"]`) {
+		t.Errorf("expected [aria-checked=\"true\"] selector, got:\n%s", css)
+	}
+}
+
+func TestAriaBusyVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`aria-busy:opacity-50`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-busy="true"]`) {
+		t.Errorf("expected [aria-busy=\"true\"] selector, got:\n%s", css)
+	}
+}
+
+func TestAriaExpandedVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`aria-expanded:block`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-expanded="true"]`) {
+		t.Errorf("expected [aria-expanded=\"true\"] selector, got:\n%s", css)
+	}
+}
+
+func TestAriaArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`aria-[sort=ascending]:text-sm`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-sort=ascending]`) {
+		t.Errorf("expected [aria-sort=ascending] selector, got:\n%s", css)
+	}
+}
+
+func TestAriaCheckedStackingWithHover(t *testing.T) {
+	e := New()
+	e.Write([]byte(`hover:aria-expanded:text-white`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-expanded="true"]`) {
+		t.Errorf("expected [aria-expanded=\"true\"] selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `:hover`) {
+		t.Errorf("expected :hover selector, got:\n%s", css)
+	}
+}
+
+func TestGroupAriaCheckedVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`group-aria-checked:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-checked="true"]`) {
+		t.Errorf("expected [aria-checked=\"true\"] selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `.group`) {
+		t.Errorf("expected .group in selector, got:\n%s", css)
+	}
+}
+
+func TestPeerAriaCheckedVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`peer-aria-checked:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[aria-checked="true"]`) {
+		t.Errorf("expected [aria-checked=\"true\"] selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `.peer`) {
+		t.Errorf("expected .peer in selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `~`) {
+		t.Errorf("expected ~ combinator for peer, got:\n%s", css)
+	}
+}
+
+// --- Data attribute variant tests ---
+
+func TestDataArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`data-[active]:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[data-active]`) {
+		t.Errorf("expected [data-active] selector, got:\n%s", css)
+	}
+}
+
+func TestGroupDataVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`group-data-[active]:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[data-active]`) {
+		t.Errorf("expected [data-active] selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `.group`) {
+		t.Errorf("expected .group in selector, got:\n%s", css)
+	}
+}
+
+func TestPeerDataVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`peer-data-[active]:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, `[data-active]`) {
+		t.Errorf("expected [data-active] selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `.peer`) {
+		t.Errorf("expected .peer in selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, `~`) {
+		t.Errorf("expected ~ combinator for peer, got:\n%s", css)
+	}
+}
+
+// --- supports-* variant tests ---
+
+func TestSupportsArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`supports-[display:_grid]:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@supports (display: grid)") {
+		t.Errorf("expected @supports (display: grid), got:\n%s", css)
+	}
+	if !strings.Contains(css, "display: flex") {
+		t.Errorf("expected display: flex declaration, got:\n%s", css)
+	}
+}
+
+func TestSupportsShorthandVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`supports-backdrop-filter:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@supports (backdrop-filter: var(--tw))") {
+		t.Errorf("expected @supports shorthand, got:\n%s", css)
+	}
+}
+
+func TestNotSupportsArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-supports-[display:_grid]:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@supports not (display: grid)") {
+		t.Errorf("expected @supports not (display: grid), got:\n%s", css)
+	}
+}
+
+// --- max-* responsive variant tests ---
+
+func TestMaxSmVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-sm:hidden`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (width < 40rem)") {
+		t.Errorf("expected @media (width < 40rem), got:\n%s", css)
+	}
+}
+
+func TestMaxMdVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-md:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (width < 48rem)") {
+		t.Errorf("expected @media (width < 48rem), got:\n%s", css)
+	}
+}
+
+func TestMaxLgVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-lg:block`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (width < 64rem)") {
+		t.Errorf("expected @media (width < 64rem), got:\n%s", css)
+	}
+}
+
+func TestMaxArbitraryBreakpointVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-[600px]:hidden`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (width < 600px)") {
+		t.Errorf("expected @media (width < 600px), got:\n%s", css)
+	}
+}
+
+func TestMinArbitraryBreakpointVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`min-[900px]:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (width >= 900px)") {
+		t.Errorf("expected @media (width >= 900px), got:\n%s", css)
+	}
+}
+
+// --- Pointer/input device variant tests ---
+
+func TestPointerFineVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`pointer-fine:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (pointer: fine)") {
+		t.Errorf("expected @media (pointer: fine), got:\n%s", css)
+	}
+}
+
+func TestPointerCoarseVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`pointer-coarse:p-4`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (pointer: coarse)") {
+		t.Errorf("expected @media (pointer: coarse), got:\n%s", css)
+	}
+}
+
+func TestAnyPointerFineVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`any-pointer-fine:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (any-pointer: fine)") {
+		t.Errorf("expected @media (any-pointer: fine), got:\n%s", css)
+	}
+}
+
+// --- Additional media query variant tests ---
+
+func TestNoscriptVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`noscript:hidden`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (scripting: none)") {
+		t.Errorf("expected @media (scripting: none), got:\n%s", css)
+	}
+}
+
+func TestInvertedColorsVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inverted-colors:hidden`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (inverted-colors: inverted)") {
+		t.Errorf("expected @media (inverted-colors: inverted), got:\n%s", css)
+	}
+}
+
+func TestNotForcedColorsVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-forced-colors:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@media (forced-colors: none)") {
+		t.Errorf("expected @media (forced-colors: none), got:\n%s", css)
+	}
+}
+
+// --- Parameterized nth-* variant tests ---
+
+func TestNthArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`nth-[3n+1]:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":nth-child(3n+1)") {
+		t.Errorf("expected :nth-child(3n+1), got:\n%s", css)
+	}
+}
+
+func TestNthLastArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`nth-last-[2n]:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":nth-last-child(2n)") {
+		t.Errorf("expected :nth-last-child(2n), got:\n%s", css)
+	}
+}
+
+func TestNthOfTypeArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`nth-of-type-[odd]:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":nth-of-type(odd)") {
+		t.Errorf("expected :nth-of-type(odd), got:\n%s", css)
+	}
+}
+
+func TestNthLastOfTypeArbitraryVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`nth-last-of-type-[3n]:bg-blue-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":nth-last-of-type(3n)") {
+		t.Errorf("expected :nth-last-of-type(3n), got:\n%s", css)
+	}
+}
+
+// --- Missing pseudo-class variant tests ---
+
+func TestUserValidVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`user-valid:border-green-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":user-valid") {
+		t.Errorf("expected :user-valid, got:\n%s", css)
+	}
+}
+
+func TestUserInvalidVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`user-invalid:border-red-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":user-invalid") {
+		t.Errorf("expected :user-invalid, got:\n%s", css)
+	}
+}
+
+func TestOptionalVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`optional:border-gray-300`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":optional") {
+		t.Errorf("expected :optional, got:\n%s", css)
+	}
+}
+
+func TestInRangeVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`in-range:border-green-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":in-range") {
+		t.Errorf("expected :in-range, got:\n%s", css)
+	}
+}
+
+func TestOutOfRangeVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`out-of-range:border-red-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ":out-of-range") {
+		t.Errorf("expected :out-of-range, got:\n%s", css)
+	}
+}
+
+func TestDetailsContentVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`details-content:p-4`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "::details-content") {
+		t.Errorf("expected ::details-content, got:\n%s", css)
+	}
+}
+
+// --- Child/descendant selector variant tests ---
+
+func TestDirectChildrenVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`*:p-4`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "> *") {
+		t.Errorf("expected > * selector, got:\n%s", css)
+	}
+}
+
+func TestAllDescendantsVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`**:m-0`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	// The selector should contain the class followed by a space and *
+	if !strings.Contains(css, " *") {
+		t.Errorf("expected descendant * selector, got:\n%s", css)
+	}
+}
+
+// --- Container query max-* variant tests ---
+
+func TestContainerMaxSmVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`@max-sm:hidden`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@container (width < 24rem)") {
+		t.Errorf("expected @container (width < 24rem), got:\n%s", css)
+	}
+}
+
+func TestContainerMaxLgVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`@max-lg:flex`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@container (width < 32rem)") {
+		t.Errorf("expected @container (width < 32rem), got:\n%s", css)
+	}
+}
+
+func TestContainerArbitraryMinVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`@min-[400px]:p-4`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@container (width >= 400px)") {
+		t.Errorf("expected @container (width >= 400px), got:\n%s", css)
+	}
+}
+
+func TestContainerArbitraryMaxVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`@max-[600px]:p-4`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "@container (width < 600px)") {
+		t.Errorf("expected @container (width < 600px), got:\n%s", css)
+	}
+}
+
+// --- Group/peer builtin variant tests ---
+
+func TestGroupHoverBuiltin(t *testing.T) {
+	e := New()
+	e.Write([]byte(`group-hover:text-white`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ".group:hover") {
+		t.Errorf("expected .group:hover selector, got:\n%s", css)
+	}
+}
+
+func TestPeerFocusBuiltin(t *testing.T) {
+	e := New()
+	e.Write([]byte(`peer-focus:text-white`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, ".peer:focus") {
+		t.Errorf("expected .peer:focus selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, "~") {
+		t.Errorf("expected ~ combinator, got:\n%s", css)
+	}
+}

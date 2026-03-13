@@ -559,6 +559,19 @@ func escapeSelector(s string) string {
 	return sb.String()
 }
 
+// isAtRuleOnlyVariant returns true if the variant name represents a dynamically
+// resolved at-rule variant that should be skipped during selector resolution
+// (handled by resolveVariants instead).
+func isAtRuleOnlyVariant(name string) bool {
+	if strings.HasPrefix(name, "min-[") || strings.HasPrefix(name, "max-[") {
+		return true
+	}
+	if strings.HasPrefix(name, "@min-[") || strings.HasPrefix(name, "@max-[") {
+		return true
+	}
+	return false
+}
+
 // resolveVariants converts variant names to media queries / selector transforms.
 func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 	var media []string
@@ -572,6 +585,65 @@ func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 				strings.HasPrefix(inner, "@container") {
 				media = append(media, inner)
 			}
+			continue
+		}
+
+		// Handle supports-* variants (feature queries).
+		// Check for exact registered variant first (e.g., CSS-defined @variant supports-grid).
+		if strings.HasPrefix(name, "not-supports-") {
+			if _, ok := defs[name]; !ok {
+				remainder := name[len("not-supports-"):]
+				if strings.HasPrefix(remainder, "[") && strings.HasSuffix(remainder, "]") {
+					inner := remainder[1 : len(remainder)-1]
+					inner = strings.ReplaceAll(inner, "_", " ")
+					media = append(media, "@supports not ("+inner+")")
+				} else {
+					prop := strings.ReplaceAll(remainder, "_", " ")
+					media = append(media, "@supports not ("+prop+": var(--tw))")
+				}
+				continue
+			}
+		}
+		if strings.HasPrefix(name, "supports-") {
+			if _, ok := defs[name]; !ok {
+				remainder := name[len("supports-"):]
+				if strings.HasPrefix(remainder, "[") && strings.HasSuffix(remainder, "]") {
+					inner := remainder[1 : len(remainder)-1]
+					inner = strings.ReplaceAll(inner, "_", " ")
+					media = append(media, "@supports ("+inner+")")
+				} else {
+					prop := strings.ReplaceAll(remainder, "_", " ")
+					media = append(media, "@supports ("+prop+": var(--tw))")
+				}
+				continue
+			}
+		}
+
+		// Handle min-[...] and max-[...] arbitrary breakpoints.
+		if strings.HasPrefix(name, "min-[") && strings.HasSuffix(name, "]") {
+			val := name[len("min-[") : len(name)-1]
+			val = strings.ReplaceAll(val, "_", " ")
+			media = append(media, "@media (width >= "+val+")")
+			continue
+		}
+		if strings.HasPrefix(name, "max-[") && strings.HasSuffix(name, "]") {
+			val := name[len("max-[") : len(name)-1]
+			val = strings.ReplaceAll(val, "_", " ")
+			media = append(media, "@media (width < "+val+")")
+			continue
+		}
+
+		// Handle @min-[...] and @max-[...] arbitrary container queries.
+		if strings.HasPrefix(name, "@min-[") && strings.HasSuffix(name, "]") {
+			val := name[len("@min-[") : len(name)-1]
+			val = strings.ReplaceAll(val, "_", " ")
+			media = append(media, "@container (width >= "+val+")")
+			continue
+		}
+		if strings.HasPrefix(name, "@max-[") && strings.HasSuffix(name, "]") {
+			val := name[len("@max-[") : len(name)-1]
+			val = strings.ReplaceAll(val, "_", " ")
+			media = append(media, "@container (width < "+val+")")
 			continue
 		}
 
@@ -610,9 +682,25 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 			continue
 		}
 
-		if v, ok := defs[name]; ok && v.Selector != "" {
-			sel = resolveMultiSelector(v.Selector, sel)
+		if v, ok := defs[name]; ok {
+			if v.Selector != "" {
+				sel = resolveMultiSelector(v.Selector, sel)
+			}
+			// Exact match found — skip compound variant resolution
+			// even for media-only variants.
 			continue
+		}
+
+		// Skip variants handled as at-rules (not selector transforms).
+		if isAtRuleOnlyVariant(name) {
+			continue
+		}
+
+		// Skip supports-* and not-supports-* dynamic variants (at-rule only).
+		if strings.HasPrefix(name, "supports-") || strings.HasPrefix(name, "not-supports-") {
+			if _, ok := defs[name]; !ok {
+				continue
+			}
 		}
 
 		// Try compound variant resolution.
@@ -624,7 +712,15 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 				value = remainder[:slashIdx]
 				groupName = remainder[slashIdx+1:]
 			}
-			selector := resolveCompoundTemplate(v.Template, value, groupName)
+			template := v.Template
+			// Strip brackets from arbitrary values and adjust template.
+			if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
+				value = value[1 : len(value)-1]
+				value = strings.ReplaceAll(value, "_", " ")
+				// Remove ="true" for arbitrary ARIA values.
+				template = strings.ReplaceAll(template, `="true"`, "")
+			}
+			selector := resolveCompoundTemplate(template, value, groupName)
 			sel = strings.ReplaceAll(selector, "&", sel)
 		}
 	}
@@ -652,17 +748,22 @@ func lookupVariant(name string, defs map[string]*VariantDef) *VariantDef {
 
 // lookupCompoundVariant checks if a variant name matches any compound variant
 // pattern (e.g., "group-hover" matches "group" compound variant).
+// Returns the longest matching compound variant to handle nested compounds
+// like "group-aria-checked" matching "group-aria" over "group".
 func lookupCompoundVariant(name string, defs map[string]*VariantDef) *VariantDef {
+	var best *VariantDef
 	for _, v := range defs {
 		if !v.Compound {
 			continue
 		}
 		prefix := v.Name + "-"
 		if strings.HasPrefix(name, prefix) && len(name) > len(prefix) {
-			return v
+			if best == nil || len(v.Name) > len(best.Name) {
+				best = v
+			}
 		}
 	}
-	return nil
+	return best
 }
 
 // stripMerge removes :merge() wrappers from a selector string.

@@ -83,9 +83,10 @@ func (s *scanner) accept() string {
 		return ""
 	}
 
-	// Must start with a letter, !, -, [ (for arbitrary properties), or @ (for container variants).
+	// Must start with a letter, !, -, [ (for arbitrary properties), @ (for container variants),
+	// or * (for child/descendant selector variants).
 	first := tok[0]
-	if !isLetter(first) && first != '!' && first != '-' && first != '[' && first != '@' {
+	if !isLetter(first) && first != '!' && first != '-' && first != '[' && first != '@' && first != '*' {
 		return ""
 	}
 

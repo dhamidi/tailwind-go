@@ -40,6 +40,11 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "autofill", Selector: "&:autofill"})
 	add(&VariantDef{Name: "read-only", Selector: "&:read-only"})
 	add(&VariantDef{Name: "open", Selector: "&[open]"})
+	add(&VariantDef{Name: "user-valid", Selector: "&:user-valid"})
+	add(&VariantDef{Name: "user-invalid", Selector: "&:user-invalid"})
+	add(&VariantDef{Name: "optional", Selector: "&:optional"})
+	add(&VariantDef{Name: "in-range", Selector: "&:in-range"})
+	add(&VariantDef{Name: "out-of-range", Selector: "&:out-of-range"})
 
 	// ===== Pseudo-element variants =====
 	add(&VariantDef{Name: "before", Selector: "&::before"})
@@ -51,6 +56,22 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "first-line", Selector: "&::first-line"})
 	add(&VariantDef{Name: "first-letter", Selector: "&::first-letter"})
 	add(&VariantDef{Name: "backdrop", Selector: "&::backdrop"})
+	add(&VariantDef{Name: "details-content", Selector: "&::details-content"})
+
+	// ===== Child/descendant selector variants =====
+	add(&VariantDef{Name: "*", Selector: "& > *"})
+	add(&VariantDef{Name: "**", Selector: "& *"})
+
+	// ===== ARIA attribute variants =====
+	add(&VariantDef{Name: "aria-busy", Selector: `&[aria-busy="true"]`})
+	add(&VariantDef{Name: "aria-checked", Selector: `&[aria-checked="true"]`})
+	add(&VariantDef{Name: "aria-disabled", Selector: `&[aria-disabled="true"]`})
+	add(&VariantDef{Name: "aria-expanded", Selector: `&[aria-expanded="true"]`})
+	add(&VariantDef{Name: "aria-hidden", Selector: `&[aria-hidden="true"]`})
+	add(&VariantDef{Name: "aria-pressed", Selector: `&[aria-pressed="true"]`})
+	add(&VariantDef{Name: "aria-readonly", Selector: `&[aria-readonly="true"]`})
+	add(&VariantDef{Name: "aria-required", Selector: `&[aria-required="true"]`})
+	add(&VariantDef{Name: "aria-selected", Selector: `&[aria-selected="true"]`})
 
 	// ===== Responsive variants =====
 	add(&VariantDef{Name: "sm", Media: "(width >= 40rem)"})
@@ -58,6 +79,13 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "lg", Media: "(width >= 64rem)"})
 	add(&VariantDef{Name: "xl", Media: "(width >= 80rem)"})
 	add(&VariantDef{Name: "2xl", Media: "(width >= 96rem)"})
+
+	// ===== max-* responsive variants =====
+	add(&VariantDef{Name: "max-sm", Media: "(width < 40rem)"})
+	add(&VariantDef{Name: "max-md", Media: "(width < 48rem)"})
+	add(&VariantDef{Name: "max-lg", Media: "(width < 64rem)"})
+	add(&VariantDef{Name: "max-xl", Media: "(width < 80rem)"})
+	add(&VariantDef{Name: "max-2xl", Media: "(width < 96rem)"})
 
 	// ===== Container query variants =====
 	add(&VariantDef{Name: "@3xs", AtRule: "container", Media: "(width >= 16rem)"})
@@ -74,6 +102,21 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "@6xl", AtRule: "container", Media: "(width >= 72rem)"})
 	add(&VariantDef{Name: "@7xl", AtRule: "container", Media: "(width >= 80rem)"})
 
+	// ===== Container query max-* variants =====
+	add(&VariantDef{Name: "@max-3xs", AtRule: "container", Media: "(width < 16rem)"})
+	add(&VariantDef{Name: "@max-2xs", AtRule: "container", Media: "(width < 18rem)"})
+	add(&VariantDef{Name: "@max-xs", AtRule: "container", Media: "(width < 20rem)"})
+	add(&VariantDef{Name: "@max-sm", AtRule: "container", Media: "(width < 24rem)"})
+	add(&VariantDef{Name: "@max-md", AtRule: "container", Media: "(width < 28rem)"})
+	add(&VariantDef{Name: "@max-lg", AtRule: "container", Media: "(width < 32rem)"})
+	add(&VariantDef{Name: "@max-xl", AtRule: "container", Media: "(width < 36rem)"})
+	add(&VariantDef{Name: "@max-2xl", AtRule: "container", Media: "(width < 42rem)"})
+	add(&VariantDef{Name: "@max-3xl", AtRule: "container", Media: "(width < 48rem)"})
+	add(&VariantDef{Name: "@max-4xl", AtRule: "container", Media: "(width < 56rem)"})
+	add(&VariantDef{Name: "@max-5xl", AtRule: "container", Media: "(width < 64rem)"})
+	add(&VariantDef{Name: "@max-6xl", AtRule: "container", Media: "(width < 72rem)"})
+	add(&VariantDef{Name: "@max-7xl", AtRule: "container", Media: "(width < 80rem)"})
+
 	// ===== Media query variants =====
 	add(&VariantDef{Name: "dark", Media: "(prefers-color-scheme: dark)"})
 	add(&VariantDef{Name: "print", Media: "print"})
@@ -84,11 +127,46 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "contrast-more", Media: "(prefers-contrast: more)"})
 	add(&VariantDef{Name: "contrast-less", Media: "(prefers-contrast: less)"})
 	add(&VariantDef{Name: "forced-colors", Media: "(forced-colors: active)"})
+	add(&VariantDef{Name: "not-forced-colors", Media: "(forced-colors: none)"})
+
+	// ===== Pointer/input device variants =====
+	add(&VariantDef{Name: "pointer-fine", Media: "(pointer: fine)"})
+	add(&VariantDef{Name: "pointer-coarse", Media: "(pointer: coarse)"})
+	add(&VariantDef{Name: "pointer-none", Media: "(pointer: none)"})
+	add(&VariantDef{Name: "any-pointer-fine", Media: "(any-pointer: fine)"})
+	add(&VariantDef{Name: "any-pointer-coarse", Media: "(any-pointer: coarse)"})
+	add(&VariantDef{Name: "any-pointer-none", Media: "(any-pointer: none)"})
+
+	// ===== Additional media query variants =====
+	add(&VariantDef{Name: "noscript", Media: "(scripting: none)"})
+	add(&VariantDef{Name: "inverted-colors", Media: "(inverted-colors: inverted)"})
 
 	// ===== Parameterized variants =====
 	add(&VariantDef{Name: "not", Compound: true, Template: "&:not(:{value})"})
 	add(&VariantDef{Name: "has", Compound: true, Template: "&:has(:{value})"})
 	add(&VariantDef{Name: "in", Compound: true, Template: "[{value}] &"})
+
+	// ARIA/data compound variants (for arbitrary values like aria-[...], data-[...])
+	add(&VariantDef{Name: "aria", Compound: true, Template: `&[aria-{value}="true"]`})
+	add(&VariantDef{Name: "data", Compound: true, Template: "&[data-{value}]"})
+
+	// Group and peer compound variants
+	add(&VariantDef{Name: "group", Compound: true, Template: ":merge(.group):{value} &"})
+	add(&VariantDef{Name: "peer", Compound: true, Template: ":merge(.peer):{value} ~ &"})
+
+	// Group/peer + ARIA compound variants
+	add(&VariantDef{Name: "group-aria", Compound: true, Template: `:merge(.group)[aria-{value}="true"] &`})
+	add(&VariantDef{Name: "peer-aria", Compound: true, Template: `:merge(.peer)[aria-{value}="true"] ~ &`})
+
+	// Group/peer + data compound variants
+	add(&VariantDef{Name: "group-data", Compound: true, Template: ":merge(.group)[data-{value}] &"})
+	add(&VariantDef{Name: "peer-data", Compound: true, Template: ":merge(.peer)[data-{value}] ~ &"})
+
+	// Parameterized nth-* variants
+	add(&VariantDef{Name: "nth", Compound: true, Template: "&:nth-child({value})"})
+	add(&VariantDef{Name: "nth-last", Compound: true, Template: "&:nth-last-child({value})"})
+	add(&VariantDef{Name: "nth-of-type", Compound: true, Template: "&:nth-of-type({value})"})
+	add(&VariantDef{Name: "nth-last-of-type", Compound: true, Template: "&:nth-last-of-type({value})"})
 
 	// ===== Starting style variant =====
 	add(&VariantDef{Name: "starting", AtRule: "starting-style"})
