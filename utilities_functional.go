@@ -706,6 +706,11 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		return nil
 	}))
 
+	// ===== Content =====
+	register(cssUtility("content", decls(
+		"content", "--value(any)",
+	)))
+
 	// ===== Font Stretch =====
 	register(functionalUtility("font-stretch", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {
