@@ -242,6 +242,143 @@ func TestTranslateArbitrary(t *testing.T) {
 	})
 }
 
+// ===== Transform — Translate Z =====
+
+func TestTranslateZUtilities(t *testing.T) {
+	tests := []struct {
+		class    string
+		wantProp string
+		wantVal  string
+	}{
+		{"translate-z-0", "--tw-translate-z", "calc(var(--spacing) * 0)"},
+		{"translate-z-4", "--tw-translate-z", "calc(var(--spacing) * 4)"},
+		{"translate-z-px", "--tw-translate-z", "1px"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(tt.class))
+			result := e.CSS()
+			if !strings.Contains(result, tt.wantProp+": "+tt.wantVal) {
+				t.Errorf("%s: expected %s: %s in:\n%s", tt.class, tt.wantProp, tt.wantVal, result)
+			}
+			if !strings.Contains(result, "translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z)") {
+				t.Errorf("%s: missing 3D translate composition in:\n%s", tt.class, result)
+			}
+		})
+	}
+}
+
+func TestNegativeTranslateZ(t *testing.T) {
+	e := New()
+	e.Write([]byte("-translate-z-4"))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-translate-z: calc(var(--spacing) * -4)") {
+		t.Errorf("expected negated --tw-translate-z in:\n%s", result)
+	}
+}
+
+func TestTranslateNone(t *testing.T) {
+	e := New()
+	e.Write([]byte("translate-none"))
+	result := e.CSS()
+	if !strings.Contains(result, "translate: none") {
+		t.Errorf("translate-none: expected translate: none in:\n%s", result)
+	}
+}
+
+func TestTranslate3d(t *testing.T) {
+	e := New()
+	e.Write([]byte("translate-3d"))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-translate-z: 0px") {
+		t.Errorf("translate-3d: expected --tw-translate-z: 0px in:\n%s", result)
+	}
+	if !strings.Contains(result, "translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z)") {
+		t.Errorf("translate-3d: missing 3D translate composition in:\n%s", result)
+	}
+}
+
+// ===== Transform — Rotate Per-Axis =====
+
+func TestRotateAxisUtilities(t *testing.T) {
+	tests := []struct {
+		class   string
+		wantVal string
+	}{
+		{"rotate-x-45", "rotate: x 45deg"},
+		{"rotate-x-90", "rotate: x 90deg"},
+		{"rotate-y-45", "rotate: y 45deg"},
+		{"rotate-y-180", "rotate: y 180deg"},
+		{"rotate-z-45", "rotate: z 45deg"},
+		{"rotate-z-90", "rotate: z 90deg"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(tt.class))
+			result := e.CSS()
+			if !strings.Contains(result, tt.wantVal) {
+				t.Errorf("%s: expected %q in:\n%s", tt.class, tt.wantVal, result)
+			}
+		})
+	}
+}
+
+func TestNegativeRotateAxis(t *testing.T) {
+	tests := []struct {
+		class   string
+		wantVal string
+	}{
+		{"-rotate-x-45", "x calc(45deg * -1)"},
+		{"-rotate-y-90", "y calc(90deg * -1)"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(tt.class))
+			result := e.CSS()
+			if !strings.Contains(result, tt.wantVal) {
+				t.Errorf("%s: expected %q in:\n%s", tt.class, tt.wantVal, result)
+			}
+		})
+	}
+}
+
+func TestRotateNone(t *testing.T) {
+	e := New()
+	e.Write([]byte("rotate-none"))
+	result := e.CSS()
+	if !strings.Contains(result, "rotate: none") {
+		t.Errorf("rotate-none: expected rotate: none in:\n%s", result)
+	}
+}
+
+// ===== Transform — Scale Z =====
+
+func TestScaleZUtilities(t *testing.T) {
+	t.Run("scale-z-50", func(t *testing.T) {
+		e := New()
+		e.Write([]byte("scale-z-50"))
+		result := e.CSS()
+		if !strings.Contains(result, "--tw-scale-z: 50%") {
+			t.Errorf("missing --tw-scale-z: 50%% in:\n%s", result)
+		}
+		if !strings.Contains(result, "scale: var(--tw-scale-x, 1) var(--tw-scale-y, 1) var(--tw-scale-z)") {
+			t.Errorf("missing 3D scale composition in:\n%s", result)
+		}
+	})
+
+	t.Run("scale-z-150", func(t *testing.T) {
+		e := New()
+		e.Write([]byte("scale-z-150"))
+		result := e.CSS()
+		if !strings.Contains(result, "--tw-scale-z: 150%") {
+			t.Errorf("missing --tw-scale-z: 150%% in:\n%s", result)
+		}
+	})
+}
+
 // ===== Transform — Skew =====
 
 func TestSkewUtilities(t *testing.T) {

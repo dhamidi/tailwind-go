@@ -706,10 +706,27 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"--tw-scale-y", "--value(percentage, number)",
 		"scale", "var(--tw-scale-x, 1) var(--tw-scale-y)",
 	)))
+	register(cssUtility("scale-z", decls(
+		"--tw-scale-z", "--value(--scale)",
+		"--tw-scale-z", "--value(percentage, number)",
+		"scale", "var(--tw-scale-x, 1) var(--tw-scale-y, 1) var(--tw-scale-z)",
+	)))
 
 	register(cssUtility("rotate", decls(
 		"rotate", "--value(--rotate)",
 		"rotate", "--value(number)",
+	)))
+	register(cssUtility("rotate-x", decls(
+		"rotate", "x --value(--rotate)",
+		"rotate", "x --value(number)",
+	)))
+	register(cssUtility("rotate-y", decls(
+		"rotate", "y --value(--rotate)",
+		"rotate", "y --value(number)",
+	)))
+	register(cssUtility("rotate-z", decls(
+		"rotate", "z --value(--rotate)",
+		"rotate", "z --value(number)",
 	)))
 
 	register(cssUtility("translate-x", decls(
@@ -721,6 +738,11 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"--tw-translate-y", "--value(--spacing)",
 		"--tw-translate-y", "--value(length, percentage)",
 		"translate", "var(--tw-translate-x) var(--tw-translate-y)",
+	)))
+	register(cssUtility("translate-z", decls(
+		"--tw-translate-z", "--value(--spacing)",
+		"--tw-translate-z", "--value(length, percentage)",
+		"translate", "var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z)",
 	)))
 
 	register(cssUtility("skew-x", decls(

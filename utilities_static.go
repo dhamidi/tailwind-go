@@ -1323,6 +1323,12 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Transform =====
 	register(staticUtility("scale-none", decls("scale", "none")))
+	register(staticUtility("rotate-none", decls("rotate", "none")))
+	register(staticUtility("translate-none", decls("translate", "none")))
+	register(staticUtility("translate-3d", decls(
+		"--tw-translate-z", "0px",
+		"translate", "var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z)",
+	)))
 	register(staticUtility("transform-none", decls("transform", "none")))
 
 	// ===== Transform Origin =====

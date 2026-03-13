@@ -1754,7 +1754,65 @@ transform-3d    → transform-style: preserve-3d
 transform-flat  → transform-style: flat
 ```
 
-### 16.11 Inset Ring Utilities
+### 16.11 3D Transform Utilities
+
+#### Translate Z-axis
+
+`translate-z-*` sets the Z-axis translation using the individual `translate` CSS property:
+
+```css
+@utility translate-z-* {
+  --tw-translate-z: --value(--spacing);
+  --tw-translate-z: --value(length, percentage);
+  translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
+}
+```
+
+Static utilities:
+```
+translate-none  → translate: none
+translate-3d    → --tw-translate-z: 0px; translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z)
+```
+
+#### Rotate Per-Axis
+
+`rotate-x-*`, `rotate-y-*`, and `rotate-z-*` set rotation around individual axes:
+
+```css
+@utility rotate-x-* {
+  rotate: x --value(--rotate);
+  rotate: x --value(number);
+}
+
+@utility rotate-y-* {
+  rotate: y --value(--rotate);
+  rotate: y --value(number);
+}
+
+@utility rotate-z-* {
+  rotate: z --value(--rotate);
+  rotate: z --value(number);
+}
+```
+
+Static utility:
+```
+rotate-none → rotate: none
+```
+
+#### Scale Z-axis
+
+`scale-z-*` sets the Z-axis scale:
+
+```css
+@utility scale-z-* {
+  --tw-scale-z: --value(--scale);
+  --tw-scale-z: --value(percentage, number);
+  scale: var(--tw-scale-x, 1) var(--tw-scale-y, 1) var(--tw-scale-z);
+}
+```
+
+### 16.12 Inset Ring Utilities
 
 Inset ring utilities generate inner ring effects using box shadows:
 
@@ -1771,14 +1829,14 @@ inset-ring-[3px]     → arbitrary width
 These compose with box shadow and ring utilities using CSS custom properties for shadow stacking.
 
 
-### 16.12 Font Smoothing Utilities
+### 16.13 Font Smoothing Utilities
 
 ```
 antialiased          → -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 subpixel-antialiased → -webkit-font-smoothing: auto; -moz-osx-font-smoothing: auto;
 ```
 
-### 16.13 Wrap Utilities
+### 16.14 Wrap Utilities
 
 ```
 wrap-anywhere  → overflow-wrap: anywhere;
@@ -1786,7 +1844,7 @@ wrap-break-word → overflow-wrap: break-word;
 wrap-normal    → overflow-wrap: normal;
 ```
 
-### 16.14 Safe Alignment Utilities
+### 16.15 Safe Alignment Utilities
 
 Safe alignment variants prevent content from becoming inaccessible by falling back when the container is too small:
 
@@ -1809,14 +1867,14 @@ place-self-center-safe     → place-self: safe center;
 place-self-end-safe        → place-self: safe end;
 ```
 
-### 16.15 Baseline Last Utilities
+### 16.16 Baseline Last Utilities
 
 ```
 items-baseline-last → align-items: baseline last;
 self-baseline-last  → align-self: baseline last;
 ```
 
-### 16.16 Transform Box Utilities
+### 16.17 Transform Box Utilities
 
 ```
 transform-content → transform-box: content-box;
