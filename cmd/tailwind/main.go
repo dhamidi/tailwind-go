@@ -6,6 +6,7 @@ import (
 
 	tailwind "github.com/dhamidi/tailwind-go"
 	"github.com/dhamidi/tailwind-go/cmd/tailwind/internal/cli"
+	"github.com/dhamidi/tailwind-go/cmd/tailwind/internal/minify"
 )
 
 const version = "0.1.0"
@@ -20,8 +21,8 @@ func main() {
 	output := cmd.StringFlag("o", "output", "-", "Output file")
 	cwd := cmd.StringFlag("", "cwd", ".", "The current working directory")
 	watch := cmd.OptionalFlag("w", "watch", watchOff, "Watch for changes and rebuild")
-	cmd.BoolFlag("m", "minify", false, "Minify output")
-	cmd.BoolFlag("", "optimize", false, "Optimize output")
+	doMinify := cmd.BoolFlag("m", "minify", false, "Minify output")
+	doOptimize := cmd.BoolFlag("", "optimize", false, "Optimize output")
 
 	if err := cmd.Parse(os.Args[1:]); err != nil {
 		if err == cli.ErrHelp {
@@ -34,17 +35,17 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "≈ tailwind v%s\n", version)
 
-	if err := run(*input, *output, *cwd, *watch); err != nil {
+	if err := run(*input, *output, *cwd, *watch, *doMinify || *doOptimize); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(input, output, cwd, watch string) error {
+func run(input, output, cwd, watch string, shouldMinify bool) error {
 	engine := tailwind.New()
 
 	// Initial build.
-	if err := build(engine, input, output, cwd); err != nil {
+	if err := build(engine, input, output, cwd, shouldMinify); err != nil {
 		return err
 	}
 
@@ -57,7 +58,7 @@ func run(input, output, cwd, watch string) error {
 	return nil
 }
 
-func build(engine *tailwind.Engine, input, output, cwd string) error {
+func build(engine *tailwind.Engine, input, output, cwd string, shouldMinify bool) error {
 	// Load custom CSS if input file provided
 	if input != "" {
 		css, err := os.ReadFile(input)
@@ -77,6 +78,11 @@ func build(engine *tailwind.Engine, input, output, cwd string) error {
 
 	// Generate CSS
 	css := engine.FullCSS()
+
+	// Minify if requested
+	if shouldMinify {
+		css = minify.CSS(css)
+	}
 
 	// Write output
 	if output == "-" {
