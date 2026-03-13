@@ -605,6 +605,7 @@ func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 				if strings.HasPrefix(remainder, "[") && strings.HasSuffix(remainder, "]") {
 					inner := remainder[1 : len(remainder)-1]
 					inner = strings.ReplaceAll(inner, "_", " ")
+					inner = normalizeSupportsCondition(inner)
 					media = append(media, "@supports not ("+inner+")")
 				} else {
 					prop := strings.ReplaceAll(remainder, "_", " ")
@@ -619,6 +620,8 @@ func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 				if strings.HasPrefix(remainder, "[") && strings.HasSuffix(remainder, "]") {
 					inner := remainder[1 : len(remainder)-1]
 					inner = strings.ReplaceAll(inner, "_", " ")
+					// Normalize "property:value" to "property: value" for readability.
+					inner = normalizeSupportsCondition(inner)
 					media = append(media, "@supports ("+inner+")")
 				} else {
 					prop := strings.ReplaceAll(remainder, "_", " ")
@@ -722,12 +725,28 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 				groupName = remainder[slashIdx+1:]
 			}
 			template := v.Template
+			isArbitrary := strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]")
 			// Strip brackets from arbitrary values and adjust template.
-			if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
+			if isArbitrary {
 				value = value[1 : len(value)-1]
 				value = strings.ReplaceAll(value, "_", " ")
 				// Remove ="true" for arbitrary ARIA values.
 				template = strings.ReplaceAll(template, `="true"`, "")
+				// For templates with :{value}, drop the template's colon prefix
+				// so the arbitrary value is used verbatim. This avoids double colons
+				// (e.g., has-[:checked] → :has(:checked)) and spurious colons
+				// (e.g., has-[>img] → :has(>img)).
+				template = strings.ReplaceAll(template, ":{value}", "{value}")
+			} else if (v.Name == "not" || v.Name == "has") && !isArbitrary {
+				// For not-* and has-* with non-arbitrary values, resolve the inner
+				// variant name through the registry (e.g., "first" → "first-child").
+				if innerDef, ok := defs[value]; ok && innerDef.Selector != "" {
+					// Extract the pseudo-class from the selector (e.g., "&:first-child" → "first-child").
+					innerSel := innerDef.Selector
+					if idx := strings.Index(innerSel, "&:"); idx >= 0 {
+						value = innerSel[idx+2:]
+					}
+				}
 			}
 			selector := resolveCompoundTemplate(template, value, groupName)
 			sel = strings.ReplaceAll(selector, "&", sel)
@@ -773,6 +792,19 @@ func lookupCompoundVariant(name string, defs map[string]*VariantDef) *VariantDef
 		}
 	}
 	return best
+}
+
+// normalizeSupportsCondition adds a space after colons in @supports conditions
+// that are missing one (e.g., "display:grid" → "display: grid").
+func normalizeSupportsCondition(s string) string {
+	var result strings.Builder
+	for i := 0; i < len(s); i++ {
+		result.WriteByte(s[i])
+		if s[i] == ':' && i+1 < len(s) && s[i+1] != ' ' {
+			result.WriteByte(' ')
+		}
+	}
+	return result.String()
 }
 
 // stripMerge removes :merge() wrappers from a selector string.

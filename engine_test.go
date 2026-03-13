@@ -1854,6 +1854,51 @@ func TestHasVariant(t *testing.T) {
 	}
 }
 
+func TestNotVariantResolvesInnerName(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-first:border-t`))
+	css := e.CSS()
+	if !strings.Contains(css, ":not(:first-child)") {
+		t.Errorf("expected :not(:first-child), got:\n%s", css)
+	}
+	if strings.Contains(css, ":not(:first)") {
+		t.Errorf("should not contain literal :not(:first), got:\n%s", css)
+	}
+}
+
+func TestHasArbitraryChecked(t *testing.T) {
+	e := New()
+	e.Write([]byte(`has-[:checked]:bg-blue-100`))
+	css := e.CSS()
+	if !strings.Contains(css, ":has(:checked)") {
+		t.Errorf("expected :has(:checked), got:\n%s", css)
+	}
+	if strings.Contains(css, ":has(::checked)") {
+		t.Errorf("should not contain double colon :has(::checked), got:\n%s", css)
+	}
+}
+
+func TestHasArbitraryCombinator(t *testing.T) {
+	e := New()
+	e.Write([]byte(`has-[>img]:overflow-hidden`))
+	css := e.CSS()
+	if !strings.Contains(css, ":has(>img)") {
+		t.Errorf("expected :has(>img), got:\n%s", css)
+	}
+	if strings.Contains(css, ":has(:>img)") {
+		t.Errorf("should not contain spurious colon :has(:>img), got:\n%s", css)
+	}
+}
+
+func TestSupportsArbitraryColonSpacing(t *testing.T) {
+	e := New()
+	e.Write([]byte(`supports-[display:grid]:grid`))
+	css := e.CSS()
+	if !strings.Contains(css, "@supports (display: grid)") {
+		t.Errorf("expected @supports (display: grid) with space after colon, got:\n%s", css)
+	}
+}
+
 func TestStartingStyleVariantBuiltin(t *testing.T) {
 	e := New()
 	e.Write([]byte(`starting:opacity-0`))
