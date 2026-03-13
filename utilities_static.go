@@ -430,7 +430,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Text Decoration Color =====
 	register(staticUtility("decoration-inherit", decls("text-decoration-color", "inherit")))
-	register(staticUtility("decoration-current", decls("text-decoration-color", "currentColor")))
+
 	register(staticUtility("decoration-transparent", decls("text-decoration-color", "transparent")))
 
 	// ===== Text Decoration Style =====
@@ -500,7 +500,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Background Color =====
 	register(staticUtility("bg-inherit", decls("background-color", "inherit")))
-	register(staticUtility("bg-current", decls("background-color", "currentColor")))
+
 	register(staticUtility("bg-transparent", decls("background-color", "transparent")))
 
 	// ===== Background Position =====
@@ -632,7 +632,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Border Color =====
 	register(staticUtility("border-inherit", decls("border-color", "inherit")))
-	register(staticUtility("border-current", decls("border-color", "currentColor")))
+
 	register(staticUtility("border-transparent", decls("border-color", "transparent")))
 
 	// ===== Border Collapse =====
@@ -924,13 +924,13 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Caret Color =====
 	register(staticUtility("caret-inherit", decls("caret-color", "inherit")))
-	register(staticUtility("caret-current", decls("caret-color", "currentColor")))
+
 	register(staticUtility("caret-transparent", decls("caret-color", "transparent")))
 
 	// ===== Accent Color =====
 	register(staticUtility("accent-auto", decls("accent-color", "auto")))
 	register(staticUtility("accent-inherit", decls("accent-color", "inherit")))
-	register(staticUtility("accent-current", decls("accent-color", "currentColor")))
+
 	register(staticUtility("accent-transparent", decls("accent-color", "transparent")))
 
 	// ===== Pointer Events =====
@@ -1043,13 +1043,13 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	// ===== Fill =====
 	register(staticUtility("fill-none", decls("fill", "none")))
 	register(staticUtility("fill-inherit", decls("fill", "inherit")))
-	register(staticUtility("fill-current", decls("fill", "currentColor")))
+
 	register(staticUtility("fill-transparent", decls("fill", "transparent")))
 
 	// ===== Stroke =====
 	register(staticUtility("stroke-none", decls("stroke", "none")))
 	register(staticUtility("stroke-inherit", decls("stroke", "inherit")))
-	register(staticUtility("stroke-current", decls("stroke", "currentColor")))
+
 	register(staticUtility("stroke-transparent", decls("stroke", "transparent")))
 	register(staticUtility("stroke-0", decls("stroke-width", "0")))
 	register(staticUtility("stroke-1", decls("stroke-width", "1")))

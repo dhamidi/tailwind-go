@@ -145,6 +145,11 @@ func TestColorUtility_BorderColorOpacity(t *testing.T) {
 	assertCSS(t, e, "border-red-500/50", "border-color", "color-mix(in srgb, #ef4444 50%, transparent)")
 }
 
+func TestColorUtility_BorderCurrentColorOpacity(t *testing.T) {
+	e := newColorTestEngine(t)
+	assertCSS(t, e, "border-current/50", "border-color", "color-mix(in srgb, currentColor 50%, transparent)")
+}
+
 func TestColorUtility_BorderTopColor(t *testing.T) {
 	e := newColorTestEngine(t)
 	assertCSS(t, e, "border-t-red-500", "border-top-color", "var(--color-red-500)")
