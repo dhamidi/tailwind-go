@@ -193,11 +193,11 @@ All three CSS sources contribute to the final registries. Definitions from later
 
 ## 4. Byte Stream Scanner
 
-### 3.1 Overview
+### 4.1 Overview
 
 The scanner converts a raw byte stream into a set of candidate class name strings. It has **no knowledge** of any markup language, template syntax, or file format. It operates purely on bytes.
 
-### 3.2 Tokenization Rules
+### 4.2 Tokenization Rules
 
 The scanner splits the byte stream into tokens using a delimiter-based approach:
 
@@ -221,7 +221,7 @@ The scanner splits the byte stream into tokens using a delimiter-based approach:
 
 **Delimiter bytes** — everything else (whitespace, `<`, `>`, `"`, `'`, `=`, `{`, `}`, `;`, etc.) terminates the current token.
 
-### 3.3 Bracket Depth Tracking
+### 4.3 Bracket Depth Tracking
 
 Square brackets `[` and `]` receive special handling. When the scanner encounters `[`, it increments a depth counter. While depth > 0, **all bytes** (including what would normally be delimiters) are accumulated into the current token. This is necessary because arbitrary values can contain characters like spaces (encoded as `_`) and commas:
 
@@ -233,11 +233,11 @@ bg-[rgb(255,0,0)]           ← single token
 
 The depth counter decrements on `]`. Normal tokenization resumes when depth returns to 0.
 
-### 3.4 Cross-Chunk Token Reconstruction
+### 4.4 Cross-Chunk Token Reconstruction
 
 The scanner maintains a byte buffer (`[]byte`) across `Write` calls. When a non-delimiter byte arrives, it's appended to the buffer. When a delimiter byte arrives, the buffer is flushed as a completed token. This correctly handles tokens split across chunk boundaries.
 
-### 3.5 Candidate Filtering
+### 4.5 Candidate Filtering
 
 Before accepting a completed token as a candidate, the scanner applies lightweight rejection filters:
 
@@ -248,7 +248,7 @@ Before accepting a completed token as a candidate, the scanner applies lightweig
 
 These filters are deliberately **conservative** (reject obvious non-classes) rather than aggressive. The scanner should never reject a valid Tailwind class. Accepting non-classes is fine — they'll be discarded during generation.
 
-### 3.6 What the Scanner Does NOT Do
+### 4.6 What the Scanner Does NOT Do
 
 - It does not parse HTML attributes to find `class="..."`.
 - It does not understand Go template syntax (`{{.Field}}`).
@@ -291,34 +291,55 @@ Parsed into a flat `map[string]string` of custom property names to values. The `
 
 The modifier keyword is noted but the parsing behavior is the same — all declarations become theme tokens.
 
+Supported modifiers:
+
+- **`inline`** — Theme values are inlined directly into utility declarations rather than emitted as CSS custom properties on `:root`. Useful for tokens that should not be exposed as variables.
+- **`static`** — Forces all CSS custom properties in the block to be generated in the output regardless of whether any utility references them. Normally the engine tree-shakes unused theme variables; `static` bypasses this optimization.
+
+```css
+@theme static {
+  --color-primary: var(--color-red-500);
+}
+```
+
+With `static`, `--color-primary` will appear as a CSS custom property on `:root` even if no utility like `bg-primary` is used in the scanned content.
+
 ##### Theme Namespaces
 
 Theme tokens are organized into namespaces by their property name prefix. The engine recognizes these namespaces for value resolution:
 
-| Prefix | Namespace | Example |
-|--------|-----------|---------|
-| `--color-` | `color` | `--color-blue-500` |
-| `--spacing` | `spacing` | `--spacing` (base), `--spacing-*` (overrides) |
-| `--breakpoint-` | `breakpoint` | `--breakpoint-md` |
-| `--font-family-` | `font-family` | `--font-family-sans` |
-| `--font-size-` | `font-size` | `--font-size-lg` |
-| `--font-weight-` | `font-weight` | `--font-weight-bold` |
-| `--line-height-` | `line-height` | `--line-height-tight` |
-| `--letter-spacing-` | `letter-spacing` | `--letter-spacing-wide` |
-| `--radius-` | `radius` | `--radius-lg` |
-| `--shadow-` | `shadow` | `--shadow-md` |
-| `--inset-shadow-` | `inset-shadow` | `--inset-shadow-sm` |
-| `--drop-shadow-` | `drop-shadow` | `--drop-shadow-lg` |
-| `--blur-` | `blur` | `--blur-md` |
-| `--opacity-` | `opacity` | `--opacity-50` |
-| `--transition-property-` | `transition-property` | `--transition-property-all` |
-| `--ease-` | `ease` | `--ease-in-out` |
-| `--animate-` | `animate` | `--animate-spin` |
-| `--perspective-` | `perspective` | `--perspective-dramatic` |
-| `--aspect-` | `aspect` | `--aspect-video` |
-| `--container-` | `container` | `--container-3xs` |
-| `--width-` | `width` | `--width-prose` |
-| `--z-` | `z` | `--z-50` |
+| Prefix | Namespace | Example | Utilities |
+|--------|-----------|---------|-----------|
+| `--color-` | `color` | `--color-blue-500` | `bg-blue-500`, `text-red-600` |
+| `--spacing` | `spacing` | `--spacing` (base), `--spacing-*` (overrides) | `p-4`, `m-2`, `gap-6` |
+| `--breakpoint-` | `breakpoint` | `--breakpoint-md` | `md:` variant |
+| `--font-family-` | `font-family` | `--font-family-sans` | `font-sans` |
+| `--text-` | `text` | `--text-lg` | `text-xl`, `text-base` |
+| `--font-weight-` | `font-weight` | `--font-weight-bold` | `font-bold` |
+| `--leading-` | `leading` | `--leading-tight` | `leading-tight` |
+| `--tracking-` | `tracking` | `--tracking-wide` | `tracking-wide` |
+| `--radius-` | `radius` | `--radius-lg` | `rounded-lg` |
+| `--shadow-` | `shadow` | `--shadow-md` | `shadow-md` |
+| `--inset-shadow-` | `inset-shadow` | `--inset-shadow-sm` | `inset-shadow-sm` |
+| `--drop-shadow-` | `drop-shadow` | `--drop-shadow-lg` | `drop-shadow-lg` |
+| `--text-shadow-` | `text-shadow` | `--text-shadow-sm` | `text-shadow-sm` |
+| `--blur-` | `blur` | `--blur-md` | `blur-md` |
+| `--opacity-` | `opacity` | `--opacity-50` | `opacity-50` |
+| `--transition-property-` | `transition-property` | `--transition-property-all` | `transition-all` |
+| `--ease-` | `ease` | `--ease-in-out` | `ease-in-out` |
+| `--animate-` | `animate` | `--animate-spin` | `animate-spin` |
+| `--perspective-` | `perspective` | `--perspective-dramatic` | `perspective-dramatic` |
+| `--aspect-` | `aspect` | `--aspect-video` | `aspect-video` |
+| `--container-` | `container` | `--container-3xs` | `@3xs:` variant |
+| `--width-` | `width` | `--width-prose` | `w-prose` |
+| `--z-` | `z` | `--z-50` | `z-50` |
+
+**Note on namespace naming:** In TailwindCSS v4, certain theme namespaces use the utility prefix rather than the CSS property name. Notably:
+- Font sizes use `--text-*` (not `--font-size-*`) — matching the `text-*` utility
+- Letter spacing uses `--tracking-*` (not `--letter-spacing-*`) — matching the `tracking-*` utility
+- Line heights use `--leading-*` (not `--line-height-*`) — matching the `leading-*` utility
+
+These namespace names mirror the utility names users write in their classes, keeping the theme and utility namespaces consistent.
 
 #### 5.1.2 `@utility` Blocks
 
@@ -428,7 +449,16 @@ Some utilities produce declarations that call CSS functions:
 
 The `--value()` appears inside a CSS function call. The engine substitutes the resolved value at the exact position of `--value(...)`.
 
-#### 5.1.3 `@variant` Directives
+#### 5.1.3 `@variant` and `@custom-variant` Directives
+
+TailwindCSS v4 uses two directives for defining variants:
+
+- **`@variant`** — Used internally in Tailwind's own CSS source to define built-in variants. This is the syntax the engine parses from the upstream Tailwind CSS file.
+- **`@custom-variant`** — Used in user-authored CSS to define custom variants. This is the syntax users write in their project CSS files loaded via `LoadCSS`.
+
+Both directives have identical parsing behavior and register variants in the same way. The engine treats them interchangeably.
+
+##### Built-in Variants (from Tailwind's CSS source)
 
 ```css
 @variant hover (&:hover);
@@ -479,7 +509,25 @@ The `--value()` appears inside a CSS function call. The engine substitutes the r
 @variant inert (&:is([inert], [inert] *));
 ```
 
-Each `@variant` declaration specifies:
+##### User-Defined Custom Variants
+
+Users define custom variants using `@custom-variant` in their project CSS:
+
+```css
+/* Parenthesized form (simple selector or media query): */
+@custom-variant theme-midnight (&:where([data-theme="midnight"] *));
+
+/* Block form (for more complex transformations): */
+@custom-variant supports-grid {
+  @supports (display: grid) {
+    @slot;
+  }
+}
+```
+
+The block form uses `@slot` to mark where the utility declarations should be inserted, identical to the block form of `@variant`.
+
+Each `@variant` / `@custom-variant` declaration specifies:
 
 1. **Name** — the prefix used in class names (e.g., `hover` in `hover:bg-blue-500`)
 2. **Definition** — either:
@@ -644,6 +692,8 @@ bg-blue-500/75                → utility "bg", value "blue-500", opacity modifi
 text-[length:--my-size]       → utility "text", arbitrary with type hint "length", value "--my-size"
 [&:nth-child(3)]:bg-red-500   → arbitrary variant, utility "bg", value "red-500"
 group-hover:text-white        → compound variant "group-hover", utility "text", value "white"
+bg-(--my-color)               → utility "bg", custom property shorthand "var(--my-color)"
+w-(--sidebar-width)           → utility "w", custom property shorthand "var(--sidebar-width)"
 ```
 
 ### 6.2 Parsing Algorithm
@@ -716,6 +766,29 @@ If the arbitrary value starts with `--`, it's a custom property reference and sh
 w-[--sidebar-width]  → "var(--sidebar-width)"
 ```
 
+##### Parenthesized Custom Property Syntax
+
+TailwindCSS v4 supports a shorthand syntax using parentheses for CSS custom properties, as an alternative to the bracket syntax:
+
+```
+bg-(--my-color)     → background-color: var(--my-color)
+w-(--sidebar-width) → width: var(--sidebar-width)
+p-(--spacing-lg)    → padding: var(--spacing-lg)
+```
+
+This is equivalent to the bracket syntax `bg-[--my-color]` → `background-color: var(--my-color)`, but provides a more ergonomic way to reference custom properties.
+
+**Parsing rules:**
+- If the value portion of a utility starts with `(` and ends with `)`, and the content inside starts with `--`, treat it as a custom property reference.
+- The content inside the parentheses is wrapped in `var()` just like bare `--` references in bracket syntax.
+- Parenthesized syntax does NOT support type hints or arbitrary CSS expressions — it is exclusively for custom property references.
+- Underscore-to-space replacement does NOT apply inside parentheses (unlike bracket syntax).
+
+```
+bg-(--my-color)      → utility "bg", value "var(--my-color)"
+text-(--heading-size) → utility "text", value "var(--heading-size)"
+```
+
 #### Step 5: Split Utility Name and Value
 
 This is the ambiguous step. Given `bg-blue-500`, is this:
@@ -743,7 +816,7 @@ The simplest resolution: look up `--{namespace}-{value}` in the theme tokens.
 
 ```
 bg-blue-500  →  look up "--color-blue-500"  →  "#3b82f6"
-text-lg      →  look up "--font-size-lg"    →  "1.125rem"
+text-lg      →  look up "--text-lg"          →  "1.125rem"
 rounded-md   →  look up "--radius-md"       →  "0.375rem"
 ```
 
@@ -1018,6 +1091,127 @@ Responsive variants (`sm`, `md`, `lg`, `xl`, `2xl`) must appear in the CSS outpu
 ```
 
 Wraps the rule in a `@starting-style` block for CSS transition entry animations.
+
+### 8.11 ARIA Variants
+
+ARIA state variants allow styling based on ARIA attributes:
+
+```
+aria-checked:bg-blue-500    → &[aria-checked="true"]
+aria-disabled:opacity-50    → &[aria-disabled="true"]
+aria-expanded:rotate-180    → &[aria-expanded="true"]
+aria-hidden:hidden          → &[aria-hidden="true"]
+aria-pressed:ring-2         → &[aria-pressed="true"]
+aria-readonly:bg-gray-100   → &[aria-readonly="true"]
+aria-required:border-red    → &[aria-required="true"]
+aria-selected:bg-blue-100   → &[aria-selected="true"]
+aria-busy:animate-pulse     → &[aria-busy="true"]
+```
+
+Arbitrary ARIA variants are also supported:
+
+```
+aria-[sort=ascending]:underline  → &[aria-sort="ascending"]
+aria-[labelledby=title]:font-bold → &[aria-labelledby="title"]
+```
+
+These are parameterized variants: the `aria-*` prefix is followed by the ARIA attribute name, and the variant generates an attribute selector matching the `"true"` value by default.
+
+### 8.12 `data-*` Variants
+
+Data attribute variants allow styling based on `data-*` attributes:
+
+```
+data-active:bg-blue-500      → &[data-active]
+data-[size=large]:text-lg    → &[data-size="large"]
+data-[loading]:animate-pulse → &[data-loading]
+```
+
+The `data-*` variants work similarly to ARIA variants. Without a value, they check for attribute presence. With a bracket value, they check for a specific attribute value.
+
+### 8.13 `supports-*` Variants
+
+Feature query variants using `@supports`:
+
+```
+supports-[display:grid]:grid        → @supports (display: grid) { ... }
+supports-[backdrop-filter]:backdrop-blur → @supports (backdrop-filter: blur()) { ... }
+```
+
+These generate `@supports` at-rule wrappers based on the CSS property and value specified in the brackets.
+
+### 8.14 `max-*` Responsive Variants
+
+Maximum-width responsive variants, the inverse of standard responsive variants:
+
+```
+max-sm:hidden   → @media (width < 40rem) { ... }
+max-md:flex     → @media (width < 48rem) { ... }
+max-lg:block    → @media (width < 64rem) { ... }
+max-xl:hidden   → @media (width < 80rem) { ... }
+max-2xl:grid    → @media (width < 96rem) { ... }
+```
+
+These use `<` (less than) rather than `>=` (greater than or equal), creating a maximum-width constraint. Combined with the standard `min-*` variants, they enable range-based responsive design.
+
+### 8.15 Pointer and Input Device Variants
+
+```
+pointer-coarse:p-4      → @media (pointer: coarse) { ... }
+pointer-fine:p-2         → @media (pointer: fine) { ... }
+pointer-none:hidden      → @media (pointer: none) { ... }
+any-pointer-coarse:p-4   → @media (any-pointer: coarse) { ... }
+any-pointer-fine:p-2     → @media (any-pointer: fine) { ... }
+hover-hover:underline    → @media (hover: hover) { ... }
+hover-none:no-underline  → @media (hover: none) { ... }
+any-hover-hover:underline → @media (any-hover: hover) { ... }
+any-hover-none:no-underline → @media (any-hover: none) { ... }
+```
+
+### 8.16 `nth-*` Parameterized Variants
+
+```
+nth-[3]:bg-red-500         → &:nth-child(3)
+nth-[3n+1]:bg-blue-500     → &:nth-child(3n+1)
+nth-last-[2]:bg-green-500  → &:nth-last-child(2)
+```
+
+Parameterized variants that generate `:nth-child()` and `:nth-last-child()` pseudo-class selectors with arbitrary arguments.
+
+### 8.17 Child and Descendant Selector Variants
+
+TailwindCSS v4 provides special selector variants for targeting children and descendants:
+
+```
+*:p-4           → & > * { padding: 1rem; }
+**:text-red-500 → & * { color: ... }
+```
+
+- **`*` (child variant):** Applies styles to direct children using `& > *`.
+- **`**` (descendant variant):** Applies styles to all descendants using `& *`.
+
+### 8.18 Additional Pseudo-Class Variants
+
+```
+user-valid:border-green-500     → &:user-valid
+user-invalid:border-red-500     → &:user-invalid
+optional:border-gray-300        → &:optional
+in-range:border-green-500       → &:in-range
+out-of-range:border-red-500     → &:out-of-range
+details-content:p-4             → &::details-content
+```
+
+These pseudo-classes extend the set of form/element state variants beyond the basic ones listed in §5.1.3.
+
+### 8.19 Additional Media Query Variants
+
+```
+noscript:hidden                        → @media (scripting: none) { ... }
+inverted-colors:filter-none            → @media (inverted-colors: inverted) { ... }
+not-forced-colors:shadow-md            → @media (forced-colors: none) { ... }
+```
+
+These media query variants provide additional environment detection beyond the standard set.
 
 
 ## 9. Utility Resolution and CSS Generation
@@ -1306,9 +1500,258 @@ When the `animate-spin` utility is used, the engine must include both:
 The engine should collect `@keyframes` blocks during CSS parsing and include them in the output when any utility references them.
 
 
-## 15. Dark Mode
+## 15. Gradient Utilities
 
-### 15.1 Media-Based (Default)
+### 15.1 Linear Gradients
+
+TailwindCSS v4 renames the gradient utilities from v3:
+
+| v3 Syntax | v4 Syntax |
+|-----------|-----------|
+| `bg-gradient-to-r` | `bg-linear-to-r` |
+| `bg-gradient-to-t` | `bg-linear-to-t` |
+| `bg-gradient-to-br` | `bg-linear-to-br` |
+
+The `bg-linear-to-*` utilities generate `background-image: linear-gradient(to <direction>, ...)` declarations.
+
+Additionally, v4 introduces angle-based linear gradients:
+
+```
+bg-linear-45      → background-image: linear-gradient(45deg, ...)
+bg-linear-90      → background-image: linear-gradient(90deg, ...)
+bg-linear-[137deg] → background-image: linear-gradient(137deg, ...)
+```
+
+### 15.2 Radial Gradients
+
+```
+bg-radial          → background-image: radial-gradient(...)
+bg-radial-[at_top] → background-image: radial-gradient(at top, ...)
+```
+
+### 15.3 Conic Gradients
+
+```
+bg-conic           → background-image: conic-gradient(...)
+bg-conic-[from_45deg] → background-image: conic-gradient(from 45deg, ...)
+```
+
+### 15.4 Gradient Color Stops
+
+Gradient color stops are defined using `from-*`, `via-*`, and `to-*` utilities:
+
+```
+from-blue-500      → starting color
+via-purple-500     → middle color (optional)
+to-pink-500        → ending color
+```
+
+**Stop positions** allow specifying where each color stop occurs:
+
+```
+from-blue-500 from-10%    → start at 10%
+via-purple-500 via-30%    → middle at 30%
+to-pink-500 to-90%        → end at 90%
+```
+
+### 15.5 Gradient Color Interpolation
+
+TailwindCSS v4 supports color interpolation modifiers that control how colors blend across the gradient:
+
+```
+bg-linear-to-r/srgb     → linear-gradient(in srgb, ...)
+bg-linear-to-r/oklab    → linear-gradient(in oklab, ...)
+bg-linear-to-r/oklch    → linear-gradient(in oklch, ...)
+```
+
+The interpolation modifier appears after a `/` on the gradient utility. Supported color spaces include `srgb`, `srgb-linear`, `lab`, `oklab`, `lch`, `oklch`, `hsl`, and `hwb`.
+
+
+## 16. Additional Utility Categories
+
+### 16.1 Text Shadow Utilities
+
+Text shadow utilities parallel the box shadow system:
+
+```
+text-shadow-sm    → text-shadow: 0 1px 1px rgb(0 0 0 / 0.05)
+text-shadow       → text-shadow: 0 1px 3px rgb(0 0 0 / 0.1)
+text-shadow-md    → text-shadow: 0 2px 4px rgb(0 0 0 / 0.1)
+text-shadow-lg    → text-shadow: 0 4px 8px rgb(0 0 0 / 0.1)
+text-shadow-none  → text-shadow: none
+```
+
+Values are resolved from the `--text-shadow-*` theme namespace.
+
+### 16.2 Mask Utilities
+
+CSS mask utilities for controlling element masking:
+
+```
+mask-clip-border    → mask-clip: border-box
+mask-clip-padding   → mask-clip: padding-box
+mask-clip-content   → mask-clip: content-box
+mask-clip-fill      → mask-clip: fill-box
+mask-clip-stroke    → mask-clip: stroke-box
+mask-clip-view      → mask-clip: view-box
+mask-clip-none      → mask-clip: no-clip
+
+mask-composite-add        → mask-composite: add
+mask-composite-subtract   → mask-composite: subtract
+mask-composite-intersect  → mask-composite: intersect
+mask-composite-exclude    → mask-composite: exclude
+
+mask-image-none           → mask-image: none
+mask-image-[url(...)]     → mask-image: url(...)
+
+mask-mode-alpha           → mask-mode: alpha
+mask-mode-luminance       → mask-mode: luminance
+mask-mode-match           → mask-mode: match-source
+
+mask-origin-border    → mask-origin: border-box
+mask-origin-padding   → mask-origin: padding-box
+mask-origin-content   → mask-origin: content-box
+mask-origin-fill      → mask-origin: fill-box
+mask-origin-stroke    → mask-origin: stroke-box
+mask-origin-view      → mask-origin: view-box
+
+mask-position-*       → mask-position: center, top, etc.
+mask-repeat-*         → mask-repeat: repeat, no-repeat, etc.
+mask-size-*           → mask-size: auto, cover, contain, etc.
+
+mask-type-alpha       → mask-type: alpha
+mask-type-luminance   → mask-type: luminance
+```
+
+### 16.3 Font Stretch Utilities
+
+```
+font-stretch-ultra-condensed  → font-stretch: ultra-condensed
+font-stretch-extra-condensed  → font-stretch: extra-condensed
+font-stretch-condensed        → font-stretch: condensed
+font-stretch-semi-condensed   → font-stretch: semi-condensed
+font-stretch-normal           → font-stretch: normal
+font-stretch-semi-expanded    → font-stretch: semi-expanded
+font-stretch-expanded         → font-stretch: expanded
+font-stretch-extra-expanded   → font-stretch: extra-expanded
+font-stretch-ultra-expanded   → font-stretch: ultra-expanded
+font-stretch-[75%]            → font-stretch: 75%
+```
+
+### 16.4 Color Scheme Utilities
+
+```
+color-scheme-normal           → color-scheme: normal
+color-scheme-light            → color-scheme: light
+color-scheme-dark             → color-scheme: dark
+color-scheme-light-dark       → color-scheme: light dark
+```
+
+Controls the preferred color scheme for form controls and UI elements.
+
+### 16.5 Field Sizing Utilities
+
+```
+field-sizing-content  → field-sizing: content
+field-sizing-fixed    → field-sizing: fixed
+```
+
+Controls how form fields size themselves based on their content.
+
+### 16.6 Logical Property Utilities
+
+Logical property utilities map to writing-mode-aware CSS properties:
+
+```
+inline-size-*   → inline-size: ...     (width in horizontal, height in vertical)
+block-size-*    → block-size: ...      (height in horizontal, width in vertical)
+min-inline-*    → min-inline-size: ...
+max-inline-*    → max-inline-size: ...
+min-block-*     → min-block-size: ...
+max-block-*     → max-block-size: ...
+
+start-*         → inset-inline-start: ...
+end-*           → inset-inline-end: ...
+
+ms-*            → margin-inline-start: ...
+me-*            → margin-inline-end: ...
+ps-*            → padding-inline-start: ...
+pe-*            → padding-inline-end: ...
+
+border-s-*      → border-inline-start: ...
+border-e-*      → border-inline-end: ...
+rounded-s-*     → border-start-start-radius + border-end-start-radius
+rounded-e-*     → border-start-end-radius + border-end-end-radius
+
+scroll-ms-*     → scroll-margin-inline-start: ...
+scroll-me-*     → scroll-margin-inline-end: ...
+scroll-ps-*     → scroll-padding-inline-start: ...
+scroll-pe-*     → scroll-padding-inline-end: ...
+```
+
+These utilities use the spacing theme namespace for value resolution.
+
+### 16.7 Container Utility
+
+The `@container` utility marks an element as a container query context:
+
+```
+@container         → container-type: inline-size
+@container/sidebar → container-type: inline-size; container-name: sidebar
+@container-normal  → container-type: normal
+```
+
+Container query variants (§8.4) target these containers.
+
+### 16.8 Backface Visibility Utilities
+
+```
+backface-visible  → backface-visibility: visible
+backface-hidden   → backface-visibility: hidden
+```
+
+### 16.9 Perspective Origin Utilities
+
+```
+perspective-origin-center       → perspective-origin: center
+perspective-origin-top          → perspective-origin: top
+perspective-origin-top-right    → perspective-origin: top right
+perspective-origin-right        → perspective-origin: right
+perspective-origin-bottom-right → perspective-origin: bottom right
+perspective-origin-bottom       → perspective-origin: bottom
+perspective-origin-bottom-left  → perspective-origin: bottom left
+perspective-origin-left         → perspective-origin: left
+perspective-origin-top-left     → perspective-origin: top left
+perspective-origin-[25%_75%]    → perspective-origin: 25% 75%
+```
+
+### 16.10 Transform Style Utilities
+
+```
+transform-3d    → transform-style: preserve-3d
+transform-flat  → transform-style: flat
+```
+
+### 16.11 Inset Ring Utilities
+
+Inset ring utilities generate inner ring effects using box shadows:
+
+```
+inset-ring-0     → box-shadow: inset 0 0 0 0px ...
+inset-ring-1     → box-shadow: inset 0 0 0 1px ...
+inset-ring-2     → box-shadow: inset 0 0 0 2px ...
+inset-ring       → box-shadow: inset 0 0 0 1px ... (default)
+
+inset-ring-blue-500  → sets the inset ring color
+inset-ring-[3px]     → arbitrary width
+```
+
+These compose with box shadow and ring utilities using CSS custom properties for shadow stacking.
+
+
+## 17. Dark Mode
+
+### 17.1 Media-Based (Default)
 
 ```css
 @variant dark (@media (prefers-color-scheme: dark));
@@ -1316,7 +1759,7 @@ The engine should collect `@keyframes` blocks during CSS parsing and include the
 
 Uses `@media (prefers-color-scheme: dark)` wrapping.
 
-### 15.2 Selector-Based
+### 17.2 Selector-Based
 
 Projects may override the dark variant to use a selector strategy:
 
@@ -1329,9 +1772,9 @@ This applies the utility when an ancestor has the `.dark` class.
 The engine doesn't need to know which strategy is in use — it simply applies whatever variant definition is registered for `dark`.
 
 
-## 16. Important Modifier
+## 18. Important Modifier
 
-### 16.1 Per-Utility Important
+### 18.1 Per-Utility Important
 
 ```
 !font-bold  →  font-weight: 700 !important
@@ -1340,7 +1783,7 @@ The engine doesn't need to know which strategy is in use — it simply applies w
 
 The `!` prefix causes all declarations in the generated rule to have `!important` appended.
 
-### 16.2 Interaction with Variants
+### 18.2 Interaction with Variants
 
 ```
 hover:!bg-blue-500  →
@@ -1352,9 +1795,9 @@ hover:!bg-blue-500  →
 The `!` flag is independent of variants and always affects the declarations, not the selector or media query.
 
 
-## 17. Negative Values
+## 19. Negative Values
 
-### 17.1 Syntax
+### 19.1 Syntax
 
 ```
 -m-4           → margin: -1rem
@@ -1364,7 +1807,7 @@ The `!` flag is independent of variants and always affects the declarations, not
 
 The `-` prefix before the utility name negates the resolved value.
 
-### 17.2 Negation Rules
+### 19.2 Negation Rules
 
 - Simple dimensions: prepend `-` (e.g., `1rem` → `-1rem`)
 - `calc()` expressions: wrap as `calc(-1 * <original>)`
@@ -1373,18 +1816,18 @@ The `-` prefix before the utility name negates the resolved value.
 - `auto`, `none`, color values: cannot be negated (class is discarded)
 
 
-## 18. Concurrency
+## 20. Concurrency
 
-### 18.1 Thread Safety Guarantees
+### 20.1 Thread Safety Guarantees
 
 The Engine is safe for concurrent use:
 
-- **`Write()`**: Multiple goroutines may call `Write` concurrently. The candidate map is protected by a mutex. The scanner's cross-chunk buffering assumes sequential delivery within a single stream, but concurrent writes from different streams are safe (worst case: a token at a stream boundary is split, producing two non-matching candidates instead of one matching one — harmless by §4.5's over-extraction principle).
+- **`Write()`**: Multiple goroutines may call `Write` concurrently. The candidate map is protected by a mutex. The scanner's cross-chunk buffering assumes sequential delivery within a single stream, but concurrent writes from different streams are safe (worst case: a token at a stream boundary is split, producing two non-matching candidates instead of one matching one — harmless by §4.5's candidate filtering principle).
 - **`CSS()`**: May be called while `Write` is in progress. Takes a snapshot of the current candidate set under a read lock. Does not modify engine state.
 - **`LoadCSS()`**: Must not be called concurrently with `CSS()`. Typically called during initialization before any writes begin.
 - **`Reset()`**: Must not be called concurrently with `Write()` or `CSS()`.
 
-### 18.2 Recommended Usage Patterns
+### 20.2 Recommended Usage Patterns
 
 **Build-time tool:**
 ```go
@@ -1431,21 +1874,21 @@ css := engine.CSS()
 ```
 
 
-## 19. Error Handling
+## 21. Error Handling
 
-### 19.1 `LoadCSS` Errors
+### 21.1 `LoadCSS` Errors
 
 `LoadCSS` returns an error only for fundamental parse failures (e.g., completely unparseable input). Individual malformed rules or unknown constructs are silently skipped. This is by design: the engine should work with partial or future CSS syntax it doesn't fully understand.
 
-### 19.2 `Write` Errors
+### 21.2 `Write` Errors
 
 `Write` only returns errors from the passthrough writer. The scanner itself cannot fail — any byte sequence is valid input (it may not produce useful candidates, but that's not an error).
 
-### 19.3 `CSS` Errors
+### 21.3 `CSS` Errors
 
 `CSS` never returns an error. Unresolvable candidates are silently dropped. If no candidates match any utilities, the output is an empty string.
 
-### 19.4 Diagnostics
+### 21.4 Diagnostics
 
 For debugging, the engine should provide optional diagnostic methods:
 
@@ -1467,53 +1910,53 @@ type Diagnostics struct {
 This is informational only and has no effect on behavior.
 
 
-## 20. Edge Cases
+## 22. Edge Cases
 
-### 20.1 Empty Input
+### 22.1 Empty Input
 
 - `LoadCSS([]byte{})` — no error, no registries populated, `CSS()` returns `""`.
 - `Write([]byte{})` — no-op, returns `(0, nil)`.
 - `CSS()` with no writes — returns `""`.
 
-### 20.2 Unknown Classes
+### 22.2 Unknown Classes
 
 Classes that don't match any utility are silently dropped. No warning, no error.
 
-### 20.3 Conflicting Utility Definitions
+### 22.3 Conflicting Utility Definitions
 
 If two `@utility` blocks define the same pattern, the later one wins (last-write-wins during `LoadCSS`).
 
-### 20.4 Very Long Class Names
+### 22.4 Very Long Class Names
 
 No length limit on class names. The scanner will accumulate tokens of any length.
 
-### 20.5 Binary Content
+### 22.5 Binary Content
 
 If binary content is written to the engine (e.g., an image accidentally piped through), the scanner will extract nonsensical tokens. These won't match any utilities and are harmless. Performance may degrade slightly due to the large number of false-positive candidates.
 
-### 20.6 Nested `@theme` in `@utility`
+### 22.6 Nested `@theme` in `@utility`
 
 Invalid per the Tailwind spec. The parser should skip the nested `@theme` and parse the `@utility` body normally.
 
-### 20.7 Recursive `@apply`
+### 22.7 Recursive `@apply`
 
 If a class referenced in `@apply` itself uses `@apply`, the engine must detect the recursion and stop. Maximum recursion depth: 10. Beyond that, the `@apply` directive is left unresolved and a diagnostic is emitted.
 
 
-## 21. Performance Expectations
+## 23. Performance Expectations
 
-### 21.1 Scanning
+### 23.1 Scanning
 
 The scanner should process bytes at close to memory-copy speed. There are no allocations in the hot path (token bytes are accumulated in a reusable buffer). Target: **>500 MB/s** on modern hardware.
 
-### 21.2 CSS Generation
+### 23.2 CSS Generation
 
 Generation is proportional to the number of matched candidates, not total candidates. For a typical project with 500-2000 matched utilities:
 - Utility matching: O(candidates × utility_count) with early exit on match
 - Value resolution: O(1) per candidate (hash map lookups)
 - Target: **<10ms** for 2000 candidates
 
-### 21.3 Memory
+### 23.3 Memory
 
 The engine's memory footprint is:
 - Theme tokens: ~100KB for Tailwind's full default theme
@@ -1525,9 +1968,9 @@ The engine's memory footprint is:
 Total baseline: **<1MB** for a fully-loaded engine.
 
 
-## 22. Testing Strategy
+## 24. Testing Strategy
 
-### 22.1 Unit Tests
+### 24.1 Unit Tests
 
 Each component is tested in isolation:
 
@@ -1538,17 +1981,17 @@ Each component is tested in isolation:
 - **Theme resolver**: Namespace + key → expected CSS values
 - **Generator**: Candidate + definitions → expected CSS output
 
-### 22.2 Integration Tests
+### 24.2 Integration Tests
 
 End-to-end tests: HTML/template bytes in → CSS string out. These use representative subsets of Tailwind's actual CSS source as the engine's input.
 
-### 22.3 Compatibility Tests
+### 24.3 Compatibility Tests
 
 Parse Tailwind's actual full CSS source (downloaded from npm or CDN) and run it through the engine with known class sets. Compare output against Tailwind's own CLI output for the same classes.
 
 This is the definitive correctness test. If the engine produces different CSS than Tailwind's CLI for the same input, the engine has a bug.
 
-### 22.4 Fuzz Testing
+### 24.4 Fuzz Testing
 
 Use Go's built-in fuzzing (`go test -fuzz`) on:
 - The CSS tokenizer (arbitrary byte input should never panic)
@@ -1557,17 +2000,17 @@ Use Go's built-in fuzzing (`go test -fuzz`) on:
 - The full pipeline (arbitrary bytes through Write → CSS should never panic)
 
 
-## 23. Future Considerations
+## 25. Future Considerations
 
-### 23.1 Incremental Generation
+### 25.1 Incremental Generation
 
 For watch-mode use cases, the engine should support incremental updates: when new candidates appear, generate only the new rules rather than regenerating everything. This requires tracking which candidates have already been generated.
 
-### 23.2 Source Maps
+### 25.2 Source Maps
 
 For debugging, the engine could emit source maps linking generated CSS selectors back to the utility class names that produced them.
 
-### 23.3 CSS Nesting Output
+### 25.3 CSS Nesting Output
 
 Modern CSS supports nesting. The engine could optionally emit nested CSS for smaller output:
 
@@ -1578,10 +2021,10 @@ Modern CSS supports nesting. The engine could optionally emit nested CSS for sma
 }
 ```
 
-### 23.4 Updating the Bundled CSS
+### 25.4 Updating the Bundled CSS
 
 When a new Tailwind CSS v4 release is published, running `go generate ./...` fetches the latest version. The embedded default CSS (§3) should be updated periodically to track upstream releases.
 
-### 23.5 Plugin System
+### 25.5 Plugin System
 
 Allow Go functions to register custom utility generators that go beyond what `@utility` can express in CSS. This would enable plugins equivalent to Tailwind's JS plugin system.
