@@ -752,21 +752,60 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtilityWithSelector("divide-none", childSel, decls("border-style", "none")))
 
 	// ===== Shadow =====
-	register(staticUtility("shadow", decls("box-shadow", "var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1))")))
-	register(staticUtility("shadow-none", decls("box-shadow", "0 0 #0000")))
-	register(staticUtility("shadow-2xs", decls("box-shadow", "var(--shadow-2xs, 0 1px rgb(0 0 0 / 0.05))")))
-	register(staticUtility("shadow-xs", decls("box-shadow", "var(--shadow-xs, 0 1px 2px 0 rgb(0 0 0 / 0.05))")))
-	register(staticUtility("shadow-sm", decls("box-shadow", "var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1))")))
-	register(staticUtility("shadow-md", decls("box-shadow", "var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1))")))
-	register(staticUtility("shadow-lg", decls("box-shadow", "var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1))")))
-	register(staticUtility("shadow-xl", decls("box-shadow", "var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1))")))
-	register(staticUtility("shadow-2xl", decls("box-shadow", "var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.25))")))
-	register(staticUtility("shadow-inner", decls("box-shadow", "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)")))
+	register(staticUtility("shadow", decls(
+		"--tw-shadow", "var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-none", decls(
+		"--tw-shadow", "0 0 #0000",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-2xs", decls(
+		"--tw-shadow", "var(--shadow-2xs, 0 1px rgb(0 0 0 / 0.05))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-xs", decls(
+		"--tw-shadow", "var(--shadow-xs, 0 1px 2px 0 rgb(0 0 0 / 0.05))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-sm", decls(
+		"--tw-shadow", "var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-md", decls(
+		"--tw-shadow", "var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-lg", decls(
+		"--tw-shadow", "var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-xl", decls(
+		"--tw-shadow", "var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-2xl", decls(
+		"--tw-shadow", "var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.25))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("shadow-inner", decls(
+		"--tw-shadow", "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
 
 	// ===== Inset Shadow =====
-	register(staticUtility("inset-shadow-2xs", decls("box-shadow", "var(--inset-shadow-2xs, inset 0 1px rgb(0 0 0 / 0.05))")))
-	register(staticUtility("inset-shadow-xs", decls("box-shadow", "var(--inset-shadow-xs, inset 0 1px 1px rgb(0 0 0 / 0.05))")))
-	register(staticUtility("inset-shadow-sm", decls("box-shadow", "var(--inset-shadow-sm, inset 0 2px 4px rgb(0 0 0 / 0.05))")))
+	register(staticUtility("inset-shadow-2xs", decls(
+		"--tw-inset-shadow", "var(--inset-shadow-2xs, inset 0 1px rgb(0 0 0 / 0.05))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-shadow-xs", decls(
+		"--tw-inset-shadow", "var(--inset-shadow-xs, inset 0 1px 1px rgb(0 0 0 / 0.05))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-shadow-sm", decls(
+		"--tw-inset-shadow", "var(--inset-shadow-sm, inset 0 2px 4px rgb(0 0 0 / 0.05))",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
 
 	// ===== Ring =====
 	register(staticUtility("ring", decls(
@@ -794,6 +833,32 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
 	)))
 	register(staticUtility("ring-inset", decls("--tw-ring-inset", "inset")))
+
+	// ===== Inset Ring =====
+	register(staticUtility("inset-ring", decls(
+		"--tw-inset-ring-shadow", "inset 0 0 0 1px var(--tw-inset-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-ring-0", decls(
+		"--tw-inset-ring-shadow", "inset 0 0 0 0px var(--tw-inset-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-ring-1", decls(
+		"--tw-inset-ring-shadow", "inset 0 0 0 1px var(--tw-inset-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-ring-2", decls(
+		"--tw-inset-ring-shadow", "inset 0 0 0 2px var(--tw-inset-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-ring-4", decls(
+		"--tw-inset-ring-shadow", "inset 0 0 0 4px var(--tw-inset-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
+	register(staticUtility("inset-ring-8", decls(
+		"--tw-inset-ring-shadow", "inset 0 0 0 8px var(--tw-inset-ring-color, currentcolor)",
+		"box-shadow", "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)",
+	)))
 
 	// ===== Ring Offset =====
 	register(staticUtility("ring-offset-0", decls("--tw-ring-offset-width", "0px")))
@@ -1192,6 +1257,25 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	// ===== Field Sizing =====
 	register(staticUtility("field-sizing-fixed", decls("field-sizing", "fixed")))
 	register(staticUtility("field-sizing-content", decls("field-sizing", "content")))
+
+	// ===== Backface Visibility =====
+	register(staticUtility("backface-visible", decls("backface-visibility", "visible")))
+	register(staticUtility("backface-hidden", decls("backface-visibility", "hidden")))
+
+	// ===== Perspective Origin =====
+	register(staticUtility("perspective-origin-center", decls("perspective-origin", "center")))
+	register(staticUtility("perspective-origin-top", decls("perspective-origin", "top")))
+	register(staticUtility("perspective-origin-top-right", decls("perspective-origin", "top right")))
+	register(staticUtility("perspective-origin-right", decls("perspective-origin", "right")))
+	register(staticUtility("perspective-origin-bottom-right", decls("perspective-origin", "bottom right")))
+	register(staticUtility("perspective-origin-bottom", decls("perspective-origin", "bottom")))
+	register(staticUtility("perspective-origin-bottom-left", decls("perspective-origin", "bottom left")))
+	register(staticUtility("perspective-origin-left", decls("perspective-origin", "left")))
+	register(staticUtility("perspective-origin-top-left", decls("perspective-origin", "top left")))
+
+	// ===== Transform Style =====
+	register(staticUtility("transform-3d", decls("transform-style", "preserve-3d")))
+	register(staticUtility("transform-flat", decls("transform-style", "flat")))
 
 	// ===== Contain =====
 	register(staticUtility("contain-none", decls("contain", "none")))

@@ -2799,3 +2799,146 @@ func TestContainerWithVariant(t *testing.T) {
 		t.Errorf("md:container should include width: 100%%, got:\n%s", css)
 	}
 }
+
+// --- Backface Visibility utilities ---
+
+func TestBackfaceVisibility(t *testing.T) {
+	e := New()
+	e.Write([]byte(`backface-visible backface-hidden`))
+	css := e.CSS()
+	for _, want := range []string{
+		"backface-visibility: visible",
+		"backface-visibility: hidden",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+}
+
+// --- Perspective Origin utilities ---
+
+func TestPerspectiveOriginStatic(t *testing.T) {
+	e := New()
+	e.Write([]byte(`perspective-origin-center perspective-origin-top perspective-origin-top-right perspective-origin-right perspective-origin-bottom-right perspective-origin-bottom perspective-origin-bottom-left perspective-origin-left perspective-origin-top-left`))
+	css := e.CSS()
+	for _, want := range []string{
+		"perspective-origin: center",
+		"perspective-origin: top",
+		"perspective-origin: top right",
+		"perspective-origin: right",
+		"perspective-origin: bottom right",
+		"perspective-origin: bottom",
+		"perspective-origin: bottom left",
+		"perspective-origin: left",
+		"perspective-origin: top left",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+}
+
+func TestPerspectiveOriginArbitrary(t *testing.T) {
+	e := New()
+	e.Write([]byte(`perspective-origin-[50%_25%]`))
+	css := e.CSS()
+	if !strings.Contains(css, "perspective-origin: 50% 25%") {
+		t.Errorf("expected perspective-origin: 50%% 25%%, got:\n%s", css)
+	}
+}
+
+// --- Transform Style utilities ---
+
+func TestTransformStyle(t *testing.T) {
+	e := New()
+	e.Write([]byte(`transform-3d transform-flat`))
+	css := e.CSS()
+	for _, want := range []string{
+		"transform-style: preserve-3d",
+		"transform-style: flat",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+}
+
+// --- Inset Ring utilities ---
+
+func TestInsetRingWidth(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inset-ring inset-ring-0 inset-ring-1 inset-ring-2 inset-ring-4 inset-ring-8`))
+	css := e.CSS()
+	for _, want := range []string{
+		"--tw-inset-ring-shadow: inset 0 0 0 1px var(--tw-inset-ring-color, currentcolor)",
+		"--tw-inset-ring-shadow: inset 0 0 0 0px var(--tw-inset-ring-color, currentcolor)",
+		"--tw-inset-ring-shadow: inset 0 0 0 2px var(--tw-inset-ring-color, currentcolor)",
+		"--tw-inset-ring-shadow: inset 0 0 0 4px var(--tw-inset-ring-color, currentcolor)",
+		"--tw-inset-ring-shadow: inset 0 0 0 8px var(--tw-inset-ring-color, currentcolor)",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+	// All inset-ring utilities should compose box-shadow
+	if !strings.Contains(css, "box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)") {
+		t.Errorf("missing composed box-shadow in:\n%s", css)
+	}
+}
+
+func TestInsetRingColor(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inset-ring-red-500`))
+	css := e.CSS()
+	if !strings.Contains(css, "--tw-inset-ring-color") {
+		t.Errorf("expected --tw-inset-ring-color in:\n%s", css)
+	}
+}
+
+// --- Shadow Composability ---
+
+func TestShadowComposability(t *testing.T) {
+	e := New()
+	e.Write([]byte(`shadow-md`))
+	css := e.CSS()
+	// shadow-md should set --tw-shadow variable
+	if !strings.Contains(css, "--tw-shadow:") {
+		t.Errorf("shadow-md should set --tw-shadow variable, got:\n%s", css)
+	}
+	// shadow-md should compose box-shadow
+	if !strings.Contains(css, "box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)") {
+		t.Errorf("shadow-md should have composed box-shadow, got:\n%s", css)
+	}
+}
+
+func TestInsetShadowComposability(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inset-shadow-sm`))
+	css := e.CSS()
+	// inset-shadow-sm should set --tw-inset-shadow variable
+	if !strings.Contains(css, "--tw-inset-shadow:") {
+		t.Errorf("inset-shadow-sm should set --tw-inset-shadow variable, got:\n%s", css)
+	}
+	// inset-shadow-sm should compose box-shadow
+	if !strings.Contains(css, "box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)") {
+		t.Errorf("inset-shadow-sm should have composed box-shadow, got:\n%s", css)
+	}
+}
+
+func TestShadowAndRingComposition(t *testing.T) {
+	e := New()
+	e.Write([]byte(`shadow-md inset-shadow-sm ring-2 inset-ring`))
+	css := e.CSS()
+	// All four utilities should be present with their respective variables
+	for _, want := range []string{
+		"--tw-shadow:",
+		"--tw-inset-shadow:",
+		"--tw-ring-shadow:",
+		"--tw-inset-ring-shadow:",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in composed output:\n%s", want, css)
+		}
+	}
+}

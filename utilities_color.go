@@ -147,6 +147,9 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 	register(colorUtility("ring", makeColorCompileFn("--tw-ring-color", "ring-color", "color")))
 	register(colorUtility("ring-offset", makeColorCompileFn("--tw-ring-offset-color", "ring-offset-color", "color")))
 
+	// === Inset Ring color ===
+	register(colorUtility("inset-ring", makeColorCompileFn("--tw-inset-ring-color", "inset-ring-color", "color")))
+
 	// === Border color ===
 	register(colorUtility("border", makeColorCompileFn("border-color", "border-color", "color")))
 	register(colorUtility("border-t", makeColorCompileFn("border-top-color", "border-color", "color")))

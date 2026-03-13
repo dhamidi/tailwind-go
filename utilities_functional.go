@@ -634,6 +634,12 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"perspective", "--value(length)",
 	)))
 
+	// ===== Perspective Origin =====
+	register(cssUtility("perspective-origin", decls(
+		"perspective-origin", "--value(position)",
+		"perspective-origin", "--value(any)",
+	)))
+
 	// ===== Gradient Utilities =====
 
 	// bg-linear-<angle> → linear-gradient(<angle>deg in oklab, ...)
