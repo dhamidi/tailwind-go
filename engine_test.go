@@ -3654,3 +3654,74 @@ func TestEndToEndOpacityModifierOnArbitraryColor(t *testing.T) {
 		t.Errorf("expected color value in output:\n%s", result)
 	}
 }
+
+func TestBorderRadiusCornerAndLogicalUtilities(t *testing.T) {
+	tests := []struct {
+		class    string
+		property string
+		value    string
+	}{
+		// Physical individual corners
+		{"rounded-tl-lg", "border-top-left-radius", "var(--radius-lg)"},
+		{"rounded-tr-lg", "border-top-right-radius", "var(--radius-lg)"},
+		{"rounded-br-md", "border-bottom-right-radius", "var(--radius-md)"},
+		{"rounded-bl-xl", "border-bottom-left-radius", "var(--radius-xl)"},
+		{"rounded-tl-none", "border-top-left-radius", "0px"},
+		{"rounded-tr-full", "border-top-right-radius", "calc(infinity * 1px)"},
+		{"rounded-br", "border-bottom-right-radius", "var(--radius-sm)"},
+		{"rounded-bl-sm", "border-bottom-left-radius", "var(--radius-xs)"},
+
+		// Logical side rounding
+		{"rounded-s-xl", "border-start-start-radius", "var(--radius-xl)"},
+		{"rounded-s-xl", "border-end-start-radius", "var(--radius-xl)"},
+		{"rounded-e-lg", "border-start-end-radius", "var(--radius-lg)"},
+		{"rounded-e-lg", "border-end-end-radius", "var(--radius-lg)"},
+		{"rounded-s-none", "border-start-start-radius", "0px"},
+		{"rounded-e-full", "border-end-end-radius", "calc(infinity * 1px)"},
+
+		// Logical corner rounding
+		{"rounded-ss-lg", "border-start-start-radius", "var(--radius-lg)"},
+		{"rounded-se-md", "border-start-end-radius", "var(--radius-md)"},
+		{"rounded-ee-sm", "border-end-end-radius", "var(--radius-xs)"},
+		{"rounded-es-xl", "border-end-start-radius", "var(--radius-xl)"},
+		{"rounded-ss-none", "border-start-start-radius", "0px"},
+		{"rounded-ee-full", "border-end-end-radius", "calc(infinity * 1px)"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.class+"→"+tc.property, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(fmt.Sprintf(`<div class="%s">`, tc.class)))
+			css := e.CSS()
+			want := tc.property + ": " + tc.value
+			if !strings.Contains(css, want) {
+				t.Errorf("%s: expected %q in CSS output:\n%s", tc.class, want, css)
+			}
+		})
+	}
+}
+
+func TestBorderRadiusArbitraryCorners(t *testing.T) {
+	tests := []struct {
+		class    string
+		property string
+		value    string
+	}{
+		{"rounded-tl-[12px]", "border-top-left-radius", "12px"},
+		{"rounded-br-[8px]", "border-bottom-right-radius", "8px"},
+		{"rounded-ss-[1rem]", "border-start-start-radius", "1rem"},
+		{"rounded-ee-[0.5em]", "border-end-end-radius", "0.5em"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(fmt.Sprintf(`<div class="%s">`, tc.class)))
+			css := e.CSS()
+			want := tc.property + ": " + tc.value
+			if !strings.Contains(css, want) {
+				t.Errorf("%s: expected %q in CSS output:\n%s", tc.class, want, css)
+			}
+		})
+	}
+}

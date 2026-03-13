@@ -411,6 +411,74 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"border-radius", "--value(--radius)",
 		"border-radius", "--value(length, percentage)",
 	)))
+	register(cssUtility("rounded-t", decls(
+		"border-top-left-radius", "--value(--radius)",
+		"border-top-left-radius", "--value(length, percentage)",
+		"border-top-right-radius", "--value(--radius)",
+		"border-top-right-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-r", decls(
+		"border-top-right-radius", "--value(--radius)",
+		"border-top-right-radius", "--value(length, percentage)",
+		"border-bottom-right-radius", "--value(--radius)",
+		"border-bottom-right-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-b", decls(
+		"border-bottom-left-radius", "--value(--radius)",
+		"border-bottom-left-radius", "--value(length, percentage)",
+		"border-bottom-right-radius", "--value(--radius)",
+		"border-bottom-right-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-l", decls(
+		"border-top-left-radius", "--value(--radius)",
+		"border-top-left-radius", "--value(length, percentage)",
+		"border-bottom-left-radius", "--value(--radius)",
+		"border-bottom-left-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-tl", decls(
+		"border-top-left-radius", "--value(--radius)",
+		"border-top-left-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-tr", decls(
+		"border-top-right-radius", "--value(--radius)",
+		"border-top-right-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-br", decls(
+		"border-bottom-right-radius", "--value(--radius)",
+		"border-bottom-right-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-bl", decls(
+		"border-bottom-left-radius", "--value(--radius)",
+		"border-bottom-left-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-s", decls(
+		"border-start-start-radius", "--value(--radius)",
+		"border-start-start-radius", "--value(length, percentage)",
+		"border-end-start-radius", "--value(--radius)",
+		"border-end-start-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-e", decls(
+		"border-start-end-radius", "--value(--radius)",
+		"border-start-end-radius", "--value(length, percentage)",
+		"border-end-end-radius", "--value(--radius)",
+		"border-end-end-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-ss", decls(
+		"border-start-start-radius", "--value(--radius)",
+		"border-start-start-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-se", decls(
+		"border-start-end-radius", "--value(--radius)",
+		"border-start-end-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-ee", decls(
+		"border-end-end-radius", "--value(--radius)",
+		"border-end-end-radius", "--value(length, percentage)",
+	)))
+	register(cssUtility("rounded-es", decls(
+		"border-end-start-radius", "--value(--radius)",
+		"border-end-start-radius", "--value(length, percentage)",
+	)))
 
 	// ===== Opacity =====
 	register(cssUtility("opacity", decls(

@@ -1683,6 +1683,16 @@ border-e-*      → border-inline-end: ...
 rounded-s-*     → border-start-start-radius + border-end-start-radius
 rounded-e-*     → border-start-end-radius + border-end-end-radius
 
+rounded-tl-*    → border-top-left-radius
+rounded-tr-*    → border-top-right-radius
+rounded-br-*    → border-bottom-right-radius
+rounded-bl-*    → border-bottom-left-radius
+
+rounded-ss-*    → border-start-start-radius
+rounded-se-*    → border-start-end-radius
+rounded-ee-*    → border-end-end-radius
+rounded-es-*    → border-end-start-radius
+
 scroll-ms-*     → scroll-margin-inline-start: ...
 scroll-me-*     → scroll-margin-inline-end: ...
 scroll-ps-*     → scroll-padding-inline-start: ...
