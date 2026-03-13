@@ -277,7 +277,7 @@ func TestColorUtility_GradientFrom(t *testing.T) {
 	if !strings.Contains(result, "--tw-gradient-from: var(--color-red-500)") {
 		t.Errorf("from-red-500 missing gradient-from:\n%s", result)
 	}
-	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent)") {
+	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from) var(--tw-gradient-from-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)") {
 		t.Errorf("from-red-500 missing gradient-stops:\n%s", result)
 	}
 }
@@ -289,7 +289,7 @@ func TestColorUtility_GradientVia(t *testing.T) {
 	if !strings.Contains(result, "--tw-gradient-via: var(--color-red-500)") {
 		t.Errorf("via-red-500 missing gradient-via:\n%s", result)
 	}
-	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent)") {
+	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from, transparent) var(--tw-gradient-from-position,), var(--tw-gradient-via) var(--tw-gradient-via-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)") {
 		t.Errorf("via-red-500 missing gradient-stops:\n%s", result)
 	}
 }
@@ -305,6 +305,171 @@ func TestColorUtility_GradientFromOpacity(t *testing.T) {
 	result := e.CSS()
 	if !strings.Contains(result, "--tw-gradient-from: color-mix(in srgb, #ef4444 50%, transparent)") {
 		t.Errorf("from-red-500/50 missing opacity:\n%s", result)
+	}
+}
+
+// === Gradient stop positions ===
+
+func TestGradientStopPosition_From(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("from-10%"))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-gradient-from-position: 10%") {
+		t.Errorf("from-10%% missing position:\n%s", result)
+	}
+}
+
+func TestGradientStopPosition_Via(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("via-30%"))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-gradient-via-position: 30%") {
+		t.Errorf("via-30%% missing position:\n%s", result)
+	}
+}
+
+func TestGradientStopPosition_To(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("to-90%"))
+	result := e.CSS()
+	if !strings.Contains(result, "--tw-gradient-to-position: 90%") {
+		t.Errorf("to-90%% missing position:\n%s", result)
+	}
+}
+
+// === V4 bg-linear-to-* direction utilities ===
+
+func TestGradient_BgLinearToR(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-to-r"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(to right, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-to-r missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgLinearToTR(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-to-tr"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(to top right, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-to-tr missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgLinearToRWithInterpolation(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-to-r/srgb"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(to right in srgb, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-to-r/srgb missing interpolation:\n%s", result)
+	}
+}
+
+func TestGradient_BgLinearToRWithOklch(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-to-r/oklch"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(to right in oklch, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-to-r/oklch missing interpolation:\n%s", result)
+	}
+}
+
+// === Angle-based linear gradients ===
+
+func TestGradient_BgLinearAngle(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-45"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(45deg in oklab, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-45 missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgLinearNegativeAngle(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("-bg-linear-45"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(-45deg in oklab, var(--tw-gradient-stops))") {
+		t.Errorf("-bg-linear-45 missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgLinearAngleWithInterpolation(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-90/oklch"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(90deg in oklch, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-90/oklch missing interpolation:\n%s", result)
+	}
+}
+
+// === Radial gradients ===
+
+func TestGradient_BgRadial(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-radial"))
+	result := e.CSS()
+	if !strings.Contains(result, "radial-gradient(in oklab, var(--tw-gradient-stops))") {
+		t.Errorf("bg-radial missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgRadialWithInterpolation(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-radial/srgb"))
+	result := e.CSS()
+	if !strings.Contains(result, "radial-gradient(in srgb, var(--tw-gradient-stops))") {
+		t.Errorf("bg-radial/srgb missing interpolation:\n%s", result)
+	}
+}
+
+func TestGradient_BgRadialArbitrary(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-radial-[at_center_top]"))
+	result := e.CSS()
+	if !strings.Contains(result, "radial-gradient(at center top in oklab, var(--tw-gradient-stops))") {
+		t.Errorf("bg-radial-[at_center_top] missing gradient:\n%s", result)
+	}
+}
+
+// === Conic gradients ===
+
+func TestGradient_BgConic(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-conic-45"))
+	result := e.CSS()
+	if !strings.Contains(result, "conic-gradient(from 45deg in oklab, var(--tw-gradient-stops))") {
+		t.Errorf("bg-conic-45 missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgConicNegative(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("-bg-conic-45"))
+	result := e.CSS()
+	if !strings.Contains(result, "conic-gradient(from -45deg in oklab, var(--tw-gradient-stops))") {
+		t.Errorf("-bg-conic-45 missing gradient:\n%s", result)
+	}
+}
+
+func TestGradient_BgConicWithInterpolation(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-conic-180/oklch"))
+	result := e.CSS()
+	if !strings.Contains(result, "conic-gradient(from 180deg in oklch, var(--tw-gradient-stops))") {
+		t.Errorf("bg-conic-180/oklch missing interpolation:\n%s", result)
+	}
+}
+
+// === Legacy bg-gradient-to-* still works ===
+
+func TestGradient_BgGradientToRLegacy(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-gradient-to-r"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(to right, var(--tw-gradient-stops))") {
+		t.Errorf("bg-gradient-to-r legacy missing gradient:\n%s", result)
 	}
 }
 

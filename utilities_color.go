@@ -51,6 +51,60 @@ func applyColorModifier(val string, c ResolvedCandidate) string {
 	return val
 }
 
+// resolveGradientInterpolation maps a modifier string to a CSS color interpolation clause.
+// Returns an empty string if no modifier is specified (caller decides default).
+func resolveGradientInterpolation(modifier string) string {
+	switch modifier {
+	case "srgb":
+		return " in srgb"
+	case "srgb-linear":
+		return " in srgb-linear"
+	case "hsl":
+		return " in hsl"
+	case "oklab":
+		return " in oklab"
+	case "oklch":
+		return " in oklch"
+	case "lab":
+		return " in lab"
+	case "lch":
+		return " in lch"
+	case "longer-hue":
+		return " in oklch longer hue"
+	case "shorter-hue":
+		return " in oklch shorter hue"
+	case "increasing-hue":
+		return " in oklch increasing hue"
+	case "decreasing-hue":
+		return " in oklch decreasing hue"
+	default:
+		return ""
+	}
+}
+
+// resolveGradientStopPosition checks if a candidate value is a percentage position
+// for gradient stops. Returns the CSS value and true if it's a position, or empty and false.
+func resolveGradientStopPosition(c ResolvedCandidate) (string, bool) {
+	if c.Arbitrary != "" {
+		// Arbitrary values with percentage type hint
+		if c.TypeHint == "percentage" || c.TypeHint == "length" {
+			return c.Arbitrary, true
+		}
+		return "", false
+	}
+	if c.Value == "" {
+		return "", false
+	}
+	// Check for percentage: e.g., "10%" from from-10%
+	if strings.HasSuffix(c.Value, "%") {
+		numPart := c.Value[:len(c.Value)-1]
+		if isNumeric(numPart) {
+			return c.Value, true
+		}
+	}
+	return "", false
+}
+
 // makeColorCompileFn creates a CompileFn for a simple single-property color utility.
 func makeColorCompileFn(property string, themeKeys ...string) CompileFn {
 	return func(c ResolvedCandidate) []Declaration {
@@ -126,28 +180,46 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 
 	// === Gradient color stops ===
 	register(colorUtility("from", func(c ResolvedCandidate) []Declaration {
+		// Check for position value first (e.g., from-10%)
+		if pos, ok := resolveGradientStopPosition(c); ok {
+			return []Declaration{
+				{Property: "--tw-gradient-from-position", Value: pos},
+			}
+		}
 		val := resolveColorValue(c, "color")
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
 			{Property: "--tw-gradient-from", Value: val},
-			{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-from), var(--tw-gradient-to, transparent)"},
+			{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-from) var(--tw-gradient-from-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)"},
 		}
 	}))
 
 	register(colorUtility("via", func(c ResolvedCandidate) []Declaration {
+		// Check for position value first (e.g., via-30%)
+		if pos, ok := resolveGradientStopPosition(c); ok {
+			return []Declaration{
+				{Property: "--tw-gradient-via-position", Value: pos},
+			}
+		}
 		val := resolveColorValue(c, "color")
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
 			{Property: "--tw-gradient-via", Value: val},
-			{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-from, transparent), var(--tw-gradient-via), var(--tw-gradient-to, transparent)"},
+			{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-from, transparent) var(--tw-gradient-from-position,), var(--tw-gradient-via) var(--tw-gradient-via-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)"},
 		}
 	}))
 
 	register(colorUtility("to", func(c ResolvedCandidate) []Declaration {
+		// Check for position value first (e.g., to-90%)
+		if pos, ok := resolveGradientStopPosition(c); ok {
+			return []Declaration{
+				{Property: "--tw-gradient-to-position", Value: pos},
+			}
+		}
 		val := resolveColorValue(c, "color")
 		if val == "" {
 			return nil

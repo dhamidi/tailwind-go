@@ -634,6 +634,72 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"perspective", "--value(length)",
 	)))
 
+	// ===== Gradient Utilities =====
+
+	// bg-linear-<angle> → linear-gradient(<angle>deg in oklab, ...)
+	register(functionalUtility("bg-linear", func(c ResolvedCandidate) []Declaration {
+		if c.Arbitrary != "" {
+			interp := resolveGradientInterpolation(c.Modifier)
+			if interp == "" {
+				interp = " in oklab"
+			}
+			return decls("background-image", "linear-gradient("+c.Arbitrary+interp+", var(--tw-gradient-stops))")
+		}
+		if c.Value == "" {
+			return nil
+		}
+		if isNumeric(c.Value) {
+			angle := c.Value
+			if c.Negative {
+				angle = "-" + angle
+			}
+			interp := resolveGradientInterpolation(c.Modifier)
+			if interp == "" {
+				interp = " in oklab"
+			}
+			return decls("background-image", "linear-gradient("+angle+"deg"+interp+", var(--tw-gradient-stops))")
+		}
+		return nil
+	}))
+
+	// bg-radial-[<value>] → radial-gradient(<value> in oklab, ...)
+	register(functionalUtility("bg-radial", func(c ResolvedCandidate) []Declaration {
+		if c.Arbitrary != "" {
+			interp := resolveGradientInterpolation(c.Modifier)
+			if interp == "" {
+				interp = " in oklab"
+			}
+			return decls("background-image", "radial-gradient("+c.Arbitrary+interp+", var(--tw-gradient-stops))")
+		}
+		return nil
+	}))
+
+	// bg-conic-<angle> → conic-gradient(from <angle>deg in oklab, ...)
+	register(functionalUtility("bg-conic", func(c ResolvedCandidate) []Declaration {
+		if c.Arbitrary != "" {
+			interp := resolveGradientInterpolation(c.Modifier)
+			if interp == "" {
+				interp = " in oklab"
+			}
+			return decls("background-image", "conic-gradient("+c.Arbitrary+interp+", var(--tw-gradient-stops))")
+		}
+		if c.Value == "" {
+			return nil
+		}
+		if isNumeric(c.Value) {
+			angle := c.Value
+			if c.Negative {
+				angle = "-" + angle
+			}
+			interp := resolveGradientInterpolation(c.Modifier)
+			if interp == "" {
+				interp = " in oklab"
+			}
+			return decls("background-image", "conic-gradient(from "+angle+"deg"+interp+", var(--tw-gradient-stops))")
+		}
+		return nil
+	}))
+
 	// ===== Font Stretch =====
 	register(functionalUtility("font-stretch", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {

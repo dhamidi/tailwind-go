@@ -544,6 +544,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("bg-scroll", decls("background-attachment", "scroll")))
 
 	// ===== Gradient Direction =====
+	// Legacy bg-gradient-to-* (backward compat, no color interpolation)
 	register(staticUtility("bg-gradient-to-t", decls("background-image", "linear-gradient(to top, var(--tw-gradient-stops))")))
 	register(staticUtility("bg-gradient-to-tr", decls("background-image", "linear-gradient(to top right, var(--tw-gradient-stops))")))
 	register(staticUtility("bg-gradient-to-r", decls("background-image", "linear-gradient(to right, var(--tw-gradient-stops))")))
@@ -552,6 +553,36 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("bg-gradient-to-bl", decls("background-image", "linear-gradient(to bottom left, var(--tw-gradient-stops))")))
 	register(staticUtility("bg-gradient-to-l", decls("background-image", "linear-gradient(to left, var(--tw-gradient-stops))")))
 	register(staticUtility("bg-gradient-to-tl", decls("background-image", "linear-gradient(to top left, var(--tw-gradient-stops))")))
+
+	// V4 bg-linear-to-* (with color interpolation modifier support)
+	for _, gd := range []struct{ suffix, dir string }{
+		{"t", "to top"}, {"tr", "to top right"}, {"r", "to right"}, {"br", "to bottom right"},
+		{"b", "to bottom"}, {"bl", "to bottom left"}, {"l", "to left"}, {"tl", "to top left"},
+	} {
+		dir := gd.dir
+		register(&UtilityRegistration{
+			Name: "bg-linear-to-" + gd.suffix,
+			Kind: "static",
+			CompileFn: func(c ResolvedCandidate) []Declaration {
+				interp := resolveGradientInterpolation(c.Modifier)
+				return decls("background-image", "linear-gradient("+dir+interp+", var(--tw-gradient-stops))")
+			},
+		})
+	}
+
+	// bg-radial (static, default radial gradient with modifier support)
+	register(&UtilityRegistration{
+		Name: "bg-radial",
+		Kind: "static",
+		CompileFn: func(c ResolvedCandidate) []Declaration {
+			interp := resolveGradientInterpolation(c.Modifier)
+			if interp == "" {
+				interp = " in oklab"
+			}
+			return decls("background-image", "radial-gradient("+interp[1:]+", var(--tw-gradient-stops))")
+		},
+	})
+
 	register(staticUtility("bg-none", decls("background-image", "none")))
 
 	// ===== Border Width =====
