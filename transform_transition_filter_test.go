@@ -635,10 +635,10 @@ func TestAnimateUtilities(t *testing.T) {
 		wantVal string
 	}{
 		{"animate-none", "animation: none"},
-		{"animate-spin", "animation: var(--animate-spin, spin 1s linear infinite)"},
-		{"animate-ping", "animation: var(--animate-ping, ping 1s cubic-bezier(0, 0, 0.2, 1) infinite)"},
-		{"animate-pulse", "animation: var(--animate-pulse, pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite)"},
-		{"animate-bounce", "animation: var(--animate-bounce, bounce 1s infinite)"},
+		{"animate-spin", "animation: var(--animate-spin)"},
+		{"animate-ping", "animation: var(--animate-ping)"},
+		{"animate-pulse", "animation: var(--animate-pulse)"},
+		{"animate-bounce", "animation: var(--animate-bounce)"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.class, func(t *testing.T) {

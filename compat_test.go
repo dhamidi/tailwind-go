@@ -38,10 +38,10 @@ func TestCompatibilityCommonClasses(t *testing.T) {
 		// Spacing (padding/margin)
 		{"p-4", "padding", "calc(var(--spacing) * 4)"},
 		{"px-4", "padding-inline", "calc(var(--spacing) * 4)"},
-		{"py-2", "padding-top", "calc(var(--spacing) * 2)"},
+		{"py-2", "padding-block", "calc(var(--spacing) * 2)"},
 		{"m-4", "margin", "calc(var(--spacing) * 4)"},
 		{"mt-2", "margin-top", "calc(var(--spacing) * 2)"},
-		{"mx-auto", "margin-left", "auto"},
+		{"mx-auto", "margin-inline", "auto"},
 
 		// Sizing
 		{"w-full", "width", "100%"},

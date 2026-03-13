@@ -385,19 +385,19 @@ func TestInsetPositioning(t *testing.T) {
 	}
 }
 
-// TestInsetXY verifies inset-x and inset-y set both sides.
+// TestInsetXY verifies inset-x and inset-y use logical properties.
 func TestInsetXY(t *testing.T) {
 	e := New()
 	e.Write([]byte(`class="inset-x-0 inset-y-0"`))
 	css := e.CSS()
 
-	// inset-x-0 sets left and right
-	if !strings.Contains(css, "left:") || !strings.Contains(css, "right:") {
-		t.Errorf("inset-x-0 should set left and right:\n%s", css)
+	// inset-x-0 sets inset-inline
+	if !strings.Contains(css, "inset-inline:") {
+		t.Errorf("inset-x-0 should set inset-inline:\n%s", css)
 	}
-	// inset-y-0 sets top and bottom
-	if !strings.Contains(css, "top:") || !strings.Contains(css, "bottom:") {
-		t.Errorf("inset-y-0 should set top and bottom:\n%s", css)
+	// inset-y-0 sets inset-block
+	if !strings.Contains(css, "inset-block:") {
+		t.Errorf("inset-y-0 should set inset-block:\n%s", css)
 	}
 }
 

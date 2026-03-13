@@ -60,16 +60,12 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"inset", "--value(length, percentage)",
 	)))
 	register(cssUtility("inset-x", decls(
-		"left", "--value(--spacing)",
-		"left", "--value(length, percentage)",
-		"right", "--value(--spacing)",
-		"right", "--value(length, percentage)",
+		"inset-inline", "--value(--spacing)",
+		"inset-inline", "--value(length, percentage)",
 	)))
 	register(cssUtility("inset-y", decls(
-		"top", "--value(--spacing)",
-		"top", "--value(length, percentage)",
-		"bottom", "--value(--spacing)",
-		"bottom", "--value(length, percentage)",
+		"inset-block", "--value(--spacing)",
+		"inset-block", "--value(length, percentage)",
 	)))
 	register(cssUtility("top", decls(
 		"top", "--value(--spacing)",
@@ -186,10 +182,8 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"padding-inline", "--value(length, percentage)",
 	)))
 	register(cssUtility("py", decls(
-		"padding-top", "--value(--spacing)",
-		"padding-top", "--value(length, percentage)",
-		"padding-bottom", "--value(--spacing)",
-		"padding-bottom", "--value(length, percentage)",
+		"padding-block", "--value(--spacing)",
+		"padding-block", "--value(length, percentage)",
 	)))
 	register(cssUtility("ps", decls(
 		"padding-inline-start", "--value(--spacing)",
@@ -230,16 +224,12 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"margin", "--value(length, percentage)",
 	)))
 	register(cssUtility("mx", decls(
-		"margin-left", "--value(--spacing)",
-		"margin-left", "--value(length, percentage)",
-		"margin-right", "--value(--spacing)",
-		"margin-right", "--value(length, percentage)",
+		"margin-inline", "--value(--spacing)",
+		"margin-inline", "--value(length, percentage)",
 	)))
 	register(cssUtility("my", decls(
-		"margin-top", "--value(--spacing)",
-		"margin-top", "--value(length, percentage)",
-		"margin-bottom", "--value(--spacing)",
-		"margin-bottom", "--value(length, percentage)",
+		"margin-block", "--value(--spacing)",
+		"margin-block", "--value(length, percentage)",
 	)))
 	register(cssUtility("ms", decls(
 		"margin-inline-start", "--value(--spacing)",
@@ -517,12 +507,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"scroll-margin", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-mx", decls(
-		"scroll-margin-left", "--value(--spacing)",
-		"scroll-margin-right", "--value(--spacing)",
+		"scroll-margin-inline", "--value(--spacing)",
 	)))
 	register(cssUtility("scroll-my", decls(
-		"scroll-margin-top", "--value(--spacing)",
-		"scroll-margin-bottom", "--value(--spacing)",
+		"scroll-margin-block", "--value(--spacing)",
 	)))
 	register(cssUtility("scroll-ms", decls(
 		"scroll-margin-inline-start", "--value(--spacing)",
@@ -555,12 +543,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"scroll-padding", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-px", decls(
-		"scroll-padding-left", "--value(--spacing)",
-		"scroll-padding-right", "--value(--spacing)",
+		"scroll-padding-inline", "--value(--spacing)",
 	)))
 	register(cssUtility("scroll-py", decls(
-		"scroll-padding-top", "--value(--spacing)",
-		"scroll-padding-bottom", "--value(--spacing)",
+		"scroll-padding-block", "--value(--spacing)",
 	)))
 	register(cssUtility("scroll-ps", decls(
 		"scroll-padding-inline-start", "--value(--spacing)",
@@ -630,38 +616,47 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	register(cssUtility("backdrop-blur", decls(
 		"--tw-backdrop-blur", "blur(--value(--blur))",
 		"--tw-backdrop-blur", "blur(--value(length))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-brightness", decls(
 		"--tw-backdrop-brightness", "brightness(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-contrast", decls(
 		"--tw-backdrop-contrast", "contrast(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-saturate", decls(
 		"--tw-backdrop-saturate", "saturate(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-hue-rotate", decls(
 		"--tw-backdrop-hue-rotate", "hue-rotate(--value(number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-grayscale", decls(
 		"--tw-backdrop-grayscale", "grayscale(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-invert", decls(
 		"--tw-backdrop-invert", "invert(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-sepia", decls(
 		"--tw-backdrop-sepia", "sepia(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 	register(cssUtility("backdrop-opacity", decls(
 		"--tw-backdrop-opacity", "opacity(--value(percentage, number))",
+		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
 

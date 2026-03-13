@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+// nestedBlock is a conditional block nested within a rule (e.g., @supports).
+type nestedBlock struct {
+	condition    string        // e.g., "@supports (color: color-mix(in lab, red, red))"
+	declarations []Declaration // declarations inside the nested block
+}
+
 // generatedRule is a single CSS rule ready for output.
 type generatedRule struct {
 	// selector is the fully-escaped CSS selector.
@@ -16,6 +22,8 @@ type generatedRule struct {
 	important bool
 	// mediaQueries wraps the rule in @media blocks (outermost first).
 	mediaQueries []string
+	// nested contains conditional blocks inside the rule (e.g., @supports for color-mix).
+	nested []nestedBlock
 	// order controls sort position in output.
 	order int
 }
@@ -44,6 +52,7 @@ func generate(
 
 		rule := resolveClass(pc, theme, utils, variants)
 		if rule != nil {
+			addColorMixSupports(rule, pc, theme)
 			rules = append(rules, *rule)
 			for _, d := range rule.declarations {
 				if d.Property == "animation" || d.Property == "animation-name" {
@@ -910,6 +919,24 @@ func emitCSS(rules []generatedRule, referencedKF map[string]bool, keyframes map[
 			sb.WriteString(";\n")
 		}
 
+		// Nested blocks (e.g., @supports).
+		for _, nb := range r.nested {
+			sb.WriteString("  ")
+			sb.WriteString(nb.condition)
+			sb.WriteString(" {\n")
+			for _, d := range nb.declarations {
+				sb.WriteString("    ")
+				sb.WriteString(d.Property)
+				sb.WriteString(": ")
+				sb.WriteString(d.Value)
+				if r.important {
+					sb.WriteString(" !important")
+				}
+				sb.WriteString(";\n")
+			}
+			sb.WriteString("  }\n")
+		}
+
 		sb.WriteString("}\n")
 
 		// Close media query wrappers.
@@ -1079,6 +1106,70 @@ func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
 		opacityStr = resolveModifierOpacity(modifier, theme)
 	}
 	return "color-mix(in srgb, " + cssValue + " " + opacityStr + ", transparent)"
+}
+
+// addColorMixSupports adds a nested @supports block for color-mix progressive
+// enhancement when declarations contain color-mix(in srgb, ...) values from
+// theme colors with opacity modifiers. The @supports block provides an oklab
+// version using CSS variable references for better color interpolation.
+func addColorMixSupports(rule *generatedRule, pc ParsedClass, theme *ThemeConfig) {
+	var supportDecls []Declaration
+	for _, d := range rule.declarations {
+		if !strings.Contains(d.Value, "color-mix(in srgb,") {
+			continue
+		}
+		// Extract the literal color and opacity from color-mix(in srgb, <color> <pct>, transparent)
+		prefix := "color-mix(in srgb, "
+		idx := strings.Index(d.Value, prefix)
+		if idx < 0 {
+			continue
+		}
+		rest := d.Value[idx+len(prefix):]
+		// rest is like "oklch(62.3% 0.214 259.815) 50%, transparent)"
+		// or "#000 50%, transparent)"
+		// Find the opacity and transparent part
+		transpIdx := strings.Index(rest, ", transparent)")
+		if transpIdx < 0 {
+			continue
+		}
+		colorAndPct := rest[:transpIdx]
+		// Split from the last space to get opacity
+		lastSpace := strings.LastIndex(colorAndPct, " ")
+		if lastSpace < 0 {
+			continue
+		}
+		literalColor := colorAndPct[:lastSpace]
+		opacityStr := colorAndPct[lastSpace+1:]
+
+		// Reverse-map the literal color to a CSS variable
+		varName := findColorVariable(literalColor, theme)
+		if varName == "" {
+			continue
+		}
+
+		oklabValue := "color-mix(in oklab, var(" + varName + ") " + opacityStr + ", transparent)"
+		supportDecls = append(supportDecls, Declaration{
+			Property: d.Property,
+			Value:    oklabValue,
+		})
+	}
+	if len(supportDecls) > 0 {
+		rule.nested = append(rule.nested, nestedBlock{
+			condition:    "@supports (color: color-mix(in lab, red, red))",
+			declarations: supportDecls,
+		})
+	}
+}
+
+// findColorVariable searches theme tokens for a literal color value and returns
+// the CSS variable name (e.g., "--color-blue-500") if found.
+func findColorVariable(literalColor string, theme *ThemeConfig) string {
+	for prop, val := range theme.Tokens {
+		if val == literalColor {
+			return prop
+		}
+	}
+	return ""
 }
 
 // normalizeOpacity converts bare decimal opacity values to percentages.
