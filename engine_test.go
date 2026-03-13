@@ -864,6 +864,94 @@ func TestParseClassCustomPropertyWithTypeHint(t *testing.T) {
 	}
 }
 
+func TestParseClassParenthesizedCustomProperty(t *testing.T) {
+	pc := parseClass("bg-(--my-color)")
+	if pc.Utility != "bg" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "bg")
+	}
+	if pc.Arbitrary != "var(--my-color)" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "var(--my-color)")
+	}
+}
+
+func TestParseClassParenthesizedWithModifier(t *testing.T) {
+	pc := parseClass("bg-(--brand)/50")
+	if pc.Utility != "bg" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "bg")
+	}
+	if pc.Arbitrary != "var(--brand)" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "var(--brand)")
+	}
+	if pc.Modifier != "50" {
+		t.Errorf("modifier = %q, want %q", pc.Modifier, "50")
+	}
+}
+
+func TestParseClassParenthesizedImportant(t *testing.T) {
+	pc := parseClass("!p-(--gap)")
+	if pc.Utility != "p" {
+		t.Errorf("utility = %q, want %q", pc.Utility, "p")
+	}
+	if pc.Arbitrary != "var(--gap)" {
+		t.Errorf("arbitrary = %q, want %q", pc.Arbitrary, "var(--gap)")
+	}
+	if !pc.Important {
+		t.Error("expected Important=true")
+	}
+}
+
+func TestEndToEndParenthesizedCustomProperty(t *testing.T) {
+	css := []byte(`
+@utility bg-* { background-color: --value(--color); }
+@utility w-* { width: --value(--spacing); }
+@utility p-* { padding: --value(--spacing); }
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="bg-(--my-color) w-(--sidebar-width) p-(--spacing)"`))
+	result := e.CSS()
+
+	if !strings.Contains(result, "background-color: var(--my-color)") {
+		t.Errorf("expected bg-(--my-color) to produce background-color: var(--my-color), got:\n%s", result)
+	}
+	if !strings.Contains(result, "width: var(--sidebar-width)") {
+		t.Errorf("expected w-(--sidebar-width) to produce width: var(--sidebar-width), got:\n%s", result)
+	}
+	if !strings.Contains(result, "padding: var(--spacing)") {
+		t.Errorf("expected p-(--spacing) to produce padding: var(--spacing), got:\n%s", result)
+	}
+}
+
+func TestEndToEndParenthesizedSelectorEscaping(t *testing.T) {
+	css := []byte(`@utility bg-* { background-color: --value(--color); }`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="bg-(--my-color)"`))
+	result := e.CSS()
+
+	if !strings.Contains(result, `bg-\(--my-color\)`) {
+		t.Errorf("expected parentheses to be escaped in selector, got:\n%s", result)
+	}
+}
+
+func TestEndToEndParenthesizedWithVariant(t *testing.T) {
+	css := []byte(`
+@utility bg-* { background-color: --value(--color); }
+@variant hover (&:hover);
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="hover:bg-(--accent)"`))
+	result := e.CSS()
+
+	if !strings.Contains(result, "background-color: var(--accent)") {
+		t.Errorf("expected background-color: var(--accent), got:\n%s", result)
+	}
+	if !strings.Contains(result, ":hover") {
+		t.Errorf("expected :hover in output, got:\n%s", result)
+	}
+}
+
 func TestArbitraryAtMediaVariant(t *testing.T) {
 	css := []byte(`@utility bg-* { background-color: --value(--color); }`)
 	e := New()

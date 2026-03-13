@@ -68,7 +68,20 @@ func parseClass(raw string) ParsedClass {
 	// 4b. Extract opacity modifier (e.g., /75, /[.5]).
 	s, pc.Modifier = extractModifier(s)
 
-	// 5. Check for arbitrary value: utility-[value]
+	// 5a. Check for parenthesized custom property: utility-(--prop)
+	if idx := strings.Index(s, "-("); idx > 0 {
+		paren := s[idx+1:]
+		if strings.HasSuffix(paren, ")") {
+			inner := paren[1 : len(paren)-1]
+			if strings.HasPrefix(inner, "--") {
+				pc.Utility = s[:idx]
+				pc.Arbitrary = "var(" + inner + ")"
+				return pc
+			}
+		}
+	}
+
+	// 5b. Check for arbitrary value: utility-[value]
 	if idx := strings.Index(s, "-["); idx > 0 {
 		bracket := s[idx+1:]
 		if strings.HasSuffix(bracket, "]") {
