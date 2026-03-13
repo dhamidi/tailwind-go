@@ -689,7 +689,7 @@ func TestAllStateVariants(t *testing.T) {
 		},
 		{
 			class:    "open:rotate-180",
-			contains: []string{"[open]", "rotate"},
+			contains: []string{":is([open],", ":popover-open,", ":open)", "rotate"},
 		},
 	}
 
@@ -755,6 +755,133 @@ func TestHoverMediaQueryWrapping(t *testing.T) {
 	}
 	if !strings.Contains(result, ":hover") {
 		t.Error("hover variant should include :hover selector")
+	}
+}
+
+// TestRTLLTRVariants verifies the rtl and ltr direction variants.
+func TestRTLLTRVariants(t *testing.T) {
+	tests := []struct {
+		class    string
+		contains []string
+	}{
+		{
+			class:    "rtl:mr-4",
+			contains: []string{`:dir(rtl)`, `[dir="rtl"]`, "margin-right"},
+		},
+		{
+			class:    "ltr:ml-4",
+			contains: []string{`:dir(ltr)`, `[dir="ltr"]`, "margin-left"},
+		},
+		{
+			class:    "rtl:text-right",
+			contains: []string{`:dir(rtl)`, "text-align: right"},
+		},
+		{
+			class:    "ltr:text-left",
+			contains: []string{`:dir(ltr)`, "text-align: left"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			t.Logf("Generated CSS:\n%s", result)
+
+			for _, want := range tt.contains {
+				if !strings.Contains(result, want) {
+					t.Errorf("class %q: expected %q in CSS output", tt.class, want)
+				}
+			}
+		})
+	}
+}
+
+// TestInertVariant verifies the inert variant.
+func TestInertVariant(t *testing.T) {
+	tests := []struct {
+		class    string
+		contains []string
+	}{
+		{
+			class:    "inert:opacity-50",
+			contains: []string{":is([inert]", "[inert] *)", "opacity"},
+		},
+		{
+			class:    "inert:pointer-events-none",
+			contains: []string{":is([inert]", "[inert] *)", "pointer-events: none"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			t.Logf("Generated CSS:\n%s", result)
+
+			for _, want := range tt.contains {
+				if !strings.Contains(result, want) {
+					t.Errorf("class %q: expected %q in CSS output", tt.class, want)
+				}
+			}
+		})
+	}
+}
+
+// TestOpenVariantUpdated verifies the open variant uses :is([open], :popover-open, :open).
+func TestOpenVariantUpdated(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="open:bg-green-500"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, ":is([open],") || !strings.Contains(result, ":popover-open,") || !strings.Contains(result, ":open)") {
+		t.Error("open variant should use :is([open], :popover-open, :open) selector")
+	}
+	if !strings.Contains(result, "background-color") {
+		t.Error("open variant should include background-color")
+	}
+}
+
+// TestCompoundVariantsWithNewVariants verifies not-*, group-*, peer-* work with new variants.
+func TestCompoundVariantsWithNewVariants(t *testing.T) {
+	tests := []struct {
+		class    string
+		contains []string
+	}{
+		{
+			class:    "not-rtl:ml-4",
+			contains: []string{":not(:where(:dir(rtl)", "margin-left"},
+		},
+		{
+			class:    "not-ltr:mr-4",
+			contains: []string{":not(:where(:dir(ltr)", "margin-right"},
+		},
+		{
+			class:    "not-inert:opacity-100",
+			contains: []string{":not(:is([inert]", "opacity"},
+		},
+		{
+			class:    "group-open:flex",
+			contains: []string{".group:is([open], :popover-open, :open)", "display: flex"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			t.Logf("Generated CSS:\n%s", result)
+
+			for _, want := range tt.contains {
+				if !strings.Contains(result, want) {
+					t.Errorf("class %q: expected %q in CSS output", tt.class, want)
+				}
+			}
+		})
 	}
 }
 

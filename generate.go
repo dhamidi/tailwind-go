@@ -737,9 +737,10 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 				// (e.g., has-[:checked] → :has(:checked)) and spurious colons
 				// (e.g., has-[>img] → :has(>img)).
 				template = strings.ReplaceAll(template, ":{value}", "{value}")
-			} else if (v.Name == "not" || v.Name == "has") && !isArbitrary {
-				// For not-* and has-* with non-arbitrary values, resolve the inner
-				// variant name through the registry (e.g., "first" → "first-child").
+			} else if (v.Name == "not" || v.Name == "has" || v.Name == "group" || v.Name == "peer") && !isArbitrary {
+				// For not-*, has-*, group-*, and peer-* with non-arbitrary values, resolve the inner
+				// variant name through the registry (e.g., "first" → "first-child",
+				// "open" → "is([open], :popover-open, :open)").
 				if innerDef, ok := defs[value]; ok && innerDef.Selector != "" {
 					// Extract the pseudo-class from the selector (e.g., "&:first-child" → "first-child").
 					innerSel := innerDef.Selector

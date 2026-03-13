@@ -505,7 +505,7 @@ Both directives have identical parsing behavior and register variants in the sam
 @variant rtl (&:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *));
 @variant ltr (&:where(:dir(ltr), [dir="ltr"], [dir="ltr"] *));
 
-@variant open (&[open]);
+@variant open (&:is([open], :popover-open, :open));
 @variant inert (&:is([inert], [inert] *));
 ```
 

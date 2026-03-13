@@ -39,12 +39,17 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "placeholder-shown", Selector: "&:placeholder-shown"})
 	add(&VariantDef{Name: "autofill", Selector: "&:autofill"})
 	add(&VariantDef{Name: "read-only", Selector: "&:read-only"})
-	add(&VariantDef{Name: "open", Selector: "&[open]"})
+	add(&VariantDef{Name: "open", Selector: "&:is([open], :popover-open, :open)"})
 	add(&VariantDef{Name: "user-valid", Selector: "&:user-valid"})
 	add(&VariantDef{Name: "user-invalid", Selector: "&:user-invalid"})
 	add(&VariantDef{Name: "optional", Selector: "&:optional"})
+	add(&VariantDef{Name: "inert", Selector: "&:is([inert], [inert] *)"})
 	add(&VariantDef{Name: "in-range", Selector: "&:in-range"})
 	add(&VariantDef{Name: "out-of-range", Selector: "&:out-of-range"})
+
+	// ===== Direction variants =====
+	add(&VariantDef{Name: "rtl", Selector: `&:where(:dir(rtl), [dir="rtl"], [dir="rtl"] *)`})
+	add(&VariantDef{Name: "ltr", Selector: `&:where(:dir(ltr), [dir="ltr"], [dir="ltr"] *)`})
 
 	// ===== Pseudo-element variants =====
 	add(&VariantDef{Name: "before", Selector: "&::before"})
