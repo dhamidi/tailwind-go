@@ -3701,6 +3701,87 @@ func TestBorderRadiusCornerAndLogicalUtilities(t *testing.T) {
 	}
 }
 
+func TestBlockDirectionLogicalUtilities(t *testing.T) {
+	tests := []struct {
+		class    string
+		property string
+		value    string
+	}{
+		// Padding block
+		{"pbs-4", "padding-block-start", "calc(var(--spacing) * 4)"},
+		{"pbe-2", "padding-block-end", "calc(var(--spacing) * 2)"},
+
+		// Margin block
+		{"mbs-4", "margin-block-start", "calc(var(--spacing) * 4)"},
+		{"mbe-2", "margin-block-end", "calc(var(--spacing) * 2)"},
+		{"mbs-auto", "margin-block-start", "auto"},
+		{"mbe-auto", "margin-block-end", "auto"},
+
+		// Inset block
+		{"inset-bs-0", "inset-block-start", "calc(var(--spacing) * 0)"},
+		{"inset-be-4", "inset-block-end", "calc(var(--spacing) * 4)"},
+
+		// Border block width (static)
+		{"border-bs", "border-block-start-width", "1px"},
+		{"border-bs-0", "border-block-start-width", "0px"},
+		{"border-bs-2", "border-block-start-width", "2px"},
+		{"border-bs-4", "border-block-start-width", "4px"},
+		{"border-bs-8", "border-block-start-width", "8px"},
+		{"border-be", "border-block-end-width", "1px"},
+		{"border-be-0", "border-block-end-width", "0px"},
+		{"border-be-2", "border-block-end-width", "2px"},
+		{"border-be-4", "border-block-end-width", "4px"},
+		{"border-be-8", "border-block-end-width", "8px"},
+
+		// Border inline width (static)
+		{"border-s", "border-inline-start-width", "1px"},
+		{"border-s-2", "border-inline-start-width", "2px"},
+		{"border-e", "border-inline-end-width", "1px"},
+		{"border-e-4", "border-inline-end-width", "4px"},
+
+		// Scroll margin block
+		{"scroll-mbs-4", "scroll-margin-block-start", "calc(var(--spacing) * 4)"},
+		{"scroll-mbe-2", "scroll-margin-block-end", "calc(var(--spacing) * 2)"},
+
+		// Scroll padding block
+		{"scroll-pbs-4", "scroll-padding-block-start", "calc(var(--spacing) * 4)"},
+		{"scroll-pbe-2", "scroll-padding-block-end", "calc(var(--spacing) * 2)"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.class+"→"+tc.property, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(fmt.Sprintf(`<div class="%s">`, tc.class)))
+			css := e.CSS()
+			want := tc.property + ": " + tc.value
+			if !strings.Contains(css, want) {
+				t.Errorf("%s: expected %q in CSS output:\n%s", tc.class, want, css)
+			}
+		})
+	}
+}
+
+func TestBlockDirectionBorderColor(t *testing.T) {
+	tests := []struct {
+		class    string
+		property string
+	}{
+		{"border-bs-red-500", "border-block-start-color"},
+		{"border-be-blue-500", "border-block-end-color"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(fmt.Sprintf(`<div class="%s">`, tc.class)))
+			css := e.CSS()
+			if !strings.Contains(css, tc.property) {
+				t.Errorf("%s: expected %q in CSS output:\n%s", tc.class, tc.property, css)
+			}
+		})
+	}
+}
+
 func TestBorderRadiusArbitraryCorners(t *testing.T) {
 	tests := []struct {
 		class    string

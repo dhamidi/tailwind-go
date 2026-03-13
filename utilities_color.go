@@ -158,6 +158,8 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 	register(colorUtility("border-l", makeColorCompileFn("border-left-color", "border-color", "color")))
 	register(colorUtility("border-s", makeColorCompileFn("border-inline-start-color", "border-color", "color")))
 	register(colorUtility("border-e", makeColorCompileFn("border-inline-end-color", "border-color", "color")))
+	register(colorUtility("border-bs", makeColorCompileFn("border-block-start-color", "border-color", "color")))
+	register(colorUtility("border-be", makeColorCompileFn("border-block-end-color", "border-color", "color")))
 	register(colorUtility("border-x", makeBorderColorCompileFn("border-left-color", "border-right-color")))
 	register(colorUtility("border-y", makeBorderColorCompileFn("border-top-color", "border-bottom-color")))
 

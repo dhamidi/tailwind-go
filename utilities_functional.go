@@ -95,6 +95,14 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"inset-inline-end", "--value(--spacing)",
 		"inset-inline-end", "--value(length, percentage)",
 	)))
+	register(cssUtility("inset-bs", decls(
+		"inset-block-start", "--value(--spacing)",
+		"inset-block-start", "--value(length, percentage)",
+	)))
+	register(cssUtility("inset-be", decls(
+		"inset-block-end", "--value(--spacing)",
+		"inset-block-end", "--value(length, percentage)",
+	)))
 
 	// ===== Z-index =====
 	register(cssUtility("z", decls(
@@ -191,6 +199,14 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"padding-inline-end", "--value(--spacing)",
 		"padding-inline-end", "--value(length, percentage)",
 	)))
+	register(cssUtility("pbs", decls(
+		"padding-block-start", "--value(--spacing)",
+		"padding-block-start", "--value(length, percentage)",
+	)))
+	register(cssUtility("pbe", decls(
+		"padding-block-end", "--value(--spacing)",
+		"padding-block-end", "--value(length, percentage)",
+	)))
 	register(cssUtility("pt", decls(
 		"padding-top", "--value(--spacing)",
 		"padding-top", "--value(length, percentage)",
@@ -232,6 +248,14 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	register(cssUtility("me", decls(
 		"margin-inline-end", "--value(--spacing)",
 		"margin-inline-end", "--value(length, percentage)",
+	)))
+	register(cssUtility("mbs", decls(
+		"margin-block-start", "--value(--spacing)",
+		"margin-block-start", "--value(length, percentage)",
+	)))
+	register(cssUtility("mbe", decls(
+		"margin-block-end", "--value(--spacing)",
+		"margin-block-end", "--value(length, percentage)",
 	)))
 	register(cssUtility("mt", decls(
 		"margin-top", "--value(--spacing)",
@@ -506,6 +530,12 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	register(cssUtility("scroll-me", decls(
 		"scroll-margin-inline-end", "--value(--spacing)",
 	)))
+	register(cssUtility("scroll-mbs", decls(
+		"scroll-margin-block-start", "--value(--spacing)",
+	)))
+	register(cssUtility("scroll-mbe", decls(
+		"scroll-margin-block-end", "--value(--spacing)",
+	)))
 	register(cssUtility("scroll-mt", decls(
 		"scroll-margin-top", "--value(--spacing)",
 	)))
@@ -537,6 +567,12 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 	register(cssUtility("scroll-pe", decls(
 		"scroll-padding-inline-end", "--value(--spacing)",
+	)))
+	register(cssUtility("scroll-pbs", decls(
+		"scroll-padding-block-start", "--value(--spacing)",
+	)))
+	register(cssUtility("scroll-pbe", decls(
+		"scroll-padding-block-end", "--value(--spacing)",
 	)))
 	register(cssUtility("scroll-pt", decls(
 		"scroll-padding-top", "--value(--spacing)",
