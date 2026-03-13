@@ -1131,6 +1131,37 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("will-change-contents", decls("will-change", "contents")))
 	register(staticUtility("will-change-transform", decls("will-change", "transform")))
 
+	// ===== Text Shadow =====
+	register(staticUtility("text-shadow-2xs", decls("text-shadow", "0px 1px 0px rgb(0 0 0 / 0.15)")))
+	register(staticUtility("text-shadow-xs", decls("text-shadow", "0px 1px 1px rgb(0 0 0 / 0.2)")))
+	register(staticUtility("text-shadow-sm", decls("text-shadow", "0px 1px 0px rgb(0 0 0 / 0.075), 0px 1px 1px rgb(0 0 0 / 0.075), 0px 2px 2px rgb(0 0 0 / 0.075)")))
+	register(staticUtility("text-shadow-md", decls("text-shadow", "0px 1px 1px rgb(0 0 0 / 0.1), 0px 1px 2px rgb(0 0 0 / 0.1), 0px 2px 4px rgb(0 0 0 / 0.1)")))
+	register(staticUtility("text-shadow-lg", decls("text-shadow", "0px 1px 2px rgb(0 0 0 / 0.1), 0px 3px 2px rgb(0 0 0 / 0.1), 0px 4px 8px rgb(0 0 0 / 0.1)")))
+	register(staticUtility("text-shadow-none", decls("text-shadow", "none")))
+
+	// ===== Font Stretch =====
+	register(staticUtility("font-stretch-ultra-condensed", decls("font-stretch", "ultra-condensed")))
+	register(staticUtility("font-stretch-extra-condensed", decls("font-stretch", "extra-condensed")))
+	register(staticUtility("font-stretch-condensed", decls("font-stretch", "condensed")))
+	register(staticUtility("font-stretch-semi-condensed", decls("font-stretch", "semi-condensed")))
+	register(staticUtility("font-stretch-normal", decls("font-stretch", "normal")))
+	register(staticUtility("font-stretch-semi-expanded", decls("font-stretch", "semi-expanded")))
+	register(staticUtility("font-stretch-expanded", decls("font-stretch", "expanded")))
+	register(staticUtility("font-stretch-extra-expanded", decls("font-stretch", "extra-expanded")))
+	register(staticUtility("font-stretch-ultra-expanded", decls("font-stretch", "ultra-expanded")))
+
+	// ===== Color Scheme =====
+	register(staticUtility("scheme-normal", decls("color-scheme", "normal")))
+	register(staticUtility("scheme-dark", decls("color-scheme", "dark")))
+	register(staticUtility("scheme-light", decls("color-scheme", "light")))
+	register(staticUtility("scheme-light-dark", decls("color-scheme", "light dark")))
+	register(staticUtility("scheme-only-dark", decls("color-scheme", "only dark")))
+	register(staticUtility("scheme-only-light", decls("color-scheme", "only light")))
+
+	// ===== Field Sizing =====
+	register(staticUtility("field-sizing-fixed", decls("field-sizing", "fixed")))
+	register(staticUtility("field-sizing-content", decls("field-sizing", "content")))
+
 	// ===== Contain =====
 	register(staticUtility("contain-none", decls("contain", "none")))
 	register(staticUtility("contain-content", decls("contain", "content")))

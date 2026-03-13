@@ -121,6 +121,9 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 	// === Shadow (value and color) ===
 	register(functionalUtility("shadow", makeShadowCompileFn()))
 
+	// === Text shadow (value and color) ===
+	register(functionalUtility("text-shadow", makeTextShadowCompileFn()))
+
 	// === Gradient color stops ===
 	register(colorUtility("from", func(c ResolvedCandidate) []Declaration {
 		val := resolveColorValue(c, "color")
@@ -374,6 +377,43 @@ func makeShadowCompileFn() CompileFn {
 		val := resolveColorValue(c, "shadow-color", "color")
 		if val != "" {
 			return decls("--tw-shadow-color", val)
+		}
+
+		return nil
+	}
+}
+
+// makeTextShadowCompileFn creates the compile function for text-shadow-* utilities.
+// Handles both text-shadow values (from theme) and text-shadow color.
+func makeTextShadowCompileFn() CompileFn {
+	return func(c ResolvedCandidate) []Declaration {
+		// Type hint: color → text shadow color
+		if c.TypeHint == "color" {
+			val := resolveColorValue(c, "color")
+			if val == "" {
+				return nil
+			}
+			return decls("--tw-text-shadow-color", val, "text-shadow", "0px 1px 0px var(--tw-text-shadow-color)")
+		}
+
+		// Arbitrary value without type hint → text-shadow
+		if c.Arbitrary != "" {
+			return decls("text-shadow", c.Arbitrary)
+		}
+
+		if c.Value == "" {
+			return nil
+		}
+
+		// Named: try --text-shadow namespace first (text-shadow value)
+		if val, ok := c.Theme.Resolve("text-shadow", c.Value); ok {
+			return decls("text-shadow", val)
+		}
+
+		// Named: try color themes for text-shadow color
+		val := resolveColorValue(c, "color")
+		if val != "" {
+			return decls("--tw-text-shadow-color", val, "text-shadow", "0px 1px 0px var(--tw-text-shadow-color)")
 		}
 
 		return nil

@@ -2465,3 +2465,110 @@ func TestPeerFocusBuiltin(t *testing.T) {
 		t.Errorf("expected ~ combinator, got:\n%s", css)
 	}
 }
+
+// --- Text Shadow utilities ---
+
+func TestTextShadowStatic(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-shadow-2xs text-shadow-xs text-shadow-sm text-shadow-md text-shadow-lg text-shadow-none`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	for _, want := range []string{
+		"text-shadow: 0px 1px 0px rgb(0 0 0 / 0.15)",
+		"text-shadow: 0px 1px 1px rgb(0 0 0 / 0.2)",
+		"text-shadow: 0px 1px 0px rgb(0 0 0 / 0.075)",
+		"text-shadow: 0px 1px 1px rgb(0 0 0 / 0.1)",
+		"text-shadow: 0px 1px 2px rgb(0 0 0 / 0.1)",
+		"text-shadow: none",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+}
+
+func TestTextShadowColor(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-shadow-red-500`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "--tw-text-shadow-color") {
+		t.Errorf("expected --tw-text-shadow-color, got:\n%s", css)
+	}
+	if !strings.Contains(css, "text-shadow:") {
+		t.Errorf("expected text-shadow property, got:\n%s", css)
+	}
+}
+
+// --- Font Stretch utilities ---
+
+func TestFontStretchStatic(t *testing.T) {
+	e := New()
+	e.Write([]byte(`font-stretch-ultra-condensed font-stretch-extra-condensed font-stretch-condensed font-stretch-semi-condensed font-stretch-normal font-stretch-semi-expanded font-stretch-expanded font-stretch-extra-expanded font-stretch-ultra-expanded`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	for _, want := range []string{
+		"font-stretch: ultra-condensed",
+		"font-stretch: extra-condensed",
+		"font-stretch: condensed",
+		"font-stretch: semi-condensed",
+		"font-stretch: normal",
+		"font-stretch: semi-expanded",
+		"font-stretch: expanded",
+		"font-stretch: extra-expanded",
+		"font-stretch: ultra-expanded",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+}
+
+func TestFontStretchPercentage(t *testing.T) {
+	e := New()
+	e.Write([]byte(`font-stretch-50% font-stretch-125%`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "font-stretch: 50%") {
+		t.Errorf("expected font-stretch: 50%%, got:\n%s", css)
+	}
+	if !strings.Contains(css, "font-stretch: 125%") {
+		t.Errorf("expected font-stretch: 125%%, got:\n%s", css)
+	}
+}
+
+// --- Color Scheme utilities ---
+
+func TestColorScheme(t *testing.T) {
+	e := New()
+	e.Write([]byte(`scheme-normal scheme-dark scheme-light scheme-light-dark scheme-only-dark scheme-only-light`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	for _, want := range []string{
+		"color-scheme: normal",
+		"color-scheme: dark",
+		"color-scheme: light",
+		"color-scheme: light dark",
+		"color-scheme: only dark",
+		"color-scheme: only light",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+}
+
+// --- Field Sizing utilities ---
+
+func TestFieldSizing(t *testing.T) {
+	e := New()
+	e.Write([]byte(`field-sizing-fixed field-sizing-content`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "field-sizing: fixed") {
+		t.Errorf("expected field-sizing: fixed, got:\n%s", css)
+	}
+	if !strings.Contains(css, "field-sizing: content") {
+		t.Errorf("expected field-sizing: content, got:\n%s", css)
+	}
+}

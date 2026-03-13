@@ -596,4 +596,20 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"perspective", "--value(--perspective)",
 		"perspective", "--value(length)",
 	)))
+
+	// ===== Font Stretch =====
+	register(functionalUtility("font-stretch", func(c ResolvedCandidate) []Declaration {
+		if c.Arbitrary != "" {
+			return decls("font-stretch", c.Arbitrary)
+		}
+		if c.Value == "" {
+			return nil
+		}
+		// Accept percentage values like font-stretch-50% or font-stretch-125%
+		val := c.Value
+		if isNumeric(val) {
+			val = val + "%"
+		}
+		return decls("font-stretch", val)
+	}))
 }
