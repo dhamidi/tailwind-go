@@ -10,13 +10,16 @@ import (
 
 const version = "0.1.0"
 
+// watchOff is the sentinel default for the --watch flag when not provided.
+const watchOff = "\x00"
+
 func main() {
 	cmd := cli.NewCommand("tailwind", "Tailwind CSS compiler (Go)")
 
 	input := cmd.StringFlag("i", "input", "", "Input file")
 	output := cmd.StringFlag("o", "output", "-", "Output file")
 	cwd := cmd.StringFlag("", "cwd", ".", "The current working directory")
-	cmd.BoolFlag("w", "watch", false, "Watch for changes")
+	watch := cmd.OptionalFlag("w", "watch", watchOff, "Watch for changes and rebuild")
 	cmd.BoolFlag("m", "minify", false, "Minify output")
 	cmd.BoolFlag("", "optimize", false, "Optimize output")
 
@@ -31,15 +34,30 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "≈ tailwind v%s\n", version)
 
-	if err := run(*input, *output, *cwd); err != nil {
+	if err := run(*input, *output, *cwd, *watch); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(input, output, cwd string) error {
+func run(input, output, cwd, watch string) error {
 	engine := tailwind.New()
 
+	// Initial build.
+	if err := build(engine, input, output, cwd); err != nil {
+		return err
+	}
+
+	// If watch mode is active, enter the watch loop.
+	if watch != watchOff {
+		stdinAware := watch != "always"
+		return watchLoop(engine, input, output, cwd, stdinAware)
+	}
+
+	return nil
+}
+
+func build(engine *tailwind.Engine, input, output, cwd string) error {
 	// Load custom CSS if input file provided
 	if input != "" {
 		css, err := os.ReadFile(input)
