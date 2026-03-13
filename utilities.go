@@ -24,6 +24,11 @@ type UtilityRegistration struct {
 	CompileFn CompileFn // generates declarations for a candidate
 	Order     int       // definition order for stable CSS output
 	Selector  string    // optional child selector suffix
+
+	// GenerateRulesFn, if set, produces multiple CSS rules for a single class.
+	// Used for utilities like "container" that emit a base rule plus responsive
+	// media-query rules. When set, CompileFn is ignored.
+	GenerateRulesFn func(pc ParsedClass, theme *ThemeConfig, variants map[string]*VariantDef) []generatedRule
 }
 
 func (u *UtilityRegistration) utilityPattern() string  { return u.Name }
@@ -132,4 +137,5 @@ func registerGoUtilities(idx *utilityIndex) {
 	registerColorUtilities(idx, register)
 	registerFunctionalUtilities(idx, register)
 	registerMaskUtilities(idx, register)
+	registerContainerUtility(idx, register)
 }

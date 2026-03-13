@@ -304,6 +304,43 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"max-height", "--value(length, percentage)",
 	)))
 
+	// ===== Inline Size =====
+	register(cssUtility("inline", decls(
+		"inline-size", "--value(--spacing)",
+		"inline-size", "--value(--width)",
+		"inline-size", "--value(--container)",
+		"inline-size", "--value(length, percentage)",
+	)))
+	register(cssUtility("min-inline", decls(
+		"min-inline-size", "--value(--spacing)",
+		"min-inline-size", "--value(--width)",
+		"min-inline-size", "--value(--container)",
+		"min-inline-size", "--value(length, percentage)",
+	)))
+	register(cssUtility("max-inline", decls(
+		"max-inline-size", "--value(--spacing)",
+		"max-inline-size", "--value(--width)",
+		"max-inline-size", "--value(--container)",
+		"max-inline-size", "--value(length, percentage)",
+	)))
+
+	// ===== Block Size =====
+	register(cssUtility("block", decls(
+		"block-size", "--value(--spacing)",
+		"block-size", "--value(--height)",
+		"block-size", "--value(length, percentage)",
+	)))
+	register(cssUtility("min-block", decls(
+		"min-block-size", "--value(--spacing)",
+		"min-block-size", "--value(--height)",
+		"min-block-size", "--value(length, percentage)",
+	)))
+	register(cssUtility("max-block", decls(
+		"max-block-size", "--value(--spacing)",
+		"max-block-size", "--value(--height)",
+		"max-block-size", "--value(length, percentage)",
+	)))
+
 	// ===== Size =====
 	register(cssUtility("size", decls(
 		"width", "--value(--spacing)",

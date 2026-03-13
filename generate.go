@@ -33,6 +33,15 @@ func generate(
 
 	for _, raw := range candidates {
 		pc := parseClass(raw)
+
+		// Check for multi-rule utilities (e.g., container).
+		entry, _ := resolveUtility(pc, utils)
+		if reg, ok := entry.(*UtilityRegistration); ok && reg.GenerateRulesFn != nil {
+			multiRules := reg.GenerateRulesFn(pc, theme, variants)
+			rules = append(rules, multiRules...)
+			continue
+		}
+
 		rule := resolveClass(pc, theme, utils, variants)
 		if rule != nil {
 			rules = append(rules, *rule)
@@ -900,6 +909,7 @@ func resolveArbitraryProperty(pc ParsedClass, variants map[string]*VariantDef) *
 func isHeightProperty(prop string) bool {
 	switch prop {
 	case "height", "min-height", "max-height",
+		"block-size", "min-block-size", "max-block-size",
 		"inset-block", "inset-block-start", "inset-block-end",
 		"top", "bottom":
 		return true

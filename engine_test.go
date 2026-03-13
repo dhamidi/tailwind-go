@@ -2572,3 +2572,230 @@ func TestFieldSizing(t *testing.T) {
 		t.Errorf("expected field-sizing: content, got:\n%s", css)
 	}
 }
+
+// ===== Inline Size / Block Size Tests =====
+
+func TestInlineSizeSpacing(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-4`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: calc(var(--spacing) * 4)") {
+		t.Errorf("inline-4 should produce inline-size spacing, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeFull(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-full`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: 100%") {
+		t.Errorf("inline-full should produce inline-size: 100%%, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeAuto(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-auto`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: auto") {
+		t.Errorf("inline-auto should produce inline-size: auto, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeScreen(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-screen`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: 100vw") {
+		t.Errorf("inline-screen should produce inline-size: 100vw, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeFraction(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-1/2`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: calc(1 / 2 * 100%)") {
+		t.Errorf("inline-1/2 should produce inline-size fraction, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeArbitrary(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-[300px]`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: 300px") {
+		t.Errorf("inline-[300px] should produce inline-size: 300px, got:\n%s", css)
+	}
+}
+
+func TestInlineSizePx(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-px`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: 1px") {
+		t.Errorf("inline-px should produce inline-size: 1px, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeMinMax(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-min inline-max inline-fit`))
+	css := e.CSS()
+	if !strings.Contains(css, "inline-size: min-content") {
+		t.Errorf("inline-min should produce inline-size: min-content, got:\n%s", css)
+	}
+	if !strings.Contains(css, "inline-size: max-content") {
+		t.Errorf("inline-max should produce inline-size: max-content, got:\n%s", css)
+	}
+	if !strings.Contains(css, "inline-size: fit-content") {
+		t.Errorf("inline-fit should produce inline-size: fit-content, got:\n%s", css)
+	}
+}
+
+func TestMinInlineSize(t *testing.T) {
+	e := New()
+	e.Write([]byte(`min-inline-4`))
+	css := e.CSS()
+	if !strings.Contains(css, "min-inline-size: calc(var(--spacing) * 4)") {
+		t.Errorf("min-inline-4 should produce min-inline-size, got:\n%s", css)
+	}
+}
+
+func TestMaxInlineSize(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-inline-4`))
+	css := e.CSS()
+	if !strings.Contains(css, "max-inline-size: calc(var(--spacing) * 4)") {
+		t.Errorf("max-inline-4 should produce max-inline-size, got:\n%s", css)
+	}
+}
+
+func TestBlockSizeSpacing(t *testing.T) {
+	e := New()
+	e.Write([]byte(`block-4`))
+	css := e.CSS()
+	if !strings.Contains(css, "block-size: calc(var(--spacing) * 4)") {
+		t.Errorf("block-4 should produce block-size spacing, got:\n%s", css)
+	}
+}
+
+func TestBlockSizeScreen(t *testing.T) {
+	e := New()
+	e.Write([]byte(`block-screen`))
+	css := e.CSS()
+	if !strings.Contains(css, "block-size: 100vh") {
+		t.Errorf("block-screen should produce block-size: 100vh (height property), got:\n%s", css)
+	}
+}
+
+func TestBlockSizeFull(t *testing.T) {
+	e := New()
+	e.Write([]byte(`block-full`))
+	css := e.CSS()
+	if !strings.Contains(css, "block-size: 100%") {
+		t.Errorf("block-full should produce block-size: 100%%, got:\n%s", css)
+	}
+}
+
+func TestMinBlockSize(t *testing.T) {
+	e := New()
+	e.Write([]byte(`min-block-4`))
+	css := e.CSS()
+	if !strings.Contains(css, "min-block-size: calc(var(--spacing) * 4)") {
+		t.Errorf("min-block-4 should produce min-block-size, got:\n%s", css)
+	}
+}
+
+func TestMaxBlockSize(t *testing.T) {
+	e := New()
+	e.Write([]byte(`max-block-4`))
+	css := e.CSS()
+	if !strings.Contains(css, "max-block-size: calc(var(--spacing) * 4)") {
+		t.Errorf("max-block-4 should produce max-block-size, got:\n%s", css)
+	}
+}
+
+func TestBlockStaticStillWorks(t *testing.T) {
+	e := New()
+	e.Write([]byte(`block`))
+	css := e.CSS()
+	if !strings.Contains(css, "display: block") {
+		t.Errorf("block (no value) should still produce display: block, got:\n%s", css)
+	}
+}
+
+func TestInlineSizeViewportUnits(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inline-dvw inline-dvh inline-lvw inline-lvh inline-svw inline-svh`))
+	css := e.CSS()
+	for _, tc := range []struct {
+		class, want string
+	}{
+		{"inline-dvw", "inline-size: 100dvw"},
+		{"inline-dvh", "inline-size: 100dvh"},
+		{"inline-lvw", "inline-size: 100lvw"},
+		{"inline-lvh", "inline-size: 100lvh"},
+		{"inline-svw", "inline-size: 100svw"},
+		{"inline-svh", "inline-size: 100svh"},
+	} {
+		if !strings.Contains(css, tc.want) {
+			t.Errorf("%s should produce %s, got:\n%s", tc.class, tc.want, css)
+		}
+	}
+}
+
+// ===== Container Utility Tests =====
+
+func TestContainerBaseRule(t *testing.T) {
+	e := New()
+	e.Write([]byte(`container`))
+	css := e.CSS()
+	if !strings.Contains(css, ".container") {
+		t.Errorf("container should produce .container selector, got:\n%s", css)
+	}
+	if !strings.Contains(css, "width: 100%") {
+		t.Errorf("container should produce width: 100%%, got:\n%s", css)
+	}
+}
+
+func TestContainerResponsiveBreakpoints(t *testing.T) {
+	e := New()
+	e.Write([]byte(`container`))
+	css := e.CSS()
+	t.Logf("Container CSS:\n%s", css)
+
+	// Check that responsive breakpoints from the default theme are present.
+	// Default breakpoints: sm=40rem, md=48rem, lg=64rem, xl=80rem, 2xl=96rem
+	expected := []struct {
+		media    string
+		maxWidth string
+	}{
+		{"@media (width >= 40rem)", "max-width: 40rem"},
+		{"@media (width >= 48rem)", "max-width: 48rem"},
+		{"@media (width >= 64rem)", "max-width: 64rem"},
+		{"@media (width >= 80rem)", "max-width: 80rem"},
+		{"@media (width >= 96rem)", "max-width: 96rem"},
+	}
+	for _, exp := range expected {
+		if !strings.Contains(css, exp.media) {
+			t.Errorf("container should have %s, got:\n%s", exp.media, css)
+		}
+		if !strings.Contains(css, exp.maxWidth) {
+			t.Errorf("container should have %s, got:\n%s", exp.maxWidth, css)
+		}
+	}
+}
+
+func TestContainerWithVariant(t *testing.T) {
+	e := New()
+	e.Write([]byte(`md:container`))
+	css := e.CSS()
+	// Should have the md variant media query wrapping the container rules
+	if !strings.Contains(css, "@media (width >= 48rem)") {
+		t.Errorf("md:container should have md media query, got:\n%s", css)
+	}
+	if !strings.Contains(css, "width: 100%") {
+		t.Errorf("md:container should include width: 100%%, got:\n%s", css)
+	}
+}
