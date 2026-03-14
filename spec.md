@@ -461,7 +461,7 @@ Both directives have identical parsing behavior and register variants in the sam
 ##### Built-in Variants (from Tailwind's CSS source)
 
 ```css
-@variant hover (&:hover);
+@variant hover — special: generates &:hover wrapped in @media (hover: hover)
 @variant focus (&:focus);
 @variant focus-visible (&:focus-visible);
 @variant active (&:active);
@@ -929,10 +929,23 @@ If none resolve, the candidate is discarded (no CSS generated).
 Selector variants modify the CSS selector by replacing `&` in the variant definition with the base selector:
 
 ```
+focus:bg-blue-500
+  base selector: .focus\:bg-blue-500
+  variant definition: &:focus
+  result: .focus\:bg-blue-500:focus
+```
+
+The `hover` variant is special: it applies both a selector transform (`&:hover`) and wraps the rule in `@media (hover: hover)`:
+
+```
 hover:bg-blue-500
   base selector: .hover\:bg-blue-500
-  variant definition: &:hover
-  result: .hover\:bg-blue-500:hover
+  result:
+    @media (hover: hover) {
+      .hover\:bg-blue-500:hover {
+        background-color: #3b82f6;
+      }
+    }
 ```
 
 Multiple selector variants compose by successive substitution (inner-to-outer):
@@ -990,10 +1003,12 @@ Variants compose by nesting. The ordering is: **outermost wrapping is the leftmo
 ```
 dark:md:hover:bg-blue-500
 
-→ @media (prefers-color-scheme: dark) {      ← dark (outermost)
-    @media (width >= 48rem) {                ← md
-      .dark\:md\:hover\:bg-blue-500:hover { ← hover (selector)
-        background-color: #3b82f6;
+→ @media (prefers-color-scheme: dark) {           ← dark (outermost)
+    @media (width >= 48rem) {                     ← md
+      @media (hover: hover) {                     ← hover (media)
+        .dark\:md\:hover\:bg-blue-500:hover {     ← hover (selector)
+          background-color: #3b82f6;
+        }
       }
     }
   }
