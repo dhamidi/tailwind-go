@@ -1,6 +1,7 @@
 package tailwind
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -755,6 +756,46 @@ func TestHoverMediaQueryWrapping(t *testing.T) {
 	}
 	if !strings.Contains(result, ":hover") {
 		t.Error("hover variant should include :hover selector")
+	}
+}
+
+// TestHoverCapabilityVariants verifies hover-hover, hover-none,
+// any-hover-hover, and any-hover-none media query variants.
+func TestHoverCapabilityVariants(t *testing.T) {
+	tests := []struct {
+		class    string
+		contains []string
+	}{
+		{
+			class:    "hover-hover:underline",
+			contains: []string{"@media (hover: hover)", "text-decoration-line: underline"},
+		},
+		{
+			class:    "hover-none:no-underline",
+			contains: []string{"@media (hover: none)", "text-decoration-line: none"},
+		},
+		{
+			class:    "any-hover-hover:underline",
+			contains: []string{"@media (any-hover: hover)", "text-decoration-line: underline"},
+		},
+		{
+			class:    "any-hover-none:no-underline",
+			contains: []string{"@media (any-hover: none)", "text-decoration-line: none"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(fmt.Sprintf(`class="%s"`, tt.class)))
+			result := e.CSS()
+			t.Logf("Generated CSS:\n%s", result)
+			for _, s := range tt.contains {
+				if !strings.Contains(result, s) {
+					t.Errorf("expected output to contain %q", s)
+				}
+			}
+		})
 	}
 }
 

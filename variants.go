@@ -142,6 +142,12 @@ func registerGoVariants(variants map[string]*VariantDef, startOrder int) int {
 	add(&VariantDef{Name: "any-pointer-coarse", Media: "(any-pointer: coarse)"})
 	add(&VariantDef{Name: "any-pointer-none", Media: "(any-pointer: none)"})
 
+	// ===== Hover capability variants =====
+	add(&VariantDef{Name: "hover-hover", Media: "(hover: hover)"})
+	add(&VariantDef{Name: "hover-none", Media: "(hover: none)"})
+	add(&VariantDef{Name: "any-hover-hover", Media: "(any-hover: hover)"})
+	add(&VariantDef{Name: "any-hover-none", Media: "(any-hover: none)"})
+
 	// ===== Additional media query variants =====
 	add(&VariantDef{Name: "noscript", Media: "(scripting: none)"})
 	add(&VariantDef{Name: "inverted-colors", Media: "(inverted-colors: inverted)"})
