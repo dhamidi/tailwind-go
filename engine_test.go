@@ -2603,20 +2603,29 @@ func TestPeerFocusBuiltin(t *testing.T) {
 
 func TestTextShadowStatic(t *testing.T) {
 	e := New()
-	e.Write([]byte(`text-shadow-2xs text-shadow-xs text-shadow-sm text-shadow-md text-shadow-lg text-shadow-none`))
+	e.Write([]byte(`text-shadow-sm text-shadow text-shadow-md text-shadow-lg text-shadow-none`))
 	css := e.CSS()
 	t.Logf("Generated CSS:\n%s", css)
 	for _, want := range []string{
-		"text-shadow: 0px 1px 0px rgb(0 0 0 / 0.15)",
-		"text-shadow: 0px 1px 1px rgb(0 0 0 / 0.2)",
-		"text-shadow: 0px 1px 0px rgb(0 0 0 / 0.075)",
-		"text-shadow: 0px 1px 1px rgb(0 0 0 / 0.1)",
-		"text-shadow: 0px 1px 2px rgb(0 0 0 / 0.1)",
+		"text-shadow: 0 1px 1px rgb(0 0 0 / 0.05)",
+		"text-shadow: 0 1px 3px rgb(0 0 0 / 0.1)",
+		"text-shadow: 0 2px 4px rgb(0 0 0 / 0.1)",
+		"text-shadow: 0 4px 8px rgb(0 0 0 / 0.1)",
 		"text-shadow: none",
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("missing %q in:\n%s", want, css)
 		}
+	}
+}
+
+func TestTextShadowRemovedUtilities(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-shadow-2xs text-shadow-xs`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if strings.Contains(css, "text-shadow-2xs") || strings.Contains(css, "text-shadow-xs") {
+		t.Errorf("removed utilities should produce no output, got:\n%s", css)
 	}
 }
 
