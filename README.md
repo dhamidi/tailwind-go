@@ -146,6 +146,7 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 
 ## Supported Tailwind Features
 
+- 26 color families (red, orange, amber, yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose, slate, gray, zinc, neutral, stone, mauve, olive, mist, taupe) with 11 shades each in OKLCH
 - Static utilities: `flex`, `block`, `hidden`
 - Dynamic utilities with values: `p-4`, `bg-blue-500`, `w-1/2`
 - Sizing: `w-*`, `h-*`, `size-*` (sets both width and height), `min-w-*`, `max-w-*`, `min-h-*`, `max-h-*`
@@ -178,6 +179,10 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Containment: `contain-none`, `contain-content`, `contain-strict`, `contain-size`, `contain-layout`, `contain-paint`, `contain-style`
 - Performance hints: `will-change-auto`, `will-change-scroll`, `will-change-contents`, `will-change-transform`
 - Accessibility: `forced-color-adjust-auto`, `forced-color-adjust-none`
+- Text size / line height associations: `text-sm` sets both `font-size` and `line-height`
+- Default configuration tokens: `--default-transition-duration`, `--default-transition-timing-function`, etc.
+
+For a comprehensive list of all default theme tokens, see [spec.md Appendix A](spec.md).
 
 ## Current Limitations
 
