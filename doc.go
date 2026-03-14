@@ -110,7 +110,7 @@
 //   - Compound variants: group-hover:text-white, peer-focus:ring-2, not-hover:opacity-100, has-*:, in-*:
 //   - Named groups/peers: group/sidebar, group-hover/sidebar:flex
 //   - Container query variants: @md:flex, @lg:grid
-//   - @supports variants: supports-grid:flex, [@supports(display:grid)]:flex
+//   - @supports variants: supports-grid:flex, supports-[display:grid]:grid, supports-backdrop-filter:flex, not-supports-[display:grid]:hidden
 //   - @starting-style variant: starting:opacity-0
 //
 // # CSS Directives

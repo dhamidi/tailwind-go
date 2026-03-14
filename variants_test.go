@@ -926,6 +926,50 @@ func TestCompoundVariantsWithNewVariants(t *testing.T) {
 	}
 }
 
+// TestSupportsVariantCases verifies supports-* variants produce correct
+// @supports at-rule wrappers for feature queries.
+func TestSupportsVariantCases(t *testing.T) {
+	tests := []struct {
+		class    string
+		contains []string
+	}{
+		{
+			class:    "supports-[display:grid]:grid",
+			contains: []string{"@supports (display: grid)", "display: grid"},
+		},
+		{
+			class:    "supports-[display:flex]:hidden",
+			contains: []string{"@supports (display: flex)", "display: none"},
+		},
+		{
+			class:    "supports-backdrop-filter:flex",
+			contains: []string{"@supports (backdrop-filter: var(--tw))", "display: flex"},
+		},
+		{
+			class:    "not-supports-[display:grid]:flex",
+			contains: []string{"@supports not (display: grid)", "display: flex"},
+		},
+		{
+			class:    "supports-[display:grid]:md:flex",
+			contains: []string{"@supports (display: grid)"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(fmt.Sprintf(`class="%s"`, tt.class)))
+			result := e.CSS()
+			t.Logf("Generated CSS:\n%s", result)
+			for _, want := range tt.contains {
+				if !strings.Contains(result, want) {
+					t.Errorf("class %q: expected %q in CSS output", tt.class, want)
+				}
+			}
+		})
+	}
+}
+
 // TestTwoXLBreakpoint documents that the 2xl: breakpoint fails because the
 // scanner rejects tokens starting with a digit. The variant itself is
 // correctly registered (width >= 96rem), but the class "2xl:flex" is

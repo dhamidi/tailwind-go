@@ -164,7 +164,7 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Named groups/peers: `group/sidebar`, `group-hover/sidebar:flex`, `peer-focus/email:text-white`
 - Dark mode class strategy: both `@media (prefers-color-scheme: dark)` and class-based (`.dark` selector)
 - Container queries: `@md:flex`, `@lg:grid`, built-in `@3xs` through `@7xl`
-- `@supports` variant: `supports-grid:flex`, `[@supports(display:grid)]:flex`
+- `@supports` variants: `supports-grid:flex`, `supports-[display:grid]:grid`, `supports-backdrop-filter:flex`, `not-supports-[display:grid]:hidden`, `[@supports(display:grid)]:flex`
 - `@starting-style` variant: `starting:opacity-0`
 - `:merge()` function in variant selectors
 - `@apply` directive for composing utilities in custom CSS rules
