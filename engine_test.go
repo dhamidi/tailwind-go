@@ -3935,3 +3935,72 @@ func TestBorderRadiusArbitraryCorners(t *testing.T) {
 		})
 	}
 }
+
+// Bug 1: resolveMultiSelector must not split commas inside parentheses.
+func TestOpenVariantSingleLineSelector(t *testing.T) {
+	e := New()
+	e.Write([]byte(`open:p-4`))
+	css := e.CSS()
+	if !strings.Contains(css, ":is([open], :popover-open, :open)") {
+		t.Errorf("open variant selector should not split commas inside :is(), got:\n%s", css)
+	}
+}
+
+func TestInertVariantSingleLineSelector(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inert:p-4`))
+	css := e.CSS()
+	if !strings.Contains(css, ":is([inert], [inert] *)") {
+		t.Errorf("inert variant selector should not split commas inside :is(), got:\n%s", css)
+	}
+}
+
+// Bug 2: not-* must negate media query variants, not produce selector.
+func TestNotDarkMediaQuery(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-dark:bg-white`))
+	css := e.CSS()
+	if !strings.Contains(css, "@media not (prefers-color-scheme: dark)") {
+		t.Errorf("not-dark should produce negated media query, got:\n%s", css)
+	}
+	if strings.Contains(css, ":not(:dark)") {
+		t.Errorf("not-dark should not produce :not(:dark) selector, got:\n%s", css)
+	}
+}
+
+func TestNotPrintMediaQuery(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-print:hidden`))
+	css := e.CSS()
+	if !strings.Contains(css, "@media not print") {
+		t.Errorf("not-print should produce negated media query, got:\n%s", css)
+	}
+}
+
+func TestNotMotionSafeMediaQuery(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-motion-safe:opacity-50`))
+	css := e.CSS()
+	if !strings.Contains(css, "@media not (prefers-reduced-motion: no-preference)") {
+		t.Errorf("not-motion-safe should produce negated media query, got:\n%s", css)
+	}
+}
+
+// Bug 3: Compound variants must reject pseudo-elements and * / **.
+func TestNotBeforeRejected(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-before:p-4`))
+	css := e.CSS()
+	if strings.Contains(css, "::before") {
+		t.Errorf("not-before should be rejected (pseudo-elements cannot be compounded), got:\n%s", css)
+	}
+}
+
+func TestNotAfterRejected(t *testing.T) {
+	e := New()
+	e.Write([]byte(`not-after:p-4`))
+	css := e.CSS()
+	if strings.Contains(css, "::after") {
+		t.Errorf("not-after should be rejected (pseudo-elements cannot be compounded), got:\n%s", css)
+	}
+}

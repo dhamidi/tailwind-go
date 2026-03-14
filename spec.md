@@ -1263,6 +1263,23 @@ in-data-current:font-bold → [data-current] &
 
 These are parameterized variants that wrap the value in a CSS pseudo-class.
 
+When `not-*` is applied to a media query variant (one that has no selector, only a media query), it negates the media query instead of producing a `:not()` selector:
+
+```
+not-dark:bg-white       → @media not (prefers-color-scheme: dark) { ... }
+not-print:hidden        → @media not print { ... }
+not-motion-safe:*       → @media not (prefers-reduced-motion: no-preference) { ... }
+not-contrast-more:*     → @media not (prefers-contrast: more) { ... }
+```
+
+If an explicit `not-*` variant is registered (e.g., `not-forced-colors`), the registered definition takes precedence over automatic negation.
+
+Certain variants cannot be used as the inner value of `not-*`, `has-*`, or other compound variants:
+- Pseudo-element variants (`before`, `after`, `placeholder`, etc.) — cannot be compounded
+- `*` (child) and `**` (descendant) — cannot be compounded
+
+Using these as compound inner values produces no output (the class is silently ignored).
+
 ### 8.9 Responsive Variant Ordering
 
 Responsive variants (`sm`, `md`, `lg`, `xl`, `2xl`) must appear in the CSS output in ascending breakpoint order so that larger breakpoints override smaller ones. This is ensured by the `Order` field from their definition sequence in the parsed CSS.

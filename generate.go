@@ -667,6 +667,22 @@ func resolveVariants(names []string, defs map[string]*VariantDef) []string {
 			continue
 		}
 
+		// Handle not-<media-variant> by negating the inner variant's media query,
+		// but only if no explicit "not-*" variant is registered.
+		if strings.HasPrefix(name, "not-") {
+			if _, hasExplicit := defs[name]; !hasExplicit {
+				innerName := name[4:]
+				if innerV, ok := defs[innerName]; ok && innerV.Media != "" && innerV.Selector == "" {
+					if innerV.AtRule != "" {
+						media = append(media, "@"+innerV.AtRule+" not "+innerV.Media)
+					} else {
+						media = append(media, "@media not "+innerV.Media)
+					}
+					continue
+				}
+			}
+		}
+
 		v := lookupVariant(name, defs)
 		if v != nil {
 			if v.AtRule != "" && v.Media == "" {
@@ -723,6 +739,16 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 			}
 		}
 
+		// Skip not-<media-variant> — handled as media wrapper in resolveVariants.
+		if strings.HasPrefix(name, "not-") {
+			if _, hasExplicit := defs[name]; !hasExplicit {
+				innerName := name[4:]
+				if innerV, ok := defs[innerName]; ok && innerV.Media != "" && innerV.Selector == "" {
+					continue
+				}
+			}
+		}
+
 		// Try compound variant resolution.
 		if v := lookupCompoundVariant(name, defs); v != nil {
 			remainder := name[len(v.Name)+1:] // e.g., "group-hover" → "hover", "group-hover/sidebar" → "hover/sidebar"
@@ -732,6 +758,20 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 				value = remainder[:slashIdx]
 				groupName = remainder[slashIdx+1:]
 			}
+
+			// Reject compound variants with incompatible inner variants:
+			// pseudo-elements (before, after, etc.) and * / ** cannot be compounded.
+			if v.Name == "not" || v.Name == "has" {
+				if value == "*" || value == "**" {
+					continue
+				}
+				if innerDef, ok := defs[value]; ok && innerDef.Selector != "" {
+					if strings.Contains(innerDef.Selector, "&::") {
+						continue
+					}
+				}
+			}
+
 			template := v.Template
 			isArbitrary := strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]")
 			// Strip brackets from arbitrary values and adjust template.
@@ -767,8 +807,27 @@ func resolveVariantSelector(base string, names []string, defs map[string]*Varian
 // resolveMultiSelector handles comma-separated selector templates.
 // For example, "& *::marker, &::marker" with base ".foo" produces
 // ".foo *::marker, .foo::marker".
+// Commas inside parentheses (e.g., ":is([open], :popover-open)") are preserved.
 func resolveMultiSelector(template, base string) string {
-	parts := strings.Split(template, ",")
+	// Split on commas that are NOT inside parentheses.
+	var parts []string
+	depth := 0
+	start := 0
+	for i, ch := range template {
+		switch ch {
+		case '(':
+			depth++
+		case ')':
+			depth--
+		case ',':
+			if depth == 0 {
+				parts = append(parts, template[start:i])
+				start = i + 1
+			}
+		}
+	}
+	parts = append(parts, template[start:])
+
 	for i, p := range parts {
 		parts[i] = strings.ReplaceAll(strings.TrimSpace(p), "&", base)
 	}
