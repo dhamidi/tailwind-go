@@ -9,7 +9,7 @@ import (
 	"github.com/dhamidi/tailwind-go/cmd/tailwind/internal/minify"
 )
 
-const version = "0.2.0"
+const version = "0.3.0"
 
 // watchOff is the sentinel default for the --watch flag when not provided.
 const watchOff = "\x00"
