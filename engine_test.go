@@ -1192,6 +1192,33 @@ func TestFullCSSSelfSufficient(t *testing.T) {
 	}
 }
 
+func TestFullCSSBalancedBraces(t *testing.T) {
+	e := New()
+	e.Write([]byte(`<div class="text-5xl space-y-10 border-b-2"></div>`))
+	css := e.FullCSS()
+
+	opens, closes := 0, 0
+	for _, ch := range css {
+		if ch == '{' {
+			opens++
+		}
+		if ch == '}' {
+			closes++
+		}
+	}
+	if opens != closes {
+		t.Errorf("FullCSS has unbalanced braces: %d opens, %d closes", opens, closes)
+	}
+}
+
+func TestThemeCSSNoKeyframes(t *testing.T) {
+	e := New()
+	css := e.ThemeCSS()
+	if strings.Contains(css, "@keyframes") {
+		t.Error("ThemeCSS should not contain @keyframes blocks; they belong in utility CSS output")
+	}
+}
+
 func TestPreflightCSSCustomTheme(t *testing.T) {
 	e := New()
 	e.LoadCSS([]byte(`@theme { --default-font-family: "Inter", sans-serif; }`))

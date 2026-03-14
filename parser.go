@@ -101,6 +101,12 @@ func (p *parser) parseTheme(ss *Stylesheet) {
 			break
 		}
 
+		// Handle nested @keyframes inside @theme blocks.
+		if p.peek().typ == tokAtKeyword && p.peek().value == "@keyframes" {
+			p.parseKeyframes(ss)
+			continue
+		}
+
 		// Expect: --property-name: value;
 		prop, val := p.parseDeclaration()
 		if prop != "" {

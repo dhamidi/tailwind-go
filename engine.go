@@ -373,7 +373,10 @@ func (e *Engine) FullCSS() string {
 func resolveThemeRefs(css string, tokens map[string]string) string {
 	const marker = "--theme("
 	// Limit iterations to prevent infinite loops from circular refs.
-	for range 10 {
+	// Each pass resolves one --theme() occurrence; nested references may
+	// require multiple passes (e.g., --theme(--default-font-family) →
+	// --theme(--font-sans, initial) → actual value).
+	for range 50 {
 		idx := strings.Index(css, marker)
 		if idx < 0 {
 			break
