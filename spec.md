@@ -397,6 +397,8 @@ In addition to namespaced theme tokens, TailwindCSS v4 defines special `--defaul
 | `--default-transition-timing-function` | Default easing for `transition-*` utilities | `cubic-bezier(0.4, 0, 0.2, 1)` |
 | `--default-border-width` | Default width for `border` (without explicit width) | `1px` |
 | `--default-outline-width` | Default width for `outline` (without explicit width) | `1px` |
+| `--default-ring-width` | Default width for `ring` (without explicit width) | `1px` |
+| `--default-inset-ring-width` | Default width for `inset-ring` (without explicit width) | `1px` |
 
 These tokens are defined in the theme and can be overridden via `@theme`. They are not namespaced — they are standalone variables that utilities reference directly. For example, `transition-colors` applies `transition-duration: var(--default-transition-duration)` unless an explicit duration utility is also present.
 
@@ -1745,16 +1747,27 @@ Controls how form fields size themselves based on their content.
 
 ### 16.6 Logical Property Utilities
 
-Logical property utilities map to writing-mode-aware CSS properties:
+Logical property utilities map to writing-mode-aware CSS properties.
+
+#### Inline and Block Size
+
+These sizing utilities mirror `w-*`/`h-*` but use logical axes:
 
 ```
-inline-size-*   → inline-size: ...     (width in horizontal, height in vertical)
-block-size-*    → block-size: ...      (height in horizontal, width in vertical)
+inline-*        → inline-size: ...     (width in horizontal writing mode)
 min-inline-*    → min-inline-size: ...
 max-inline-*    → max-inline-size: ...
+
+block-*         → block-size: ...      (height in horizontal writing mode)
 min-block-*     → min-block-size: ...
 max-block-*     → max-block-size: ...
+```
 
+Value resolution follows the same rules as width/height utilities: the spacing scale, the `--width-*`/`--height-*` and `--container-*` theme namespaces (for inline-size variants), and arbitrary length/percentage values.
+
+#### Logical Positioning
+
+```
 start-*         → inset-inline-start: ...
 end-*           → inset-inline-end: ...
 inset-bs-*      → inset-block-start: ...
@@ -1969,6 +1982,206 @@ transform-fill    → transform-box: fill-box;
 transform-stroke  → transform-box: stroke-box;
 transform-view    → transform-box: view-box;
 ```
+
+### 16.18 Font Variant Numeric Utilities
+
+Font variant numeric utilities control OpenType numeric glyph alternates:
+
+```
+normal-nums        → font-variant-numeric: normal
+ordinal            → font-variant-numeric: ordinal
+slashed-zero       → font-variant-numeric: slashed-zero
+lining-nums        → font-variant-numeric: lining-nums
+oldstyle-nums      → font-variant-numeric: oldstyle-nums
+proportional-nums  → font-variant-numeric: proportional-nums
+tabular-nums       → font-variant-numeric: tabular-nums
+diagonal-fractions → font-variant-numeric: diagonal-fractions
+stacked-fractions  → font-variant-numeric: stacked-fractions
+```
+
+These are static utilities. `normal-nums` resets all numeric variants to the default. The other utilities each enable a specific OpenType feature.
+
+### 16.19 Size Utilities
+
+The `size-*` utility sets both `width` and `height` simultaneously:
+
+```
+size-4        → width: calc(4 * var(--spacing)); height: calc(4 * var(--spacing))
+size-px       → width: 1px; height: 1px
+size-0.5      → width: calc(0.5 * var(--spacing)); height: calc(0.5 * var(--spacing))
+size-full     → width: 100%; height: 100%
+size-auto     → width: auto; height: auto
+size-min      → width: min-content; height: min-content
+size-max      → width: max-content; height: max-content
+size-fit      → width: fit-content; height: fit-content
+size-[200px]  → width: 200px; height: 200px
+```
+
+Value resolution uses the spacing scale, the `--size-*` theme namespace, and accepts arbitrary length/percentage values. Static keyword variants (`auto`, `full`, `min`, `max`, `fit`) are registered separately.
+
+### 16.20 Forced Color Adjust Utilities
+
+```
+forced-color-adjust-auto → forced-color-adjust: auto
+forced-color-adjust-none → forced-color-adjust: none
+```
+
+Controls whether the browser should force colors when the user has enabled a forced-color mode (e.g., Windows High Contrast).
+
+### 16.21 Hyphens Utilities
+
+```
+hyphens-none   → -webkit-hyphens: none; hyphens: none
+hyphens-manual → -webkit-hyphens: manual; hyphens: manual
+hyphens-auto   → -webkit-hyphens: auto; hyphens: auto
+```
+
+Controls how words are hyphenated when wrapping across multiple lines. Includes the `-webkit-hyphens` vendor prefix for Safari compatibility.
+
+### 16.22 Text Indent Utility
+
+The `indent-*` utility sets the `text-indent` CSS property:
+
+```
+indent-4       → text-indent: calc(4 * var(--spacing))
+indent-px      → text-indent: 1px
+indent-[50px]  → text-indent: 50px
+```
+
+Value resolution uses the spacing scale and accepts arbitrary length/percentage values. Supports negative values via the `-indent-*` syntax.
+
+### 16.23 Word Break Utilities
+
+```
+break-normal → overflow-wrap: normal; word-break: normal
+break-words  → overflow-wrap: break-word
+break-all    → word-break: break-all
+break-keep   → word-break: keep-all
+```
+
+Controls how words break when reaching the end of a line. `break-normal` resets both `overflow-wrap` and `word-break` to their default behavior.
+
+### 16.24 Vertical Align Utilities
+
+The `align-*` utility sets the `vertical-align` CSS property:
+
+```
+align-baseline    → vertical-align: baseline
+align-top         → vertical-align: top
+align-middle      → vertical-align: middle
+align-bottom      → vertical-align: bottom
+align-text-top    → vertical-align: text-top
+align-text-bottom → vertical-align: text-bottom
+align-sub         → vertical-align: sub
+align-super       → vertical-align: super
+```
+
+These are static utilities for controlling the vertical alignment of inline or table-cell elements.
+
+### 16.25 Contain Utilities
+
+```
+contain-none        → contain: none
+contain-content     → contain: content
+contain-strict      → contain: strict
+contain-size        → contain: size
+contain-inline-size → contain: inline-size
+contain-layout      → contain: layout
+contain-paint       → contain: paint
+contain-style       → contain: style
+```
+
+Controls the CSS containment model, which lets browsers optimize rendering performance by isolating parts of the page.
+
+### 16.26 Will Change Utilities
+
+```
+will-change-auto      → will-change: auto
+will-change-scroll    → will-change: scroll-position
+will-change-contents  → will-change: contents
+will-change-transform → will-change: transform
+```
+
+Hints to the browser which properties are expected to change, allowing it to set up optimizations ahead of time. These are static utilities with fixed keyword values.
+
+### 16.27 Transition Utilities
+
+The `transition-*` utilities control the `transition-property` CSS property and apply default duration and timing function from the theme:
+
+```
+transition-none      → transition-property: none
+transition-all       → transition-property: all; transition-timing-function: ...; transition-duration: ...
+transition           → transition-property: color, background-color, border-color, ... (common properties); transition-timing-function: ...; transition-duration: ...
+transition-colors    → transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: ...; transition-duration: ...
+transition-opacity   → transition-property: opacity; transition-timing-function: ...; transition-duration: ...
+transition-shadow    → transition-property: box-shadow; transition-timing-function: ...; transition-duration: ...
+transition-transform → transition-property: transform, translate, scale, rotate; transition-timing-function: ...; transition-duration: ...
+```
+
+All transition utilities except `transition-none` also set:
+- `transition-timing-function: var(--tw-ease, var(--default-transition-timing-function))`
+- `transition-duration: var(--tw-duration, var(--default-transition-duration))`
+
+This means using any `transition-*` utility (other than `none`) automatically applies the default 150ms duration and ease curve, unless overridden by explicit `duration-*` or `ease-*` utilities.
+
+The bare `transition` utility covers a comprehensive set of commonly animated properties including colors, opacity, box-shadow, transform, filters, and layout-related properties like `display`, `content-visibility`, `overlay`, and `pointer-events`.
+
+### 16.28 Scroll Snap Utilities
+
+Scroll snap utilities control CSS scroll snapping behavior:
+
+```
+snap-none       → scroll-snap-type: none
+snap-x          → scroll-snap-type: x var(--tw-scroll-snap-strictness, proximity)
+snap-y          → scroll-snap-type: y var(--tw-scroll-snap-strictness, proximity)
+snap-both       → scroll-snap-type: both var(--tw-scroll-snap-strictness, proximity)
+snap-mandatory  → --tw-scroll-snap-strictness: mandatory
+snap-proximity  → --tw-scroll-snap-strictness: proximity
+```
+
+The `snap-x`, `snap-y`, and `snap-both` utilities compose with the strictness utilities via the `--tw-scroll-snap-strictness` custom property, defaulting to `proximity` if no strictness utility is specified.
+
+Scroll snap alignment:
+```
+snap-start      → scroll-snap-align: start
+snap-end        → scroll-snap-align: end
+snap-center     → scroll-snap-align: center
+snap-align-none → scroll-snap-align: none
+```
+
+Scroll snap stop:
+```
+snap-normal → scroll-snap-stop: normal
+snap-always → scroll-snap-stop: always
+```
+
+### 16.29 Object Fit and Position Utilities
+
+Object fit utilities control how replaced elements (images, videos) are resized:
+
+```
+object-contain    → object-fit: contain
+object-cover      → object-fit: cover
+object-fill       → object-fit: fill
+object-none       → object-fit: none
+object-scale-down → object-fit: scale-down
+```
+
+Object position utilities control the alignment of replaced elements within their container:
+
+```
+object-bottom       → object-position: bottom
+object-center       → object-position: center
+object-left         → object-position: left
+object-left-bottom  → object-position: left bottom
+object-left-top     → object-position: left top
+object-right        → object-position: right
+object-right-bottom → object-position: right bottom
+object-right-top    → object-position: right top
+object-top          → object-position: top
+```
+
+All object utilities are static with fixed keyword values.
 
 ## 17. Dark Mode
 

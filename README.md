@@ -148,6 +148,8 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 
 - Static utilities: `flex`, `block`, `hidden`
 - Dynamic utilities with values: `p-4`, `bg-blue-500`, `w-1/2`
+- Sizing: `w-*`, `h-*`, `size-*` (sets both width and height), `min-w-*`, `max-w-*`, `min-h-*`, `max-h-*`
+- Logical properties: `inline-*`, `block-*`, `min-inline-*`, `max-inline-*`, `min-block-*`, `max-block-*`
 - Variants: `hover:bg-blue-500`, `md:flex`, `dark:text-white`
 - Stacked variants: `dark:md:hover:bg-blue-500`
 - Important modifier: `!p-4`
@@ -168,6 +170,14 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - `@starting-style` variant: `starting:opacity-0`
 - `:merge()` function in variant selectors
 - `@apply` directive for composing utilities in custom CSS rules
+- Typography: `indent-*`, `hyphens-*`, `break-normal`/`break-all`/`break-keep`, `align-*` (vertical-align)
+- Font variant numeric: `tabular-nums`, `lining-nums`, `ordinal`, `slashed-zero`, `diagonal-fractions`, etc.
+- Transitions: `transition`, `transition-colors`, `transition-opacity`, `transition-shadow`, `transition-transform`, `transition-all`, `transition-none`
+- Scroll snap: `snap-x`, `snap-y`, `snap-both`, `snap-mandatory`, `snap-proximity`, `snap-start`, `snap-center`, `snap-end`
+- Object fit/position: `object-cover`, `object-contain`, `object-center`, `object-left-top`, etc.
+- Containment: `contain-none`, `contain-content`, `contain-strict`, `contain-size`, `contain-layout`, `contain-paint`, `contain-style`
+- Performance hints: `will-change-auto`, `will-change-scroll`, `will-change-contents`, `will-change-transform`
+- Accessibility: `forced-color-adjust-auto`, `forced-color-adjust-none`
 
 ## Current Limitations
 
