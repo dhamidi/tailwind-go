@@ -331,8 +331,54 @@ Theme tokens are organized into namespaces by their property name prefix. The en
 | `--perspective-` | `perspective` | `--perspective-dramatic` | `perspective-dramatic` |
 | `--aspect-` | `aspect` | `--aspect-video` | `aspect-video` |
 | `--container-` | `container` | `--container-3xs` | `@3xs:` variant |
+| `--fill-` | `fill` | `--fill-red-500` | `fill-red-500` |
+| `--stroke-` | `stroke` | `--stroke-blue-500` | `stroke-blue-500` |
+| `--stroke-width-` | `stroke-width` | `--stroke-width-2` | `stroke-2` |
+| `--scale-` | `scale` | `--scale-75` | `scale-75` |
+| `--rotate-` | `rotate` | `--rotate-45` | `rotate-45` |
+| `--skew-` | `skew` | `--skew-12` | `skew-12` |
+| `--translate-` | `translate` | `--translate-full` | `translate-full` |
 | `--width-` | `width` | `--width-prose` | `w-prose` |
-| `--z-` | `z` | `--z-50` | `z-50` |
+| `--height-` | `height` | `--height-screen` | `h-screen` |
+| `--min-width-` | `min-width` | `--min-width-0` | `min-w-0` |
+| `--max-width-` | `max-width` | `--max-width-prose` | `max-w-prose` |
+| `--min-height-` | `min-height` | `--min-height-0` | `min-h-0` |
+| `--max-height-` | `max-height` | `--max-height-screen` | `max-h-screen` |
+| `--cursor-` | `cursor` | `--cursor-pointer` | `cursor-pointer` |
+| `--columns-` | `columns` | `--columns-3` | `columns-3` |
+| `--grid-template-columns-` | `grid-template-columns` | `--grid-template-columns-header` | `grid-cols-header` |
+| `--grid-template-rows-` | `grid-template-rows` | `--grid-template-rows-header` | `grid-rows-header` |
+| `--grid-auto-columns-` | `grid-auto-columns` | `--grid-auto-columns-min` | `auto-cols-min` |
+| `--grid-auto-rows-` | `grid-auto-rows` | `--grid-auto-rows-min` | `auto-rows-min` |
+| `--grid-column-` | `grid-column` | `--grid-column-span-3` | `col-span-3` |
+| `--grid-column-start-` | `grid-column-start` | `--grid-column-start-1` | `col-start-1` |
+| `--grid-column-end-` | `grid-column-end` | `--grid-column-end-3` | `col-end-3` |
+| `--grid-row-` | `grid-row` | `--grid-row-span-3` | `row-span-3` |
+| `--grid-row-start-` | `grid-row-start` | `--grid-row-start-1` | `row-start-1` |
+| `--grid-row-end-` | `grid-row-end` | `--grid-row-end-3` | `row-end-3` |
+| `--order-` | `order` | `--order-1` | `order-1` |
+| `--z-index-` | `z-index` | `--z-index-50` | `z-50` |
+| `--inset-` | `inset` | `--inset-auto` | `inset-auto` |
+| `--margin-` | `margin` | `--margin-auto` | `m-auto` |
+| `--padding-` | `padding` | `--padding-0` | `p-0` |
+| `--gap-` | `gap` | `--gap-0` | `gap-0` |
+| `--scroll-margin-` | `scroll-margin` | `--scroll-margin-0` | `scroll-m-0` |
+| `--scroll-padding-` | `scroll-padding` | `--scroll-padding-0` | `scroll-p-0` |
+| `--background-image-` | `background-image` | `--background-image-none` | `bg-none` |
+| `--list-style-type-` | `list-style-type` | `--list-style-type-disc` | `list-disc` |
+| `--list-style-image-` | `list-style-image` | `--list-style-image-none` | `list-image-none` |
+| `--text-indent-` | `text-indent` | `--text-indent-4` | `indent-4` |
+| `--transform-origin-` | `transform-origin` | `--transform-origin-center` | `origin-center` |
+| `--border-width-` | `border-width` | `--border-width-2` | `border-2` |
+| `--outline-width-` | `outline-width` | `--outline-width-2` | `outline-2` |
+| `--outline-offset-` | `outline-offset` | `--outline-offset-2` | `outline-offset-2` |
+| `--ring-width-` | `ring-width` | `--ring-width-2` | `ring-2` |
+| `--inset-ring-width-` | `inset-ring-width` | `--inset-ring-width-2` | `inset-ring-2` |
+| `--ring-offset-width-` | `ring-offset-width` | `--ring-offset-width-2` | `ring-offset-2` |
+| `--text-decoration-thickness-` | `text-decoration-thickness` | `--text-decoration-thickness-2` | `decoration-2` |
+| `--text-underline-offset-` | `text-underline-offset` | `--text-underline-offset-2` | `underline-offset-2` |
+
+**Namespaces without default theme values:** Some namespaces (such as `z-index`, `opacity`, `order`, `columns`, and many sizing/spacing-related namespaces like `margin`, `padding`, `gap`, `inset`, `width`, `height`, etc.) have no tokens defined in the default `theme.css`. These utilities work via bare numeric values (e.g., `z-50` → `50`, `opacity-50` → `0.5`), the spacing scale (e.g., `p-4` resolves via `--spacing`), or arbitrary values (e.g., `z-[100]`). Users may add custom theme tokens to these namespaces via `@theme`.
 
 **Note on namespace naming:** In TailwindCSS v4, certain theme namespaces use the utility prefix rather than the CSS property name. Notably:
 - Font sizes use `--text-*` (not `--font-size-*`) — matching the `text-*` utility
@@ -340,6 +386,19 @@ Theme tokens are organized into namespaces by their property name prefix. The en
 - Line heights use `--leading-*` (not `--line-height-*`) — matching the `leading-*` utility
 
 These namespace names mirror the utility names users write in their classes, keeping the theme and utility namespaces consistent.
+
+##### Default Value Tokens
+
+In addition to namespaced theme tokens, TailwindCSS v4 defines special `--default-*` tokens that provide implicit default values used by certain utilities:
+
+| Token | Purpose | Default Value |
+|-------|---------|---------------|
+| `--default-transition-duration` | Default duration for `transition-*` utilities | `150ms` |
+| `--default-transition-timing-function` | Default easing for `transition-*` utilities | `cubic-bezier(0.4, 0, 0.2, 1)` |
+| `--default-border-width` | Default width for `border` (without explicit width) | `1px` |
+| `--default-outline-width` | Default width for `outline` (without explicit width) | `1px` |
+
+These tokens are defined in the theme and can be overridden via `@theme`. They are not namespaced — they are standalone variables that utilities reference directly. For example, `transition-colors` applies `transition-duration: var(--default-transition-duration)` unless an explicit duration utility is also present.
 
 #### 5.1.2 `@utility` Blocks
 
