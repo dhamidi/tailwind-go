@@ -190,7 +190,7 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 
 	// ===== Linear gradient masks =====
 	// mask-linear-<angle> → sets angle and mask-image
-	register(functionalUtility("mask-linear", func(c ResolvedCandidate) []Declaration {
+	maskLinear := functionalUtility("mask-linear", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskAngleValue(c)
 		if val == "" {
 			return nil
@@ -199,7 +199,9 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 			{Property: "--tw-mask-linear-angle", Value: val},
 			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-angle, 0deg), black var(--tw-mask-linear-from, 0%), transparent var(--tw-mask-linear-to, 100%))"},
 		}
-	}))
+	})
+	maskLinear.Negatable = true
+	register(maskLinear)
 
 	// mask-linear-from-* → gradient from stop
 	register(functionalUtility("mask-linear-from", func(c ResolvedCandidate) []Declaration {
@@ -285,7 +287,7 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 	// ===== Conic gradient masks =====
 	// mask-conic-<angle> → sets angle and mask-image
 	// mask-conic-[...] → arbitrary conic gradient
-	register(functionalUtility("mask-conic", func(c ResolvedCandidate) []Declaration {
+	maskConic := functionalUtility("mask-conic", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {
 			return decls("mask-image", "conic-gradient("+c.Arbitrary+")")
 		}
@@ -303,7 +305,9 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 			}
 		}
 		return nil
-	}))
+	})
+	maskConic.Negatable = true
+	register(maskConic)
 
 	// mask-conic-from-* → conic gradient from stop
 	register(functionalUtility("mask-conic-from", func(c ResolvedCandidate) []Declaration {

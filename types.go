@@ -124,6 +124,9 @@ type UtilityDef struct {
 	// generated CSS selector. For example, "> :not(:last-child)" causes
 	// the rule to target children rather than the element itself.
 	Selector string
+
+	// Negatable is true for CSS-parsed utilities that accept the negative prefix.
+	Negatable bool
 }
 
 func (u *UtilityDef) utilityPattern() string  { return u.Pattern }

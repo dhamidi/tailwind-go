@@ -341,7 +341,10 @@ func resolveValueForDecl(d Declaration, valueStr string, pc ParsedClass, theme *
 
 	// Fraction support: "1/2" → "50%". Check before theme resolution so that
 	// fractions are not erroneously computed as spacing multipliers.
-	if strings.Contains(valueStr, "/") {
+	// Only apply fraction-to-percent for declarations whose value types include
+	// percentage or length (or sizing namespaces). Integer-only utilities like
+	// z-index and order must not accept fractions.
+	if strings.Contains(valueStr, "/") && declarationAcceptsFraction(d) {
 		if pct := fractionToPercent(valueStr); pct != "" {
 			if pc.Negative {
 				return negateValue(pct)
@@ -1221,6 +1224,35 @@ func keywordToCSS(s string, property string) string {
 		return "transparent"
 	}
 	return ""
+}
+
+// declarationAcceptsFraction returns true if a declaration's --value() type
+// is compatible with fraction values (percentage-based). Declarations with
+// integer-only types, or namespace-only declarations for non-sizing namespaces
+// (like --z-index, --opacity), do not accept fractions.
+func declarationAcceptsFraction(d Declaration) bool {
+	types := extractValueTypes(d.Value)
+	ns := extractNamespace(d.Value)
+
+	// Sizing namespaces accept fractions (they produce percentages).
+	switch ns {
+	case "spacing", "width", "height", "size", "container":
+		return true
+	}
+
+	// If no explicit types and just a namespace (e.g., --value(--z-index)),
+	// do not accept fractions.
+	if len(types) == 0 {
+		return ns == ""
+	}
+
+	// Check if any explicit type is fraction-compatible.
+	for _, t := range types {
+		if t == "percentage" || t == "length" {
+			return true
+		}
+	}
+	return false
 }
 
 // fractionToPercent converts "1/2" → "calc(1 / 2 * 100%)", etc.

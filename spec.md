@@ -1054,6 +1054,20 @@ w-5/12   →  41.666667%
 
 Computed as: `(numerator / denominator) * 100` with sufficient decimal precision.
 
+**Ratio vs. Percentage:** The `aspect-*` utility treats fractions as literal ratios
+instead of converting to percentages:
+
+```
+aspect-16/9  →  aspect-ratio: 16 / 9
+aspect-4/3   →  aspect-ratio: 4 / 3
+aspect-1/2   →  aspect-ratio: 1 / 2
+```
+
+**Utilities that do NOT accept fractions:** Utilities that operate on integers
+(e.g., `z-*`, `order-*`, `grid-cols-*`, `col-start-*`, `col-end-*`, `row-start-*`,
+`row-end-*`), colors, angles, or filter functions do not accept fraction values.
+The value `z-1/2` would be discarded.
+
 ### 7.5 Arbitrary Value Passthrough
 
 Values wrapped in `[...]` are passed through as raw CSS after:
@@ -1075,6 +1089,32 @@ When the negative modifier is set (`-translate-x-4`), the resolved value is nega
 - If the value is a `calc()` expression: wrap as `calc(-1 * <expression>)`
 - If the value is a simple dimension: prepend `-` (e.g., `1rem` → `-1rem`)
 - If the value is `0`: remains `0` (no negation needed)
+
+**Negatable utilities:** Only certain utilities accept the negative prefix. When a
+class has the negative prefix and the utility is not negatable, the class is silently
+discarded (no CSS generated).
+
+Negatable utilities include:
+- Margin (`m-*`, `mx-*`, `my-*`, `mt-*`, `mr-*`, `mb-*`, `ml-*`, `ms-*`, `me-*`, `mbs-*`, `mbe-*`)
+- Positioning insets (`inset-*`, `inset-x-*`, `inset-y-*`, `top-*`, `right-*`, `bottom-*`, `left-*`, `start-*`, `end-*`, `inset-bs-*`, `inset-be-*`)
+- Transform: `translate-x-*`, `translate-y-*`, `translate-z-*`, `rotate-*`, `rotate-x-*`, `rotate-y-*`, `rotate-z-*`, `skew-x-*`, `skew-y-*`, `scale-*`, `scale-x-*`, `scale-y-*`, `scale-z-*`
+- `order-*`, `z-*`
+- `hue-rotate-*`, `backdrop-hue-rotate-*`
+- `tracking-*` (letter-spacing), `indent-*` (text-indent)
+- Scroll margin: `scroll-m-*` and directional variants
+- Space between: `space-x-*`, `space-y-*`
+- Gradient angles: `bg-linear-*`, `bg-conic-*`, `mask-linear-*`, `mask-conic-*`
+
+**Non-negatable utilities** (negative prefix is silently discarded):
+- Padding (`p-*` and directional variants)
+- Sizing (`w-*`, `h-*`, `min-w-*`, `max-w-*`, `min-h-*`, `max-h-*`, `size-*`)
+- Opacity (`opacity-*`)
+- Colors (`bg-*`, `text-*`, `border-*`, etc.)
+- Border radius, border width
+- Font-related utilities
+- Gap, flex-basis, grow, shrink
+- Filter functions (blur, brightness, contrast, etc. — except hue-rotate)
+- Duration, delay, animation
 
 ### 7.7 Resolution Priority
 

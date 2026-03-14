@@ -491,3 +491,77 @@ func TestBasisUtility(t *testing.T) {
 		})
 	}
 }
+
+// TestAspectRatioFraction verifies that aspect-N/M produces a literal ratio.
+func TestAspectRatioFraction(t *testing.T) {
+	cases := []struct {
+		class string
+		want  string
+	}{
+		{"aspect-16/9", "aspect-ratio: 16 / 9"},
+		{"aspect-4/3", "aspect-ratio: 4 / 3"},
+		{"aspect-1/2", "aspect-ratio: 1 / 2"},
+		{"aspect-21/9", "aspect-ratio: 21 / 9"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(tc.class))
+			e.Flush()
+			css := e.CSS()
+			if !strings.Contains(css, tc.want) {
+				t.Errorf("%s: expected %q in CSS, got:\n%s", tc.class, tc.want, css)
+			}
+		})
+	}
+}
+
+// TestFractionRejectedForIntegerUtilities verifies that fraction values are
+// discarded for utilities that only accept integers (z-index, order, etc.).
+func TestFractionRejectedForIntegerUtilities(t *testing.T) {
+	classes := []string{"z-1/2", "order-1/2"}
+	for _, cls := range classes {
+		t.Run(cls, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(cls))
+			e.Flush()
+			css := e.CSS()
+			if css != "" {
+				t.Errorf("%s should produce no CSS (fraction on integer utility), got:\n%s", cls, css)
+			}
+		})
+	}
+}
+
+// TestNegativeNonNegatableUtilities verifies that negative prefix is rejected
+// for utilities like padding, width, opacity, and colors.
+func TestNegativeNonNegatableUtilities(t *testing.T) {
+	classes := []string{"-p-4", "-w-4", "-opacity-50", "-bg-blue-500"}
+	for _, cls := range classes {
+		t.Run(cls, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(cls))
+			e.Flush()
+			css := e.CSS()
+			if css != "" {
+				t.Errorf("%s should produce no CSS (non-negatable utility), got:\n%s", cls, css)
+			}
+		})
+	}
+}
+
+// TestNegativeNegatableUtilities verifies that negatable utilities still work.
+func TestNegativeNegatableUtilities(t *testing.T) {
+	classes := []string{"-m-4", "-translate-x-4", "-rotate-45", "-order-1", "-skew-x-12", "-z-10"}
+	for _, cls := range classes {
+		t.Run(cls, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(cls))
+			e.Flush()
+			css := e.CSS()
+			if css == "" {
+				t.Errorf("%s should produce CSS (negatable utility), got empty output", cls)
+			}
+		})
+	}
+}

@@ -160,11 +160,11 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Variants: `hover:bg-blue-500`, `md:flex`, `dark:text-white`
 - Stacked variants: `dark:md:hover:bg-blue-500`
 - Important modifier: `!p-4`
-- Negative values: `-translate-x-4`
+- Negative values: `-translate-x-4`, `-m-4` (only for negatable utilities; non-negatable utilities like padding, width, opacity, and colors silently discard the negative prefix)
 - Arbitrary values: `w-[300px]`, `text-[#ff0000]`
 - Arbitrary properties: `[mask-type:alpha]`
 - Opacity modifiers: `bg-blue-500/75`, `text-white/[.5]`
-- Fractions: `w-1/2` → `50%`
+- Fractions: `w-1/2` → `50%`, `aspect-16/9` → `aspect-ratio: 16 / 9` (integer-only utilities like `z-*` and `order-*` do not accept fractions)
 - Type hints: `text-[length:1.5em]`
 - Custom properties: `w-[--sidebar-width]`
 - Arbitrary variants: `[@media(min-width:900px)]:bg-red-500`

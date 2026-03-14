@@ -25,6 +25,13 @@ type UtilityRegistration struct {
 	Order     int       // definition order for stable CSS output
 	Selector  string    // optional child selector suffix
 
+	// Negatable is true for utilities that accept the negative prefix (-).
+	// Utilities like margin, translate, rotate, skew, scale, order, z-index,
+	// and inset are negatable. Utilities like padding, width, opacity, and
+	// colors are not. When a class has the negative prefix and the utility
+	// is not negatable, the class is silently discarded.
+	Negatable bool
+
 	// GenerateRulesFn, if set, produces multiple CSS rules for a single class.
 	// Used for utilities like "container" that emit a base rule plus responsive
 	// media-query rules. When set, CompileFn is ignored.
@@ -79,6 +86,13 @@ func spacingUtility(name string, compileFn CompileFn) *UtilityRegistration {
 	}
 }
 
+// negatableCSSUtility creates a cssUtility that also supports the negative prefix.
+func negatableCSSUtility(name string, declarations []Declaration) *UtilityRegistration {
+	reg := cssUtility(name, declarations)
+	reg.Negatable = true
+	return reg
+}
+
 // colorUtility creates a UtilityRegistration for a color utility
 // (e.g., bg-*, text-*, border-*) with opacity modifier support.
 func colorUtility(name string, compileFn CompileFn) *UtilityRegistration {
@@ -93,6 +107,15 @@ func colorUtility(name string, compileFn CompileFn) *UtilityRegistration {
 // dispatching to CompileFn for Go-registered utilities or to
 // resolveDeclarations for CSS-parsed utilities.
 func resolveEntryDeclarations(entry utilityEntry, valueStr string, pc ParsedClass, theme *ThemeConfig) []Declaration {
+	// If the class has a negative prefix, check that the utility supports negation.
+	// Only enforced for Go-registered utilities; CSS-parsed UtilityDefs allow
+	// negation by default since the CSS author controls the definition.
+	if pc.Negative {
+		if u, ok := entry.(*UtilityRegistration); ok && !u.Negatable {
+			return nil
+		}
+	}
+
 	switch u := entry.(type) {
 	case *UtilityRegistration:
 		candidate := ResolvedCandidate{

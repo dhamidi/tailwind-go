@@ -1,5 +1,7 @@
 package tailwind
 
+import "strings"
+
 // cssUtility creates a UtilityRegistration that delegates to the CSS-based
 // resolveDeclarations logic. This ensures functional utilities ported from
 // utilities.css produce identical output. The declPairs are alternating
@@ -42,10 +44,43 @@ func cssUtilityWithSelector(name, selector string, declarations []Declaration) *
 func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegistration)) {
 
 	// ===== Aspect Ratio =====
-	register(cssUtility("aspect", decls(
-		"aspect-ratio", "--value(--aspect)",
-		"aspect-ratio", "--value(ratio)",
-	)))
+	// Custom handling: fractions like 16/9 produce "16 / 9" (a ratio),
+	// not a percentage. The parser treats N/M where N >= M as an opacity
+	// modifier, so we recombine value + modifier when both are numeric.
+	register(functionalUtility("aspect", func(c ResolvedCandidate) []Declaration {
+		// Arbitrary values pass through directly.
+		if c.Arbitrary != "" {
+			return decls("aspect-ratio", c.Arbitrary)
+		}
+
+		// Theme lookup: aspect-video, aspect-square, etc.
+		if c.Value != "" && c.Theme != nil {
+			if resolved, ok := c.Theme.Resolve("aspect", c.Value); ok {
+				return decls("aspect-ratio", resolved)
+			}
+		}
+
+		// Fraction parsed as value (numerator < denominator, e.g., aspect-1/2).
+		if c.Fraction != "" {
+			parts := strings.SplitN(c.Fraction, "/", 2)
+			if len(parts) == 2 {
+				return decls("aspect-ratio", parts[0]+" / "+parts[1])
+			}
+		}
+
+		// Ratio where numerator >= denominator (e.g., aspect-16/9):
+		// parser treats 16/9 as value="16" modifier="9".
+		if c.Value != "" && c.Modifier != "" && isNumeric(c.Value) && isNumeric(c.Modifier) {
+			return decls("aspect-ratio", c.Value+" / "+c.Modifier)
+		}
+
+		// Bare numeric value (e.g., aspect-2 → 2).
+		if c.Value != "" && isNumeric(c.Value) {
+			return decls("aspect-ratio", c.Value)
+		}
+
+		return nil
+	}))
 
 	// ===== Columns =====
 	register(cssUtility("columns", decls(
@@ -55,59 +90,59 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Inset (positioning) =====
-	register(cssUtility("inset", decls(
+	register(negatableCSSUtility("inset", decls(
 		"inset", "--value(--spacing)",
 		"inset", "--value(length, percentage)",
 	)))
-	register(cssUtility("inset-x", decls(
+	register(negatableCSSUtility("inset-x", decls(
 		"inset-inline", "--value(--spacing)",
 		"inset-inline", "--value(length, percentage)",
 	)))
-	register(cssUtility("inset-y", decls(
+	register(negatableCSSUtility("inset-y", decls(
 		"inset-block", "--value(--spacing)",
 		"inset-block", "--value(length, percentage)",
 	)))
-	register(cssUtility("top", decls(
+	register(negatableCSSUtility("top", decls(
 		"top", "--value(--spacing)",
 		"top", "--value(length, percentage)",
 	)))
-	register(cssUtility("right", decls(
+	register(negatableCSSUtility("right", decls(
 		"right", "--value(--spacing)",
 		"right", "--value(length, percentage)",
 	)))
-	register(cssUtility("bottom", decls(
+	register(negatableCSSUtility("bottom", decls(
 		"bottom", "--value(--spacing)",
 		"bottom", "--value(length, percentage)",
 	)))
-	register(cssUtility("left", decls(
+	register(negatableCSSUtility("left", decls(
 		"left", "--value(--spacing)",
 		"left", "--value(length, percentage)",
 	)))
-	register(cssUtility("start", decls(
+	register(negatableCSSUtility("start", decls(
 		"inset-inline-start", "--value(--spacing)",
 		"inset-inline-start", "--value(length, percentage)",
 	)))
-	register(cssUtility("end", decls(
+	register(negatableCSSUtility("end", decls(
 		"inset-inline-end", "--value(--spacing)",
 		"inset-inline-end", "--value(length, percentage)",
 	)))
-	register(cssUtility("inset-bs", decls(
+	register(negatableCSSUtility("inset-bs", decls(
 		"inset-block-start", "--value(--spacing)",
 		"inset-block-start", "--value(length, percentage)",
 	)))
-	register(cssUtility("inset-be", decls(
+	register(negatableCSSUtility("inset-be", decls(
 		"inset-block-end", "--value(--spacing)",
 		"inset-block-end", "--value(length, percentage)",
 	)))
 
 	// ===== Z-index =====
-	register(cssUtility("z", decls(
+	register(negatableCSSUtility("z", decls(
 		"z-index", "--value(--z-index)",
 		"z-index", "--value(integer)",
 	)))
 
 	// ===== Order =====
-	register(cssUtility("order", decls(
+	register(negatableCSSUtility("order", decls(
 		"order", "--value(integer)",
 	)))
 
@@ -219,67 +254,71 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Margin =====
-	register(cssUtility("m", decls(
+	register(negatableCSSUtility("m", decls(
 		"margin", "--value(--spacing)",
 		"margin", "--value(length, percentage)",
 	)))
-	register(cssUtility("mx", decls(
+	register(negatableCSSUtility("mx", decls(
 		"margin-inline", "--value(--spacing)",
 		"margin-inline", "--value(length, percentage)",
 	)))
-	register(cssUtility("my", decls(
+	register(negatableCSSUtility("my", decls(
 		"margin-block", "--value(--spacing)",
 		"margin-block", "--value(length, percentage)",
 	)))
-	register(cssUtility("ms", decls(
+	register(negatableCSSUtility("ms", decls(
 		"margin-inline-start", "--value(--spacing)",
 		"margin-inline-start", "--value(length, percentage)",
 	)))
-	register(cssUtility("me", decls(
+	register(negatableCSSUtility("me", decls(
 		"margin-inline-end", "--value(--spacing)",
 		"margin-inline-end", "--value(length, percentage)",
 	)))
-	register(cssUtility("mbs", decls(
+	register(negatableCSSUtility("mbs", decls(
 		"margin-block-start", "--value(--spacing)",
 		"margin-block-start", "--value(length, percentage)",
 	)))
-	register(cssUtility("mbe", decls(
+	register(negatableCSSUtility("mbe", decls(
 		"margin-block-end", "--value(--spacing)",
 		"margin-block-end", "--value(length, percentage)",
 	)))
-	register(cssUtility("mt", decls(
+	register(negatableCSSUtility("mt", decls(
 		"margin-top", "--value(--spacing)",
 		"margin-top", "--value(length, percentage)",
 	)))
-	register(cssUtility("mr", decls(
+	register(negatableCSSUtility("mr", decls(
 		"margin-right", "--value(--spacing)",
 		"margin-right", "--value(length, percentage)",
 	)))
-	register(cssUtility("mb", decls(
+	register(negatableCSSUtility("mb", decls(
 		"margin-bottom", "--value(--spacing)",
 		"margin-bottom", "--value(length, percentage)",
 	)))
-	register(cssUtility("ml", decls(
+	register(negatableCSSUtility("ml", decls(
 		"margin-left", "--value(--spacing)",
 		"margin-left", "--value(length, percentage)",
 	)))
 
 	// ===== Space Between =====
 	childSel := "> :not(:last-child)"
-	register(cssUtilityWithSelector("space-x", childSel, decls(
+	spaceX := cssUtilityWithSelector("space-x", childSel, decls(
 		"--tw-space-x-reverse", "0",
 		"margin-inline-end", "calc(--value(--spacing) * var(--tw-space-x-reverse))",
 		"margin-inline-start", "calc(--value(--spacing) * calc(1 - var(--tw-space-x-reverse)))",
 		"margin-inline-end", "calc(--value(length, percentage) * var(--tw-space-x-reverse))",
 		"margin-inline-start", "calc(--value(length, percentage) * calc(1 - var(--tw-space-x-reverse)))",
-	)))
-	register(cssUtilityWithSelector("space-y", childSel, decls(
+	))
+	spaceX.Negatable = true
+	register(spaceX)
+	spaceY := cssUtilityWithSelector("space-y", childSel, decls(
 		"--tw-space-y-reverse", "0",
 		"margin-block-end", "calc(--value(--spacing) * var(--tw-space-y-reverse))",
 		"margin-block-start", "calc(--value(--spacing) * calc(1 - var(--tw-space-y-reverse)))",
 		"margin-block-end", "calc(--value(length, percentage) * var(--tw-space-y-reverse))",
 		"margin-block-start", "calc(--value(length, percentage) * calc(1 - var(--tw-space-y-reverse)))",
-	)))
+	))
+	spaceY.Negatable = true
+	register(spaceY)
 
 	// ===== Width =====
 	register(cssUtility("w", decls(
@@ -378,7 +417,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Text Indent =====
-	register(cssUtility("indent", decls(
+	register(negatableCSSUtility("indent", decls(
 		"text-indent", "--value(--spacing)",
 		"text-indent", "--value(length, percentage)",
 	)))
@@ -400,7 +439,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Letter Spacing =====
-	register(cssUtility("tracking", decls(
+	register(negatableCSSUtility("tracking", decls(
 		"letter-spacing", "--value(--tracking)",
 		"letter-spacing", "--value(--letter-spacing)",
 		"letter-spacing", "--value(length)",
@@ -502,38 +541,38 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Scroll Margin =====
-	register(cssUtility("scroll-m", decls(
+	register(negatableCSSUtility("scroll-m", decls(
 		"scroll-margin", "--value(--spacing)",
 		"scroll-margin", "--value(length, percentage)",
 	)))
-	register(cssUtility("scroll-mx", decls(
+	register(negatableCSSUtility("scroll-mx", decls(
 		"scroll-margin-inline", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-my", decls(
+	register(negatableCSSUtility("scroll-my", decls(
 		"scroll-margin-block", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-ms", decls(
+	register(negatableCSSUtility("scroll-ms", decls(
 		"scroll-margin-inline-start", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-me", decls(
+	register(negatableCSSUtility("scroll-me", decls(
 		"scroll-margin-inline-end", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-mbs", decls(
+	register(negatableCSSUtility("scroll-mbs", decls(
 		"scroll-margin-block-start", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-mbe", decls(
+	register(negatableCSSUtility("scroll-mbe", decls(
 		"scroll-margin-block-end", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-mt", decls(
+	register(negatableCSSUtility("scroll-mt", decls(
 		"scroll-margin-top", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-mr", decls(
+	register(negatableCSSUtility("scroll-mr", decls(
 		"scroll-margin-right", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-mb", decls(
+	register(negatableCSSUtility("scroll-mb", decls(
 		"scroll-margin-bottom", "--value(--spacing)",
 	)))
-	register(cssUtility("scroll-ml", decls(
+	register(negatableCSSUtility("scroll-ml", decls(
 		"scroll-margin-left", "--value(--spacing)",
 	)))
 
@@ -593,7 +632,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"--tw-saturate", "saturate(--value(percentage, number))",
 		"filter", filterChain,
 	)))
-	register(cssUtility("hue-rotate", decls(
+	register(negatableCSSUtility("hue-rotate", decls(
 		"--tw-hue-rotate", "hue-rotate(--value(number))",
 		"filter", filterChain,
 	)))
@@ -634,7 +673,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
 	)))
-	register(cssUtility("backdrop-hue-rotate", decls(
+	register(negatableCSSUtility("backdrop-hue-rotate", decls(
 		"--tw-backdrop-hue-rotate", "hue-rotate(--value(number))",
 		"-webkit-backdrop-filter", backdropChain,
 		"backdrop-filter", backdropChain,
@@ -682,7 +721,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Transform =====
-	register(cssUtility("scale", decls(
+	register(negatableCSSUtility("scale", decls(
 		"--tw-scale-x", "--value(--scale)",
 		"--tw-scale-x", "--value(percentage, number)",
 		"--tw-scale-y", "--value(--scale)",
@@ -691,60 +730,60 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 		"--tw-scale-z", "--value(percentage, number)",
 		"scale", "var(--tw-scale-x) var(--tw-scale-y)",
 	)))
-	register(cssUtility("scale-x", decls(
+	register(negatableCSSUtility("scale-x", decls(
 		"--tw-scale-x", "--value(--scale)",
 		"--tw-scale-x", "--value(percentage, number)",
 		"scale", "var(--tw-scale-x) var(--tw-scale-y, 1)",
 	)))
-	register(cssUtility("scale-y", decls(
+	register(negatableCSSUtility("scale-y", decls(
 		"--tw-scale-y", "--value(--scale)",
 		"--tw-scale-y", "--value(percentage, number)",
 		"scale", "var(--tw-scale-x, 1) var(--tw-scale-y)",
 	)))
-	register(cssUtility("scale-z", decls(
+	register(negatableCSSUtility("scale-z", decls(
 		"--tw-scale-z", "--value(--scale)",
 		"--tw-scale-z", "--value(percentage, number)",
 		"scale", "var(--tw-scale-x, 1) var(--tw-scale-y, 1) var(--tw-scale-z)",
 	)))
 
-	register(cssUtility("rotate", decls(
+	register(negatableCSSUtility("rotate", decls(
 		"rotate", "--value(--rotate)",
 		"rotate", "--value(number)",
 	)))
-	register(cssUtility("rotate-x", decls(
+	register(negatableCSSUtility("rotate-x", decls(
 		"rotate", "x --value(--rotate)",
 		"rotate", "x --value(number)",
 	)))
-	register(cssUtility("rotate-y", decls(
+	register(negatableCSSUtility("rotate-y", decls(
 		"rotate", "y --value(--rotate)",
 		"rotate", "y --value(number)",
 	)))
-	register(cssUtility("rotate-z", decls(
+	register(negatableCSSUtility("rotate-z", decls(
 		"rotate", "z --value(--rotate)",
 		"rotate", "z --value(number)",
 	)))
 
-	register(cssUtility("translate-x", decls(
+	register(negatableCSSUtility("translate-x", decls(
 		"--tw-translate-x", "--value(--spacing)",
 		"--tw-translate-x", "--value(length, percentage)",
 		"translate", "var(--tw-translate-x) var(--tw-translate-y)",
 	)))
-	register(cssUtility("translate-y", decls(
+	register(negatableCSSUtility("translate-y", decls(
 		"--tw-translate-y", "--value(--spacing)",
 		"--tw-translate-y", "--value(length, percentage)",
 		"translate", "var(--tw-translate-x) var(--tw-translate-y)",
 	)))
-	register(cssUtility("translate-z", decls(
+	register(negatableCSSUtility("translate-z", decls(
 		"--tw-translate-z", "--value(--spacing)",
 		"--tw-translate-z", "--value(length, percentage)",
 		"translate", "var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z)",
 	)))
 
-	register(cssUtility("skew-x", decls(
+	register(negatableCSSUtility("skew-x", decls(
 		"--tw-skew-x", "--value(--skew)",
 		"--tw-skew-x", "--value(number)",
 	)))
-	register(cssUtility("skew-y", decls(
+	register(negatableCSSUtility("skew-y", decls(
 		"--tw-skew-y", "--value(--skew)",
 		"--tw-skew-y", "--value(number)",
 	)))
@@ -764,7 +803,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	// ===== Gradient Utilities =====
 
 	// bg-linear-<angle> → linear-gradient(<angle>deg in oklab, ...)
-	register(functionalUtility("bg-linear", func(c ResolvedCandidate) []Declaration {
+	bgLinear := functionalUtility("bg-linear", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {
 			interp := resolveGradientInterpolation(c.Modifier)
 			if interp == "" {
@@ -787,7 +826,9 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			return decls("background-image", "linear-gradient("+angle+"deg"+interp+", var(--tw-gradient-stops))")
 		}
 		return nil
-	}))
+	})
+	bgLinear.Negatable = true
+	register(bgLinear)
 
 	// bg-radial-[<value>] → radial-gradient(<value> in oklab, ...)
 	register(functionalUtility("bg-radial", func(c ResolvedCandidate) []Declaration {
@@ -802,7 +843,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	}))
 
 	// bg-conic-<angle> → conic-gradient(from <angle>deg in oklab, ...)
-	register(functionalUtility("bg-conic", func(c ResolvedCandidate) []Declaration {
+	bgConic := functionalUtility("bg-conic", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {
 			interp := resolveGradientInterpolation(c.Modifier)
 			if interp == "" {
@@ -825,7 +866,9 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			return decls("background-image", "conic-gradient(from "+angle+"deg"+interp+", var(--tw-gradient-stops))")
 		}
 		return nil
-	}))
+	})
+	bgConic.Negatable = true
+	register(bgConic)
 
 	// ===== Content =====
 	register(cssUtility("content", decls(
