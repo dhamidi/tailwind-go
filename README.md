@@ -140,6 +140,8 @@ full := tw.FullCSS()              // theme + preflight + utilities + properties 
 
 `FullCSS()` produces a complete stylesheet that includes theme token definitions, preflight, utilities, and `@property`/fallback declarations — so the generated CSS is self-sufficient without needing external stylesheets.
 
+`CSS()` also emits `@property` declarations for any `--tw-*` custom properties used by the generated utilities. This ensures that composite patterns (e.g., `translate-x-4` referencing `var(--tw-translate-y)`) work correctly even when only some utilities from a group are used.
+
 ## Explanation
 
 The engine works by ingesting Tailwind's own CSS v4 source as its specification. Rather than hardcoding a list of utilities, it parses `@theme`, `@utility`, `@variant`, and `@keyframes` directives from real Tailwind CSS. This means the engine's behavior is defined entirely by the CSS it loads — the same way Tailwind v4 itself works.
@@ -177,8 +179,9 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - `:merge()` function in variant selectors
 - `@apply` directive for composing utilities in custom CSS rules
 - Typography: `indent-*`, `hyphens-*`, `break-normal`/`break-all`/`break-keep`, `align-*` (vertical-align)
-- Font variant numeric: `tabular-nums`, `lining-nums`, `ordinal`, `slashed-zero`, `diagonal-fractions`, etc.
+- Font variant numeric: `tabular-nums`, `lining-nums`, `ordinal`, `slashed-zero`, `diagonal-fractions`, etc. — composable via custom properties (e.g., `ordinal tabular-nums` combines both)
 - Transitions: `transition`, `transition-colors`, `transition-opacity`, `transition-shadow`, `transition-transform`, `transition-all`, `transition-none`
+- Touch action: `touch-auto`, `touch-none`, `touch-pan-x`, `touch-pan-y`, `touch-pinch-zoom`, `touch-manipulation` — composable via custom properties (e.g., `touch-pan-x touch-pan-y` combines both)
 - Scroll snap: `snap-x`, `snap-y`, `snap-both`, `snap-mandatory`, `snap-proximity`, `snap-start`, `snap-center`, `snap-end`
 - Object fit/position: `object-cover`, `object-contain`, `object-center`, `object-left-top`, etc.
 - Containment: `contain-none`, `contain-content`, `contain-strict`, `contain-size`, `contain-layout`, `contain-paint`, `contain-style`

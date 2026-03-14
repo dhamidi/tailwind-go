@@ -406,15 +406,18 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("not-italic", decls("font-style", "normal")))
 
 	// ===== Font Variant Numeric =====
+	// Composable via custom properties (trailing-comma trick) so that
+	// multiple numeric variant utilities combine instead of overwriting.
+	fvnChain := "var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,)"
 	register(staticUtility("normal-nums", decls("font-variant-numeric", "normal")))
-	register(staticUtility("ordinal", decls("font-variant-numeric", "ordinal")))
-	register(staticUtility("slashed-zero", decls("font-variant-numeric", "slashed-zero")))
-	register(staticUtility("lining-nums", decls("font-variant-numeric", "lining-nums")))
-	register(staticUtility("oldstyle-nums", decls("font-variant-numeric", "oldstyle-nums")))
-	register(staticUtility("proportional-nums", decls("font-variant-numeric", "proportional-nums")))
-	register(staticUtility("tabular-nums", decls("font-variant-numeric", "tabular-nums")))
-	register(staticUtility("diagonal-fractions", decls("font-variant-numeric", "diagonal-fractions")))
-	register(staticUtility("stacked-fractions", decls("font-variant-numeric", "stacked-fractions")))
+	register(staticUtility("ordinal", decls("--tw-ordinal", "ordinal", "font-variant-numeric", fvnChain)))
+	register(staticUtility("slashed-zero", decls("--tw-slashed-zero", "slashed-zero", "font-variant-numeric", fvnChain)))
+	register(staticUtility("lining-nums", decls("--tw-numeric-figure", "lining-nums", "font-variant-numeric", fvnChain)))
+	register(staticUtility("oldstyle-nums", decls("--tw-numeric-figure", "oldstyle-nums", "font-variant-numeric", fvnChain)))
+	register(staticUtility("proportional-nums", decls("--tw-numeric-spacing", "proportional-nums", "font-variant-numeric", fvnChain)))
+	register(staticUtility("tabular-nums", decls("--tw-numeric-spacing", "tabular-nums", "font-variant-numeric", fvnChain)))
+	register(staticUtility("diagonal-fractions", decls("--tw-numeric-fraction", "diagonal-fractions", "font-variant-numeric", fvnChain)))
+	register(staticUtility("stacked-fractions", decls("--tw-numeric-fraction", "stacked-fractions", "font-variant-numeric", fvnChain)))
 
 	// ===== Text Alignment =====
 	register(staticUtility("text-left", decls("text-align", "left")))
@@ -1056,15 +1059,18 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("pointer-events-auto", decls("pointer-events", "auto")))
 
 	// ===== Touch Action =====
+	// Composable via custom properties (trailing-comma trick) so that
+	// touch-pan-x + touch-pan-y + touch-pinch-zoom combine correctly.
+	touchChain := "var(--tw-pan-x,) var(--tw-pan-y,) var(--tw-pinch-zoom,)"
 	register(staticUtility("touch-auto", decls("touch-action", "auto")))
 	register(staticUtility("touch-none", decls("touch-action", "none")))
-	register(staticUtility("touch-pan-x", decls("touch-action", "pan-x")))
-	register(staticUtility("touch-pan-left", decls("touch-action", "pan-left")))
-	register(staticUtility("touch-pan-right", decls("touch-action", "pan-right")))
-	register(staticUtility("touch-pan-y", decls("touch-action", "pan-y")))
-	register(staticUtility("touch-pan-up", decls("touch-action", "pan-up")))
-	register(staticUtility("touch-pan-down", decls("touch-action", "pan-down")))
-	register(staticUtility("touch-pinch-zoom", decls("touch-action", "pinch-zoom")))
+	register(staticUtility("touch-pan-x", decls("--tw-pan-x", "pan-x", "touch-action", touchChain)))
+	register(staticUtility("touch-pan-left", decls("--tw-pan-x", "pan-left", "touch-action", touchChain)))
+	register(staticUtility("touch-pan-right", decls("--tw-pan-x", "pan-right", "touch-action", touchChain)))
+	register(staticUtility("touch-pan-y", decls("--tw-pan-y", "pan-y", "touch-action", touchChain)))
+	register(staticUtility("touch-pan-up", decls("--tw-pan-y", "pan-up", "touch-action", touchChain)))
+	register(staticUtility("touch-pan-down", decls("--tw-pan-y", "pan-down", "touch-action", touchChain)))
+	register(staticUtility("touch-pinch-zoom", decls("--tw-pinch-zoom", "pinch-zoom", "touch-action", touchChain)))
 	register(staticUtility("touch-manipulation", decls("touch-action", "manipulation")))
 
 	// ===== User Select =====

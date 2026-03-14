@@ -80,7 +80,11 @@ func generate(
 		return rules[i].selector < rules[j].selector
 	})
 
-	return emitCSS(rules, referencedKeyframes, keyframes)
+	// Collect @property declarations for any --tw-* custom properties
+	// set by the generated rules.
+	propertyDecls := collectPropertyDeclarations(rules)
+
+	return emitCSS(rules, referencedKeyframes, keyframes, propertyDecls)
 }
 
 // extractKeyframeNames extracts animation names from a CSS animation value.
@@ -933,12 +937,144 @@ func resolveCompoundTemplate(template, value, groupName string) string {
 	return result
 }
 
+// twPropertyDefs maps --tw-* custom property names to their @property
+// declaration blocks. Used by collectPropertyDeclarations to emit
+// @property rules for custom properties referenced by generated utilities.
+var twPropertyDefs = map[string]string{
+	"--tw-translate-x":         "@property --tw-translate-x {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-translate-y":         "@property --tw-translate-y {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-translate-z":         "@property --tw-translate-z {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-scale-x":             "@property --tw-scale-x {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 1;\n}\n",
+	"--tw-scale-y":             "@property --tw-scale-y {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 1;\n}\n",
+	"--tw-scale-z":             "@property --tw-scale-z {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 1;\n}\n",
+	"--tw-rotate-x":            "@property --tw-rotate-x {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-rotate-y":            "@property --tw-rotate-y {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-rotate-z":            "@property --tw-rotate-z {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-skew-x":              "@property --tw-skew-x {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-skew-y":              "@property --tw-skew-y {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-shadow":              "@property --tw-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n",
+	"--tw-shadow-color":        "@property --tw-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-shadow-alpha":        "@property --tw-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n",
+	"--tw-inset-shadow":        "@property --tw-inset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n",
+	"--tw-inset-shadow-color":  "@property --tw-inset-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-inset-shadow-alpha":  "@property --tw-inset-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n",
+	"--tw-ring-color":          "@property --tw-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-ring-shadow":         "@property --tw-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n",
+	"--tw-inset-ring-color":    "@property --tw-inset-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-inset-ring-shadow":   "@property --tw-inset-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n",
+	"--tw-ring-inset":          "@property --tw-ring-inset {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-ring-offset-width":   "@property --tw-ring-offset-width {\n  syntax: \"<length>\";\n  inherits: false;\n  initial-value: 0px;\n}\n",
+	"--tw-ring-offset-color":   "@property --tw-ring-offset-color {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: #fff;\n}\n",
+	"--tw-ring-offset-shadow":  "@property --tw-ring-offset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n",
+	"--tw-blur":                "@property --tw-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-brightness":          "@property --tw-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-contrast":            "@property --tw-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-grayscale":           "@property --tw-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-hue-rotate":          "@property --tw-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-invert":              "@property --tw-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-opacity":             "@property --tw-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-saturate":            "@property --tw-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-sepia":               "@property --tw-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-drop-shadow":         "@property --tw-drop-shadow {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-drop-shadow-color":   "@property --tw-drop-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-drop-shadow-alpha":   "@property --tw-drop-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n",
+	"--tw-drop-shadow-size":    "@property --tw-drop-shadow-size {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-space-y-reverse":     "@property --tw-space-y-reverse {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-space-x-reverse":     "@property --tw-space-x-reverse {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-border-style":        "@property --tw-border-style {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: solid;\n}\n",
+	"--tw-leading":             "@property --tw-leading {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-font-weight":         "@property --tw-font-weight {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-tracking":            "@property --tw-tracking {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-duration":            "@property --tw-duration {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-ease":                "@property --tw-ease {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-outline-style":       "@property --tw-outline-style {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-border-spacing-x":    "@property --tw-border-spacing-x {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-border-spacing-y":    "@property --tw-border-spacing-y {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-gradient-from":       "@property --tw-gradient-from {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-gradient-via":        "@property --tw-gradient-via {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-gradient-to":         "@property --tw-gradient-to {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-gradient-stops":      "@property --tw-gradient-stops {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-gradient-from-position": "@property --tw-gradient-from-position {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-gradient-via-position":  "@property --tw-gradient-via-position {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-gradient-to-position":   "@property --tw-gradient-to-position {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-ordinal":             "@property --tw-ordinal {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-slashed-zero":        "@property --tw-slashed-zero {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-numeric-figure":      "@property --tw-numeric-figure {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-numeric-spacing":     "@property --tw-numeric-spacing {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-numeric-fraction":    "@property --tw-numeric-fraction {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-pan-x":               "@property --tw-pan-x {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-pan-y":               "@property --tw-pan-y {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-pinch-zoom":          "@property --tw-pinch-zoom {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+}
+
+// collectPropertyDeclarations scans generated rules for --tw-* custom
+// property declarations and returns the corresponding sorted @property
+// declaration strings.
+func collectPropertyDeclarations(rules []generatedRule) []string {
+	seen := make(map[string]bool)
+	for _, r := range rules {
+		for _, d := range r.declarations {
+			if strings.HasPrefix(d.Property, "--tw-") {
+				if _, ok := twPropertyDefs[d.Property]; ok {
+					seen[d.Property] = true
+				}
+			}
+			// Also scan values for var(--tw-*) references that need @property.
+			scanVarRefs(d.Value, seen)
+		}
+	}
+	if len(seen) == 0 {
+		return nil
+	}
+	props := make([]string, 0, len(seen))
+	for p := range seen {
+		props = append(props, p)
+	}
+	sort.Strings(props)
+	var result []string
+	for _, p := range props {
+		result = append(result, twPropertyDefs[p])
+	}
+	return result
+}
+
+// scanVarRefs finds var(--tw-*) references in a CSS value and marks
+// the referenced properties in the seen map if they have @property defs.
+func scanVarRefs(value string, seen map[string]bool) {
+	s := value
+	for {
+		idx := strings.Index(s, "var(--tw-")
+		if idx < 0 {
+			return
+		}
+		start := idx + len("var(")
+		// Find the end of the property name (comma or closing paren).
+		end := start
+		for end < len(s) && s[end] != ',' && s[end] != ')' {
+			end++
+		}
+		prop := s[start:end]
+		if _, ok := twPropertyDefs[prop]; ok {
+			seen[prop] = true
+		}
+		s = s[end:]
+	}
+}
+
 // emitCSS serializes generated rules into a CSS string.
-func emitCSS(rules []generatedRule, referencedKF map[string]bool, keyframes map[string]*KeyframesRule) string {
+func emitCSS(rules []generatedRule, referencedKF map[string]bool, keyframes map[string]*KeyframesRule, propertyDecls []string) string {
 	var sb strings.Builder
 
+	// Emit @property declarations before everything else.
+	for i, pd := range propertyDecls {
+		if i > 0 {
+			sb.WriteByte('\n')
+		}
+		sb.WriteString(pd)
+	}
+
 	// Emit referenced @keyframes before utility rules.
-	first := true
+	first := len(propertyDecls) == 0
 	for name := range referencedKF {
 		if kf, ok := keyframes[name]; ok {
 			if !first {

@@ -202,6 +202,11 @@ func (e *Engine) Candidates() []string {
 // CSS generates the Tailwind CSS for all candidate classes found so far.
 // Only utilities that match known definitions are included; unknown
 // candidates are silently ignored.
+//
+// The output includes @property declarations for any --tw-* custom
+// properties referenced by the generated utilities, ensuring composite
+// patterns work correctly even when only some utilities from a group
+// are used.
 func (e *Engine) CSS() string {
 	e.Flush()
 
@@ -219,7 +224,7 @@ func (e *Engine) CSS() string {
 
 	utilCSS := generate(candidates, e.theme, e.utilIndex, e.variants, e.keyframes)
 	if len(e.applyRules) > 0 {
-		applyCSS := emitCSS(e.applyRules, nil, nil)
+		applyCSS := emitCSS(e.applyRules, nil, nil, nil)
 		if utilCSS != "" {
 			return applyCSS + "\n" + utilCSS
 		}

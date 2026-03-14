@@ -20,6 +20,10 @@ func normalizeCSS(input string) string {
 	reComment := regexp.MustCompile(`/\*[\s\S]*?\*/`)
 	s := reComment.ReplaceAllString(input, "")
 
+	// Strip @property blocks (compared separately, not part of utility rules).
+	reProperty := regexp.MustCompile(`@property\s+--[\w-]+\s*\{[^}]*\}\n?`)
+	s = reProperty.ReplaceAllString(s, "")
+
 	// Parse into rules and normalize
 	rules := parseCSSRules(s)
 	sort.Slice(rules, func(i, j int) bool {

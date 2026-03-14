@@ -445,3 +445,228 @@ func TestBackdropFilterComposition(t *testing.T) {
 		t.Errorf("backdrop-filter utilities should output composed filter: %s", result)
 	}
 }
+
+func TestFontVariantNumericComposition(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="ordinal tabular-nums"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// Each utility should set its own custom property.
+	if !strings.Contains(result, "--tw-ordinal: ordinal") {
+		t.Errorf("ordinal should set --tw-ordinal: %s", result)
+	}
+	if !strings.Contains(result, "--tw-numeric-spacing: tabular-nums") {
+		t.Errorf("tabular-nums should set --tw-numeric-spacing: %s", result)
+	}
+
+	// Both should use the composed font-variant-numeric value.
+	composedFVN := "var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,)"
+	if !strings.Contains(result, composedFVN) {
+		t.Errorf("font-variant-numeric should use composed pattern: %s", result)
+	}
+
+	// Should NOT set font-variant-numeric directly to a bare value.
+	if strings.Contains(result, "font-variant-numeric: ordinal;") {
+		t.Errorf("ordinal should use composite pattern, not bare value: %s", result)
+	}
+	if strings.Contains(result, "font-variant-numeric: tabular-nums;") {
+		t.Errorf("tabular-nums should use composite pattern, not bare value: %s", result)
+	}
+}
+
+func TestFontVariantNumericSingle(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="ordinal"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "--tw-ordinal: ordinal") {
+		t.Errorf("ordinal should set --tw-ordinal: %s", result)
+	}
+	if !strings.Contains(result, "var(--tw-ordinal,)") {
+		t.Errorf("ordinal should use composed font-variant-numeric: %s", result)
+	}
+}
+
+func TestFontVariantNumericNormalNums(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="normal-nums"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// normal-nums should NOT use the composite pattern — it resets directly.
+	if !strings.Contains(result, "font-variant-numeric: normal") {
+		t.Errorf("normal-nums should set font-variant-numeric: normal: %s", result)
+	}
+	if strings.Contains(result, "--tw-ordinal") {
+		t.Errorf("normal-nums should not set custom properties: %s", result)
+	}
+}
+
+func TestFontVariantNumericAllCategories(t *testing.T) {
+	tests := []struct {
+		class    string
+		property string
+		value    string
+	}{
+		{"ordinal", "--tw-ordinal", "ordinal"},
+		{"slashed-zero", "--tw-slashed-zero", "slashed-zero"},
+		{"lining-nums", "--tw-numeric-figure", "lining-nums"},
+		{"oldstyle-nums", "--tw-numeric-figure", "oldstyle-nums"},
+		{"proportional-nums", "--tw-numeric-spacing", "proportional-nums"},
+		{"tabular-nums", "--tw-numeric-spacing", "tabular-nums"},
+		{"diagonal-fractions", "--tw-numeric-fraction", "diagonal-fractions"},
+		{"stacked-fractions", "--tw-numeric-fraction", "stacked-fractions"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			expected := tt.property + ": " + tt.value
+			if !strings.Contains(result, expected) {
+				t.Errorf("%s should contain %q:\n%s", tt.class, expected, result)
+			}
+		})
+	}
+}
+
+func TestTouchActionComposition(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="touch-pan-x touch-pan-y"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// Each utility should set its own custom property.
+	if !strings.Contains(result, "--tw-pan-x: pan-x") {
+		t.Errorf("touch-pan-x should set --tw-pan-x: %s", result)
+	}
+	if !strings.Contains(result, "--tw-pan-y: pan-y") {
+		t.Errorf("touch-pan-y should set --tw-pan-y: %s", result)
+	}
+
+	// Both should use the composed touch-action value.
+	composedTouch := "var(--tw-pan-x,) var(--tw-pan-y,) var(--tw-pinch-zoom,)"
+	if !strings.Contains(result, composedTouch) {
+		t.Errorf("touch-action should use composed pattern: %s", result)
+	}
+
+	// Should NOT set touch-action directly to a bare value.
+	if strings.Contains(result, "touch-action: pan-x;") {
+		t.Errorf("touch-pan-x should use composite pattern, not bare value: %s", result)
+	}
+}
+
+func TestTouchActionCompositionAllThree(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="touch-pan-x touch-pan-y touch-pinch-zoom"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "--tw-pan-x: pan-x") {
+		t.Errorf("touch-pan-x should set --tw-pan-x: %s", result)
+	}
+	if !strings.Contains(result, "--tw-pan-y: pan-y") {
+		t.Errorf("touch-pan-y should set --tw-pan-y: %s", result)
+	}
+	if !strings.Contains(result, "--tw-pinch-zoom: pinch-zoom") {
+		t.Errorf("touch-pinch-zoom should set --tw-pinch-zoom: %s", result)
+	}
+}
+
+func TestTouchActionDirectUtilities(t *testing.T) {
+	// touch-auto, touch-none, touch-manipulation should NOT use composite.
+	tests := []struct {
+		class string
+		value string
+	}{
+		{"touch-auto", "auto"},
+		{"touch-none", "none"},
+		{"touch-manipulation", "manipulation"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			if !strings.Contains(result, "touch-action: "+tt.value) {
+				t.Errorf("%s should set touch-action: %s:\n%s", tt.class, tt.value, result)
+			}
+			if strings.Contains(result, "--tw-pan") {
+				t.Errorf("%s should not use custom properties: %s", tt.class, result)
+			}
+		})
+	}
+}
+
+func TestTouchActionDirectionVariants(t *testing.T) {
+	tests := []struct {
+		class    string
+		property string
+		value    string
+	}{
+		{"touch-pan-left", "--tw-pan-x", "pan-left"},
+		{"touch-pan-right", "--tw-pan-x", "pan-right"},
+		{"touch-pan-up", "--tw-pan-y", "pan-up"},
+		{"touch-pan-down", "--tw-pan-y", "pan-down"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			expected := tt.property + ": " + tt.value
+			if !strings.Contains(result, expected) {
+				t.Errorf("%s should contain %q:\n%s", tt.class, expected, result)
+			}
+		})
+	}
+}
+
+func TestPropertyDeclarationsInCSS(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="translate-x-4"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	// CSS() should emit @property for custom properties used.
+	if !strings.Contains(result, "@property --tw-translate-x") {
+		t.Errorf("CSS() should emit @property for --tw-translate-x:\n%s", result)
+	}
+	if !strings.Contains(result, "@property --tw-translate-y") {
+		t.Errorf("CSS() should emit @property for --tw-translate-y:\n%s", result)
+	}
+}
+
+func TestPropertyDeclarationsForShadow(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="shadow-md"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "@property --tw-shadow") {
+		t.Errorf("CSS() should emit @property for --tw-shadow:\n%s", result)
+	}
+}
+
+func TestPropertyDeclarationsForComposite(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="ordinal"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "@property --tw-ordinal") {
+		t.Errorf("CSS() should emit @property for --tw-ordinal:\n%s", result)
+	}
+}
+
+func TestNoPropertyDeclarationsForSimpleUtility(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="flex"`))
+	result := e.CSS()
+
+	if strings.Contains(result, "@property") {
+		t.Errorf("flex should not emit any @property declarations:\n%s", result)
+	}
+}
