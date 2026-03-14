@@ -149,8 +149,8 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 	register(colorUtility("ring", makeColorCompileFn("--tw-ring-color", "ring-color", "color")))
 	register(colorUtility("ring-offset", makeColorCompileFn("--tw-ring-offset-color", "ring-offset-color", "color")))
 
-	// === Inset Ring color ===
-	register(colorUtility("inset-ring", makeColorCompileFn("--tw-inset-ring-color", "inset-ring-color", "color")))
+	// === Inset Ring (color and arbitrary width) ===
+	register(functionalUtility("inset-ring", makeInsetRingCompileFn()))
 
 	// === Border color ===
 	register(colorUtility("border", makeColorCompileFn("border-color", "border-color", "color")))
@@ -423,6 +423,68 @@ func makeStrokeCompileFn() CompileFn {
 		}
 		return nil
 	}
+}
+
+// makeInsetRingCompileFn creates the compile function for inset-ring-*.
+// Handles both color (--tw-inset-ring-color) and arbitrary width (--tw-inset-ring-shadow).
+func makeInsetRingCompileFn() CompileFn {
+	const boxShadow = "var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)"
+	return func(c ResolvedCandidate) []Declaration {
+		// Type hint dispatching
+		if c.TypeHint == "color" {
+			val := resolveColorValue(c, "inset-ring-color", "color")
+			if val == "" {
+				return nil
+			}
+			return decls("--tw-inset-ring-color", val)
+		}
+		if c.TypeHint == "length" || c.TypeHint == "number" {
+			if c.Arbitrary != "" {
+				return decls(
+					"--tw-inset-ring-shadow", "inset 0 0 0 "+c.Arbitrary+" var(--tw-inset-ring-color, currentcolor)",
+					"box-shadow", boxShadow,
+				)
+			}
+			return nil
+		}
+
+		// Arbitrary value without type hint: infer length vs color
+		if c.Arbitrary != "" {
+			if looksLikeCSSLength(c.Arbitrary) {
+				return decls(
+					"--tw-inset-ring-shadow", "inset 0 0 0 "+c.Arbitrary+" var(--tw-inset-ring-color, currentcolor)",
+					"box-shadow", boxShadow,
+				)
+			}
+			// Treat as color
+			val := c.Arbitrary
+			if c.Modifier != "" {
+				val = applyModifier(val, c.Modifier, c.Theme)
+			}
+			return decls("--tw-inset-ring-color", val)
+		}
+
+		// Named value: try color resolution
+		val := resolveColorValue(c, "inset-ring-color", "color")
+		if val != "" {
+			return decls("--tw-inset-ring-color", val)
+		}
+		return nil
+	}
+}
+
+// looksLikeCSSLength returns true if the value appears to be a CSS length
+// (e.g., "3px", "0.5rem", "1em") rather than a color.
+func looksLikeCSSLength(val string) bool {
+	if val == "" {
+		return false
+	}
+	// CSS functions like calc(), var() are treated as lengths
+	if strings.HasPrefix(val, "calc(") || strings.HasPrefix(val, "var(") {
+		return true
+	}
+	// Starts with a digit or decimal point → likely a length
+	return (val[0] >= '0' && val[0] <= '9') || val[0] == '.'
 }
 
 // makeShadowCompileFn creates the compile function for shadow-*.

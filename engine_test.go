@@ -3044,6 +3044,35 @@ func TestInsetRingColor(t *testing.T) {
 	}
 }
 
+func TestInsetRingArbitraryWidth(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inset-ring-[3px] inset-ring-[0.5rem] inset-ring-[var(--my-width)]`))
+	css := e.CSS()
+	for _, want := range []string{
+		"--tw-inset-ring-shadow: inset 0 0 0 3px var(--tw-inset-ring-color, currentcolor)",
+		"--tw-inset-ring-shadow: inset 0 0 0 0.5rem var(--tw-inset-ring-color, currentcolor)",
+		"--tw-inset-ring-shadow: inset 0 0 0 var(--my-width) var(--tw-inset-ring-color, currentcolor)",
+	} {
+		if !strings.Contains(css, want) {
+			t.Errorf("missing %q in:\n%s", want, css)
+		}
+	}
+	// Arbitrary inset-ring widths should compose box-shadow
+	if !strings.Contains(css, "box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)") {
+		t.Errorf("missing composed box-shadow in:\n%s", css)
+	}
+}
+
+func TestInsetRingArbitraryWidthWithTypeHint(t *testing.T) {
+	e := New()
+	e.Write([]byte(`inset-ring-[length:3px]`))
+	css := e.CSS()
+	want := "--tw-inset-ring-shadow: inset 0 0 0 3px var(--tw-inset-ring-color, currentcolor)"
+	if !strings.Contains(css, want) {
+		t.Errorf("missing %q in:\n%s", want, css)
+	}
+}
+
 // --- Shadow Composability ---
 
 func TestShadowComposability(t *testing.T) {
