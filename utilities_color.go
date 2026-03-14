@@ -61,6 +61,8 @@ func resolveGradientInterpolation(modifier string) string {
 		return " in srgb-linear"
 	case "hsl":
 		return " in hsl"
+	case "hwb":
+		return " in hwb"
 	case "oklab":
 		return " in oklab"
 	case "oklch":

@@ -380,6 +380,15 @@ func TestGradient_BgLinearToRWithOklch(t *testing.T) {
 	}
 }
 
+func TestGradient_BgLinearToRWithHwb(t *testing.T) {
+	e := newColorTestEngine(t)
+	e.Write([]byte("bg-linear-to-r/hwb"))
+	result := e.CSS()
+	if !strings.Contains(result, "linear-gradient(to right in hwb, var(--tw-gradient-stops))") {
+		t.Errorf("bg-linear-to-r/hwb missing interpolation:\n%s", result)
+	}
+}
+
 // === Angle-based linear gradients ===
 
 func TestGradient_BgLinearAngle(t *testing.T) {
