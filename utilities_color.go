@@ -33,7 +33,7 @@ func resolveColorValue(c ResolvedCandidate, themeKeys ...string) string {
 	for _, ns := range themeKeys {
 		if resolved, ok := c.Theme.Resolve(ns, c.Value); ok {
 			if c.Modifier != "" {
-				// With opacity modifier, use the resolved literal value for color-mix fallback.
+				// With opacity modifier, use the resolved literal value for oklch(from ...) output.
 				return applyModifier(resolved, c.Modifier, c.Theme)
 			}
 			// Without modifier, emit CSS variable reference.

@@ -114,10 +114,10 @@ func TestShadowColors(t *testing.T) {
 		wantVal  string
 	}{
 		{"shadow-red-500", "--tw-shadow-color", "var(--color-red-500)"},
-		{"shadow-blue-500/50", "--tw-shadow-color", "color-mix(in srgb, #3b82f6 50%, transparent)"},
+		{"shadow-blue-500/50", "--tw-shadow-color", "oklch(from #3b82f6 l c h / 50%)"},
 		{"shadow-current", "--tw-shadow-color", "currentColor"},
 		{"shadow-transparent", "--tw-shadow-color", "transparent"},
-		{"shadow-black/25", "--tw-shadow-color", "color-mix(in srgb, #000 25%, transparent)"},
+		{"shadow-black/25", "--tw-shadow-color", "oklch(from #000 l c h / 25%)"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.class, func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestRingColors(t *testing.T) {
 		wantVal  string
 	}{
 		{"ring-blue-500", "--tw-ring-color", "var(--color-blue-500)"},
-		{"ring-red-500/50", "--tw-ring-color", "color-mix(in srgb, #ef4444 50%, transparent)"},
+		{"ring-red-500/50", "--tw-ring-color", "oklch(from #ef4444 l c h / 50%)"},
 		{"ring-current", "--tw-ring-color", "currentColor"},
 		{"ring-transparent", "--tw-ring-color", "transparent"},
 	}
@@ -331,7 +331,7 @@ func TestOutlineColors(t *testing.T) {
 		wantVal  string
 	}{
 		{"outline-blue-500", "outline-color", "var(--color-blue-500)"},
-		{"outline-red-500/50", "outline-color", "color-mix(in srgb, #ef4444 50%, transparent)"},
+		{"outline-red-500/50", "outline-color", "oklch(from #ef4444 l c h / 50%)"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.class, func(t *testing.T) {
@@ -432,9 +432,9 @@ func TestGradientStopsWithOpacity(t *testing.T) {
 		wantProp string
 		wantVal  string
 	}{
-		{"from-blue-500/50", "--tw-gradient-from", "color-mix(in srgb, #3b82f6 50%, transparent)"},
-		{"via-red-500/25", "--tw-gradient-via", "color-mix(in srgb, #ef4444 25%, transparent)"},
-		{"to-green-500/75", "--tw-gradient-to", "color-mix(in srgb, #22c55e 75%, transparent)"},
+		{"from-blue-500/50", "--tw-gradient-from", "oklch(from #3b82f6 l c h / 50%)"},
+		{"via-red-500/25", "--tw-gradient-via", "oklch(from #ef4444 l c h / 25%)"},
+		{"to-green-500/75", "--tw-gradient-to", "oklch(from #22c55e l c h / 75%)"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.class, func(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 
 // nestedBlock is a conditional block nested within a rule (e.g., @supports).
 type nestedBlock struct {
-	condition    string        // e.g., "@supports (color: color-mix(in lab, red, red))"
+	condition    string        // e.g., "@supports (grid: var(--tw))"
 	declarations []Declaration // declarations inside the nested block
 }
 
@@ -22,7 +22,7 @@ type generatedRule struct {
 	important bool
 	// mediaQueries wraps the rule in @media blocks (outermost first).
 	mediaQueries []string
-	// nested contains conditional blocks inside the rule (e.g., @supports for color-mix).
+	// nested contains conditional blocks inside the rule (e.g., @supports).
 	nested []nestedBlock
 	// order controls sort position in output.
 	order int
@@ -52,7 +52,6 @@ func generate(
 
 		rule := resolveClass(pc, theme, utils, variants)
 		if rule != nil {
-			addColorMixSupports(rule, pc, theme)
 			rules = append(rules, *rule)
 			for _, d := range rule.declarations {
 				if d.Property == "animation" || d.Property == "animation-name" {
@@ -1100,110 +1099,14 @@ func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
 	if strings.HasPrefix(modifier, "[") && strings.HasSuffix(modifier, "]") {
 		opacityStr = modifier[1 : len(modifier)-1]
 		opacityStr = strings.ReplaceAll(opacityStr, "_", " ")
-		// Convert bare decimal to percentage (e.g. ".5" → "50%")
-		opacityStr = normalizeOpacity(opacityStr)
 	} else {
 		opacityStr = resolveModifierOpacity(modifier, theme)
 	}
-	return "color-mix(in srgb, " + cssValue + " " + opacityStr + ", transparent)"
-}
-
-// addColorMixSupports adds a nested @supports block for color-mix progressive
-// enhancement when declarations contain color-mix(in srgb, ...) values from
-// theme colors with opacity modifiers. The @supports block provides an oklab
-// version using CSS variable references for better color interpolation.
-func addColorMixSupports(rule *generatedRule, pc ParsedClass, theme *ThemeConfig) {
-	var supportDecls []Declaration
-	for _, d := range rule.declarations {
-		if !strings.Contains(d.Value, "color-mix(in srgb,") {
-			continue
-		}
-		// Extract the literal color and opacity from color-mix(in srgb, <color> <pct>, transparent)
-		prefix := "color-mix(in srgb, "
-		idx := strings.Index(d.Value, prefix)
-		if idx < 0 {
-			continue
-		}
-		rest := d.Value[idx+len(prefix):]
-		// rest is like "oklch(62.3% 0.214 259.815) 50%, transparent)"
-		// or "#000 50%, transparent)"
-		// Find the opacity and transparent part
-		transpIdx := strings.Index(rest, ", transparent)")
-		if transpIdx < 0 {
-			continue
-		}
-		colorAndPct := rest[:transpIdx]
-		// Split from the last space to get opacity
-		lastSpace := strings.LastIndex(colorAndPct, " ")
-		if lastSpace < 0 {
-			continue
-		}
-		literalColor := colorAndPct[:lastSpace]
-		opacityStr := colorAndPct[lastSpace+1:]
-
-		// Reverse-map the literal color to a CSS variable
-		varName := findColorVariable(literalColor, theme)
-		if varName == "" {
-			continue
-		}
-
-		oklabValue := "color-mix(in oklab, var(" + varName + ") " + opacityStr + ", transparent)"
-		supportDecls = append(supportDecls, Declaration{
-			Property: d.Property,
-			Value:    oklabValue,
-		})
-	}
-	if len(supportDecls) > 0 {
-		rule.nested = append(rule.nested, nestedBlock{
-			condition:    "@supports (color: color-mix(in lab, red, red))",
-			declarations: supportDecls,
-		})
-	}
-}
-
-// findColorVariable searches theme tokens for a literal color value and returns
-// the CSS variable name (e.g., "--color-blue-500") if found.
-func findColorVariable(literalColor string, theme *ThemeConfig) string {
-	for prop, val := range theme.Tokens {
-		if val == literalColor {
-			return prop
-		}
-	}
-	return ""
-}
-
-// normalizeOpacity converts bare decimal opacity values to percentages.
-// e.g., ".5" → "50%", "0.75" → "75%"
-func normalizeOpacity(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-	// Check if it's a bare decimal (starts with digit or dot, no unit)
-	if (s[0] >= '0' && s[0] <= '9') || s[0] == '.' {
-		// Check that it's purely numeric (no units like "px" etc.)
-		allNumeric := true
-		for _, c := range s {
-			if c != '.' && (c < '0' || c > '9') {
-				allNumeric = false
-				break
-			}
-		}
-		if allNumeric && !strings.HasSuffix(s, "%") {
-			var f float64
-			fmt.Sscanf(s, "%f", &f)
-			if f >= 0 && f <= 1 {
-				pct := f * 100
-				// Format without unnecessary trailing zeros
-				formatted := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.6f", pct), "0"), ".")
-				return formatted + "%"
-			}
-		}
-	}
-	return s
+	return "oklch(from " + cssValue + " l c h / " + opacityStr + ")"
 }
 
 // resolveModifierOpacity resolves an opacity modifier value.
-// Numeric modifiers are always treated as percentages for color-mix().
+// Numeric modifiers are always treated as percentages.
 // Non-numeric modifiers check the theme for --opacity-{modifier}.
 func resolveModifierOpacity(modifier string, theme *ThemeConfig) string {
 	if isNumeric(modifier) {

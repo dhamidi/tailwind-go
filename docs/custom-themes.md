@@ -233,18 +233,17 @@ You can apply an opacity modifier to any color utility:
 <div class="bg-brand-500/50">
 ```
 
-This produces CSS using the `color-mix()` function to blend the color with
-transparent:
+This produces CSS using the `oklch(from ...)` syntax to apply opacity:
 
 ```css
 .bg-brand-500\/50 {
-  background-color: color-mix(in srgb, oklch(58% 0.18 250) 50%, transparent);
+  background-color: oklch(from oklch(58% 0.18 250) l c h / 50%);
 }
 ```
 
-The engine resolves the theme token value and generates a `color-mix()` call
-in sRGB color space, mixing the resolved color at the specified percentage
-with `transparent`. The `/50` modifier maps to `50%` opacity.
+The engine resolves the theme token value and generates an `oklch(from ...)`
+call that preserves the original color's lightness, chroma, and hue while
+applying the specified opacity. The `/50` modifier maps to `50%` opacity.
 
 ### Token namespaces
 

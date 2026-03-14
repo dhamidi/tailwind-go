@@ -55,12 +55,12 @@ func TestColorUtility_BgColor(t *testing.T) {
 
 func TestColorUtility_BgColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-red-500/50", "background-color", "color-mix(in srgb, #ef4444 50%, transparent)")
+	assertCSS(t, e, "bg-red-500/50", "background-color", "oklch(from #ef4444 l c h / 50%)")
 }
 
 func TestColorUtility_BgColorArbitraryOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-red-500/[.3]", "background-color", "color-mix(in srgb, #ef4444 30%, transparent)")
+	assertCSS(t, e, "bg-red-500/[.3]", "background-color", "oklch(from #ef4444 l c h / .3)")
 }
 
 func TestColorUtility_BgTransparent(t *testing.T) {
@@ -112,7 +112,7 @@ func TestColorUtility_TextFontSize(t *testing.T) {
 
 func TestColorUtility_TextColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "text-red-500/50", "color", "color-mix(in srgb, #ef4444 50%, transparent)")
+	assertCSS(t, e, "text-red-500/50", "color", "oklch(from #ef4444 l c h / 50%)")
 }
 
 func TestColorUtility_TextCurrent(t *testing.T) {
@@ -142,12 +142,12 @@ func TestColorUtility_BorderColor(t *testing.T) {
 
 func TestColorUtility_BorderColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-red-500/50", "border-color", "color-mix(in srgb, #ef4444 50%, transparent)")
+	assertCSS(t, e, "border-red-500/50", "border-color", "oklch(from #ef4444 l c h / 50%)")
 }
 
 func TestColorUtility_BorderCurrentColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-current/50", "border-color", "color-mix(in srgb, currentColor 50%, transparent)")
+	assertCSS(t, e, "border-current/50", "border-color", "oklch(from currentColor l c h / 50%)")
 }
 
 func TestColorUtility_BorderTopColor(t *testing.T) {
@@ -308,7 +308,7 @@ func TestColorUtility_GradientFromOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
 	e.Write([]byte("from-red-500/50"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-gradient-from: color-mix(in srgb, #ef4444 50%, transparent)") {
+	if !strings.Contains(result, "--tw-gradient-from: oklch(from #ef4444 l c h / 50%)") {
 		t.Errorf("from-red-500/50 missing opacity:\n%s", result)
 	}
 }
@@ -495,7 +495,7 @@ func TestColorUtility_StrokeCurrent(t *testing.T) {
 
 func TestColorUtility_BgArbitraryWithOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-[#ff0000]/50", "background-color", "color-mix(in srgb, #ff0000 50%, transparent)")
+	assertCSS(t, e, "bg-[#ff0000]/50", "background-color", "oklch(from #ff0000 l c h / 50%)")
 }
 
 func TestColorUtility_ShadowArbitrary(t *testing.T) {
