@@ -1124,9 +1124,18 @@ func TestPreflightCSS(t *testing.T) {
 func TestFullCSSWithNoCandidates(t *testing.T) {
 	e := New()
 	full := e.FullCSS()
-	preflight := e.Preflight()
-	if full != preflight {
-		t.Errorf("FullCSS with no candidates should equal Preflight;\nFullCSS length=%d, Preflight length=%d", len(full), len(preflight))
+	// FullCSS should include theme, preflight, and properties even with no candidates.
+	if !strings.Contains(full, ":root, :host {") {
+		t.Error("FullCSS missing theme layer")
+	}
+	if !strings.Contains(full, "box-sizing: border-box") {
+		t.Error("FullCSS missing preflight content")
+	}
+	if !strings.Contains(full, "@property --tw-border-style") {
+		t.Error("FullCSS missing @property declarations")
+	}
+	if !strings.Contains(full, "@layer properties") {
+		t.Error("FullCSS missing properties fallback layer")
 	}
 }
 
@@ -1134,18 +1143,52 @@ func TestFullCSSWithCandidates(t *testing.T) {
 	e := New()
 	e.Write([]byte(`<div class="flex p-4">`))
 	full := e.FullCSS()
-	preflight := e.Preflight()
-	utility := e.CSS()
 
+	if !strings.Contains(full, ":root, :host {") {
+		t.Error("FullCSS missing theme layer")
+	}
 	if !strings.Contains(full, "box-sizing: border-box") {
 		t.Error("FullCSS missing preflight content")
 	}
 	if !strings.Contains(full, "display: flex") {
 		t.Error("FullCSS missing utility content")
 	}
-	expected := preflight + "\n" + utility
-	if full != expected {
-		t.Errorf("FullCSS != Preflight + newline + CSS")
+	if !strings.Contains(full, "@property --tw-border-style") {
+		t.Error("FullCSS missing @property declarations")
+	}
+	if !strings.Contains(full, "@layer properties") {
+		t.Error("FullCSS missing properties fallback layer")
+	}
+}
+
+// TestFullCSSSelfSufficient verifies the bug fix: FullCSS output must be
+// self-sufficient by including theme token definitions and --tw-* property
+// defaults that utility CSS references via var().
+func TestFullCSSSelfSufficient(t *testing.T) {
+	e := New()
+	// Scan classes from the repro scenario in the work item.
+	e.Write([]byte(`space-y-4 text-xl bg-stone-100 border border-zinc-700`))
+	full := e.FullCSS()
+
+	// Theme tokens that utilities reference via var() must be defined.
+	checks := []struct {
+		substr string
+		desc   string
+	}{
+		{"--spacing: 0.25rem", "theme token --spacing"},
+		{"--text-xl: 1.25rem", "theme token --text-xl"},
+		{"--color-stone-100:", "theme token --color-stone-100"},
+		{"--color-zinc-700:", "theme token --color-zinc-700"},
+		// --tw-border-style must have a default so border utilities work.
+		{"--tw-border-style: solid", "property default --tw-border-style"},
+		// @property declarations must be present.
+		{"@property --tw-border-style", "@property for --tw-border-style"},
+		{"@property --tw-space-y-reverse", "@property for --tw-space-y-reverse"},
+	}
+	for _, c := range checks {
+		if !strings.Contains(full, c.substr) {
+			t.Errorf("FullCSS missing %s (expected substring %q)", c.desc, c.substr)
+		}
 	}
 }
 

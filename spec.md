@@ -22,7 +22,7 @@ The engine implements `io.Writer`. Any byte stream — template output, HTML fil
 - **Build tool / file watcher.** The engine is a library. CLI tooling, file watching, and build integration are out of scope for the core package (though a `cmd/` subpackage may be provided).
 - **Browser runtime.** This is a build-time / server-side tool. It does not run in WASM or target the browser.
 - **CSS minification / optimization.** The engine generates readable CSS. Minification is a separate concern.
-- **Preflight / reset styles generation.** The engine does not generate preflight styles — they come from Tailwind's embedded `preflight.css`. The preflight is available via `PreflightCSS()` with `--theme()` references resolved, but is served independently from the utility CSS.
+- **Preflight / reset styles generation.** The engine does not generate preflight styles — they come from Tailwind's embedded `preflight.css`. The preflight is available via `PreflightCSS()` with `--theme()` references resolved. `FullCSS()` combines theme tokens, preflight, utilities, and `@property` declarations into a single self-sufficient stylesheet.
 
 
 ## 2. Public API
@@ -150,6 +150,29 @@ preflightCSS := e.PreflightCSS()  // serve once, cache aggressively
 utilityCSS := e.CSS()              // regenerated per content scan
 ```
 
+#### 2.1.9 Theme CSS
+
+```go
+func (e *Engine) ThemeCSS() string
+```
+
+Returns a `:root, :host { ... }` block containing all design tokens from the engine's theme as CSS custom properties. These are the `--color-*`, `--spacing`, `--text-*`, `--font-*`, etc. variables that utility classes reference via `var()`. The output is sorted alphabetically by property name for deterministic output.
+
+#### 2.1.10 Properties CSS
+
+```go
+func (e *Engine) PropertiesCSS() string
+```
+
+Returns the `@property` declarations and legacy fallback `@layer properties` block for Tailwind's internal `--tw-*` CSS custom properties. These provide default values (e.g., `--tw-border-style: solid`) so that utility CSS referencing these variables is self-sufficient.
+
+#### 2.1.11 Full CSS
+
+```go
+func (e *Engine) FullCSS() string
+```
+
+Returns the complete, self-sufficient Tailwind stylesheet combining all layers: theme variables (`:root, :host`), preflight/reset, utility CSS, and `@property` declarations with legacy fallback. This is the method the HTTP handler uses to produce the served stylesheet.
 
 ## 3. Bundled CSS Source
 

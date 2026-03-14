@@ -126,15 +126,19 @@ mux.Handle(h.URL(), h)
 
 ### Serve preflight CSS
 
-The engine provides access to Tailwind's preflight (reset) stylesheet and a combined preflight + utilities output:
+The engine provides access to individual CSS layers and a complete, self-sufficient stylesheet:
 
 ```go
 tw := tailwind.New()
 tw.Scan(templateFS)
-preflight := tw.PreflightCSS()  // static reset, cache aggressively
-utilities := tw.CSS()            // regenerated per content scan
-full := tw.FullCSS()             // preflight + utilities combined
+preflight := tw.PreflightCSS()   // static reset, cache aggressively
+utilities := tw.CSS()             // regenerated per content scan
+theme := tw.ThemeCSS()            // :root token definitions (--spacing, --color-*, etc.)
+properties := tw.PropertiesCSS()  // @property defaults for --tw-* variables
+full := tw.FullCSS()              // theme + preflight + utilities + properties (self-sufficient)
 ```
+
+`FullCSS()` produces a complete stylesheet that includes theme token definitions, preflight, utilities, and `@property`/fallback declarations — so the generated CSS is self-sufficient without needing external stylesheets.
 
 ## Explanation
 
@@ -209,7 +213,9 @@ The following are **out of scope by design** (see [spec.md §1.2](spec.md)):
 | `Engine.Scan(fsys)` | Walk an `fs.FS` and extract class candidates |
 | `Engine.Preflight()` | Get the Tailwind preflight/reset stylesheet |
 | `Engine.PreflightCSS()` | Alias for `Preflight()` |
-| `Engine.FullCSS()` | Get preflight + utility CSS combined |
+| `Engine.ThemeCSS()` | Get `:root` theme token definitions |
+| `Engine.PropertiesCSS()` | Get `@property` declarations and fallback layer |
+| `Engine.FullCSS()` | Get complete self-sufficient stylesheet (theme + preflight + utilities + properties) |
 | `Handler.Build()` | Recompute cached CSS and content hash |
 | `Handler.URL()` | Get the current content-hashed URL path |
 | `Handler.WithPrefix(p)` | Set URL path prefix (default `/tailwind`) |

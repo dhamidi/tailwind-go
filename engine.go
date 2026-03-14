@@ -5,6 +5,7 @@ package tailwind
 import (
 	"io"
 	"io/fs"
+	"sort"
 	"strings"
 	"sync"
 
@@ -293,22 +294,71 @@ func (e *Engine) PreflightCSS() string {
 	return e.Preflight()
 }
 
-// FullCSS returns the complete Tailwind stylesheet: preflight/reset
-// styles followed by the generated utility CSS. This is the method
-// the HTTP handler uses to produce the served stylesheet.
-func (e *Engine) FullCSS() string {
-	preflight := e.Preflight()
-	utility := e.CSS()
-	if preflight == "" && utility == "" {
+// ThemeCSS returns the theme layer containing all design tokens as CSS
+// custom properties on :root, :host. These are the --color-*, --spacing,
+// --text-*, --font-*, etc. variables that utility classes reference.
+func (e *Engine) ThemeCSS() string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	if len(e.theme.Tokens) == 0 {
 		return ""
 	}
-	if preflight == "" {
-		return utility
+
+	// Collect and sort token names for deterministic output.
+	names := make([]string, 0, len(e.theme.Tokens))
+	for k := range e.theme.Tokens {
+		names = append(names, k)
 	}
-	if utility == "" {
-		return preflight
+	sort.Strings(names)
+
+	var sb strings.Builder
+	sb.WriteString(":root, :host {\n")
+	for _, name := range names {
+		sb.WriteString("  ")
+		sb.WriteString(name)
+		sb.WriteString(": ")
+		sb.WriteString(e.theme.Tokens[name])
+		sb.WriteString(";\n")
 	}
-	return preflight + "\n" + utility
+	sb.WriteString("}\n")
+	return sb.String()
+}
+
+// PropertiesCSS returns the @property declarations and legacy fallback
+// layer for Tailwind's internal --tw-* CSS custom properties. These
+// provide default values (e.g., --tw-border-style: solid) so that
+// utility CSS referencing these variables is self-sufficient.
+func (e *Engine) PropertiesCSS() string {
+	return twPropertyDeclarations + twPropertiesFallbackLayer
+}
+
+// FullCSS returns the complete Tailwind stylesheet: theme variables,
+// preflight/reset, utility CSS, and @property declarations. This is
+// the method the HTTP handler uses to produce the served stylesheet.
+func (e *Engine) FullCSS() string {
+	theme := e.ThemeCSS()
+	preflight := e.Preflight()
+	utility := e.CSS()
+	properties := e.PropertiesCSS()
+
+	var parts []string
+	if theme != "" {
+		parts = append(parts, theme)
+	}
+	if preflight != "" {
+		parts = append(parts, preflight)
+	}
+	if utility != "" {
+		parts = append(parts, utility)
+	}
+	if properties != "" {
+		parts = append(parts, properties)
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.Join(parts, "\n")
 }
 
 // resolveThemeRefs replaces all --theme(--token, fallback) references in
