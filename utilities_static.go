@@ -1371,12 +1371,10 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("font-stretch-ultra-expanded", decls("font-stretch", "ultra-expanded")))
 
 	// ===== Color Scheme =====
-	register(staticUtility("scheme-normal", decls("color-scheme", "normal")))
-	register(staticUtility("scheme-dark", decls("color-scheme", "dark")))
-	register(staticUtility("scheme-light", decls("color-scheme", "light")))
-	register(staticUtility("scheme-light-dark", decls("color-scheme", "light dark")))
-	register(staticUtility("scheme-only-dark", decls("color-scheme", "only dark")))
-	register(staticUtility("scheme-only-light", decls("color-scheme", "only light")))
+	register(staticUtility("color-scheme-normal", decls("color-scheme", "normal")))
+	register(staticUtility("color-scheme-dark", decls("color-scheme", "dark")))
+	register(staticUtility("color-scheme-light", decls("color-scheme", "light")))
+	register(staticUtility("color-scheme-light-dark", decls("color-scheme", "light dark")))
 
 	// ===== Field Sizing =====
 	register(staticUtility("field-sizing-fixed", decls("field-sizing", "fixed")))

@@ -2674,7 +2674,7 @@ func TestFontStretchPercentage(t *testing.T) {
 
 func TestColorScheme(t *testing.T) {
 	e := New()
-	e.Write([]byte(`scheme-normal scheme-dark scheme-light scheme-light-dark scheme-only-dark scheme-only-light`))
+	e.Write([]byte(`color-scheme-normal color-scheme-dark color-scheme-light color-scheme-light-dark`))
 	css := e.CSS()
 	t.Logf("Generated CSS:\n%s", css)
 	for _, want := range []string{
@@ -2682,12 +2682,18 @@ func TestColorScheme(t *testing.T) {
 		"color-scheme: dark",
 		"color-scheme: light",
 		"color-scheme: light dark",
-		"color-scheme: only dark",
-		"color-scheme: only light",
 	} {
 		if !strings.Contains(css, want) {
 			t.Errorf("missing %q in:\n%s", want, css)
 		}
+	}
+
+	// Old scheme-* names should not produce output
+	e2 := New()
+	e2.Write([]byte(`scheme-dark scheme-light`))
+	css2 := e2.CSS()
+	if strings.Contains(css2, "color-scheme") {
+		t.Errorf("old scheme-* names should not produce output, got:\n%s", css2)
 	}
 }
 
