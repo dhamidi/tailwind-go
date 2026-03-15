@@ -233,17 +233,17 @@ You can apply an opacity modifier to any color utility:
 <div class="bg-brand-500/50">
 ```
 
-This produces CSS using the `oklch(from ...)` syntax to apply opacity:
+This produces CSS using `color-mix(in oklab, ...)` to apply opacity:
 
 ```css
 .bg-brand-500\/50 {
-  background-color: oklch(from oklch(58% 0.18 250) l c h / 50%);
+  background-color: color-mix(in oklab, var(--color-brand-500) 50%, transparent);
 }
 ```
 
-The engine resolves the theme token value and generates an `oklch(from ...)`
-call that preserves the original color's lightness, chroma, and hue while
-applying the specified opacity. The `/50` modifier maps to `50%` opacity.
+The engine keeps the CSS variable reference and uses `color-mix(in oklab, ...)`
+to apply the specified opacity. The `/50` modifier maps to `50%` opacity.
+A `/100` modifier (full opacity) is treated as identity and produces no wrapping.
 
 ### Token namespaces
 

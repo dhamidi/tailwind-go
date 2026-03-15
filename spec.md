@@ -1632,26 +1632,29 @@ text-white/50      → 50% opacity on white
 The opacity modifier changes how color values are emitted. Instead of:
 
 ```css
-background-color: #3b82f6;
+background-color: var(--color-blue-500);
 ```
 
 The engine emits:
 
 ```css
-background-color: oklch(from #3b82f6 l c h / 75%);
+background-color: color-mix(in oklab, var(--color-blue-500) 75%, transparent);
 ```
 
-Or using the `color-mix()` function for broader compatibility:
+The engine uses `color-mix(in oklab, ...)` with the CSS variable reference (not the
+resolved literal value). This matches the Tailwind CSS v4 approach.
 
-```css
-background-color: color-mix(in oklch, #3b82f6 75%, transparent);
-```
-
-The engine should use the Tailwind v4 approach, which is `oklch()` with the `from` keyword.
+A `/100` modifier (100% opacity) is treated as identity — no `color-mix` wrapping
+is applied, and the plain `var(--color-*)` reference is emitted.
 
 For arbitrary opacity values:
 ```
-bg-blue-500/[.5] → background-color: oklch(from #3b82f6 l c h / 0.5);
+bg-blue-500/[.5] → background-color: color-mix(in oklab, var(--color-blue-500) .5, transparent);
+```
+
+For arbitrary color values (not theme references), the literal value is used directly:
+```
+bg-[#ff0000]/50 → background-color: color-mix(in oklab, #ff0000 50%, transparent);
 ```
 
 Theme-defined opacity values are checked first:
@@ -1662,6 +1665,18 @@ Theme-defined opacity values are checked first:
 ```
 
 So `bg-blue-500/50` first looks up `--opacity-50` → `0.5`, then applies it.
+
+### 11.3 Shadow Color Special Case
+
+Shadow colors are additionally wrapped with `--tw-shadow-alpha`:
+
+```css
+/* shadow-red-500 (no opacity modifier) */
+--tw-shadow-color: color-mix(in oklab, var(--color-red-500) var(--tw-shadow-alpha), transparent);
+
+/* shadow-purple-500/70 (with opacity modifier) */
+--tw-shadow-color: color-mix(in oklab, color-mix(in oklab, var(--color-purple-500) 70%, transparent) var(--tw-shadow-alpha), transparent);
+```
 
 
 ## 12. `@apply` Directive

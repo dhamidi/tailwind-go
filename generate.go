@@ -297,7 +297,18 @@ func resolvePropertyGroup(alts []Declaration, valueStr string, pc ParsedClass, t
 			resolved := substituteValue(d.Value, cssValue)
 			// Apply opacity modifier if the declaration used a color namespace.
 			if pc.Modifier != "" && ns == "color" {
-				resolved = applyModifier(resolved, pc.Modifier, theme)
+				// For theme-resolved colors, use the CSS variable reference
+				// instead of the literal value for color-mix output.
+				if pc.Arbitrary == "" && valueStr != "" {
+					if _, ok := theme.Resolve(ns, valueStr); ok {
+						varRef := "var(--" + ns + "-" + valueStr + ")"
+						resolved = applyModifier(varRef, pc.Modifier, theme)
+					} else {
+						resolved = applyModifier(resolved, pc.Modifier, theme)
+					}
+				} else {
+					resolved = applyModifier(resolved, pc.Modifier, theme)
+				}
 			}
 			return &Declaration{Property: d.Property, Value: resolved}
 		}
@@ -1317,7 +1328,7 @@ func negateValue(v string) string {
 	return ""
 }
 
-// applyModifier wraps a CSS color value with oklch opacity modifier.
+// applyModifier wraps a CSS color value with color-mix opacity modifier.
 func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
 	if modifier == "" {
 		return cssValue
@@ -1329,7 +1340,11 @@ func applyModifier(cssValue, modifier string, theme *ThemeConfig) string {
 	} else {
 		opacityStr = resolveModifierOpacity(modifier, theme)
 	}
-	return "oklch(from " + cssValue + " l c h / " + opacityStr + ")"
+	// 100% opacity is identity — no wrapping needed.
+	if opacityStr == "100%" {
+		return cssValue
+	}
+	return "color-mix(in oklab, " + cssValue + " " + opacityStr + ", transparent)"
 }
 
 // resolveModifierOpacity resolves an opacity modifier value.

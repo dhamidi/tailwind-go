@@ -43,7 +43,7 @@ Output:
 }
 
 .text-blue-500 {
-  color: oklch(62.3% 0.214 259.815);
+  color: var(--color-blue-500);
 }
 ```
 

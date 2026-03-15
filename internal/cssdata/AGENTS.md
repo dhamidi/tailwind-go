@@ -181,7 +181,7 @@ Several Go source files contain hard-coded Tailwind knowledge that may need upda
 
 2. **`generate.go:638–682` — `keywordToCSS()`**: Maps ~20 Tailwind value keywords to their CSS equivalents (e.g., "full" → "100%", "px" → "1px", "current" → "currentColor"). If Tailwind changes what a keyword maps to, or adds new keyword-to-CSS mappings, update this function.
 
-3. **`generate.go:723–736` — `applyModifier()`**: Hard-codes the `oklch()` color space for opacity modifiers (e.g., `oklch(from <color> l c h / <opacity>)`). If Tailwind changes its color space model away from OKLCH, this function must change.
+3. **`generate.go` — `applyModifier()`**: Uses `color-mix(in oklab, <color> <opacity>, transparent)` for opacity modifiers, matching Tailwind CSS v4. A `/100` modifier (100% opacity) is treated as identity. Shadow colors are additionally wrapped with `--tw-shadow-alpha` via `wrapShadowAlpha()`.
 
 4. **`types.go:28` — `ThemeConfig.Resolve()`**: Hard-codes "spacing" as a special namespace that uses multiplier-based computation (`calc(key * base)`). If Tailwind adds other computed namespaces (beyond spacing), this function must be extended.
 

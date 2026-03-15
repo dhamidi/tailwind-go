@@ -31,13 +31,13 @@ func resolveColorValue(c ResolvedCandidate, themeKeys ...string) string {
 
 	// Theme resolution: try each namespace in order
 	for _, ns := range themeKeys {
-		if resolved, ok := c.Theme.Resolve(ns, c.Value); ok {
+		if _, ok := c.Theme.Resolve(ns, c.Value); ok {
+			varRef := "var(--" + ns + "-" + c.Value + ")"
 			if c.Modifier != "" {
-				// With opacity modifier, use the resolved literal value for oklch(from ...) output.
-				return applyModifier(resolved, c.Modifier, c.Theme)
+				// With opacity modifier, use color-mix with the CSS variable reference.
+				return applyModifier(varRef, c.Modifier, c.Theme)
 			}
-			// Without modifier, emit CSS variable reference.
-			return "var(--" + ns + "-" + c.Value + ")"
+			return varRef
 		}
 	}
 	return ""
@@ -376,11 +376,12 @@ func resolveTextColorValue(c ResolvedCandidate) string {
 
 	// Theme resolution: --text-color, then --color
 	for _, ns := range []string{"text-color", "color"} {
-		if resolved, ok := c.Theme.Resolve(ns, c.Value); ok {
+		if _, ok := c.Theme.Resolve(ns, c.Value); ok {
+			varRef := "var(--" + ns + "-" + c.Value + ")"
 			if c.Modifier != "" {
-				return applyModifier(resolved, c.Modifier, c.Theme)
+				return applyModifier(varRef, c.Modifier, c.Theme)
 			}
-			return "var(--" + ns + "-" + c.Value + ")"
+			return varRef
 		}
 	}
 	return ""
@@ -487,6 +488,11 @@ func looksLikeCSSLength(val string) bool {
 	return (val[0] >= '0' && val[0] <= '9') || val[0] == '.'
 }
 
+// wrapShadowAlpha wraps a color value with --tw-shadow-alpha using color-mix.
+func wrapShadowAlpha(colorValue string) string {
+	return "color-mix(in oklab, " + colorValue + " var(--tw-shadow-alpha), transparent)"
+}
+
 // makeShadowCompileFn creates the compile function for shadow-*.
 // Handles both shadow values (box-shadow) and shadow color (--tw-shadow-color).
 func makeShadowCompileFn() CompileFn {
@@ -497,7 +503,7 @@ func makeShadowCompileFn() CompileFn {
 			if val == "" {
 				return nil
 			}
-			return decls("--tw-shadow-color", val)
+			return decls("--tw-shadow-color", wrapShadowAlpha(val))
 		}
 
 		// Arbitrary value without type hint → box-shadow (matching current CSS)
@@ -517,7 +523,7 @@ func makeShadowCompileFn() CompileFn {
 		// Named: try shadow color themes
 		val := resolveColorValue(c, "shadow-color", "color")
 		if val != "" {
-			return decls("--tw-shadow-color", val)
+			return decls("--tw-shadow-color", wrapShadowAlpha(val))
 		}
 
 		return nil
