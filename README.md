@@ -192,6 +192,40 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 
 For a comprehensive list of all default theme tokens, see [spec.md Appendix A](spec.md).
 
+## Testing
+
+### Differential Fuzzer
+
+A differential fuzzer generates random Tailwind CSS classes, processes them through both the official TailwindCSS CLI and the Go implementation, and asserts that outputs are semantically equivalent. This catches regressions and missing utility implementations.
+
+Run the fuzzer (requires Node.js/npm):
+
+```bash
+go test -tags reference -run TestDifferentialFuzz -v -timeout 30m
+```
+
+Configure the number of classes and random seed:
+
+```bash
+go test -tags reference -run TestDifferentialFuzz -v -timeout 30m \
+  -fuzz-count 1000 -fuzz-seed 123
+```
+
+The generator produces classes at multiple complexity levels — static utilities, variants, opacity modifiers, negative values, arbitrary values, arbitrary properties, and combinations — using a deterministic pseudo-random seed for reproducibility.
+
+The class generator itself can be tested without Node.js:
+
+```bash
+go test -run TestClassGenerator -v
+```
+
+Cache the npm install across runs by setting `TAILWIND_FUZZ_CACHE`:
+
+```bash
+export TAILWIND_FUZZ_CACHE=/tmp/tw-fuzz
+go test -tags reference -run TestDifferentialFuzz -v -timeout 30m
+```
+
 ## Current Limitations
 
 The following are **out of scope by design** (see [spec.md §1.2](spec.md)):
