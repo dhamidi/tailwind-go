@@ -303,19 +303,19 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	childSel := "> :not(:last-child)"
 	spaceX := cssUtilityWithSelector("space-x", childSel, decls(
 		"--tw-space-x-reverse", "0",
-		"margin-inline-end", "calc(--value(--spacing) * var(--tw-space-x-reverse))",
-		"margin-inline-start", "calc(--value(--spacing) * calc(1 - var(--tw-space-x-reverse)))",
-		"margin-inline-end", "calc(--value(length, percentage) * var(--tw-space-x-reverse))",
-		"margin-inline-start", "calc(--value(length, percentage) * calc(1 - var(--tw-space-x-reverse)))",
+		"margin-inline-end", "calc(--value(--spacing) * calc(1 - var(--tw-space-x-reverse)))",
+		"margin-inline-start", "calc(--value(--spacing) * var(--tw-space-x-reverse))",
+		"margin-inline-end", "calc(--value(length, percentage) * calc(1 - var(--tw-space-x-reverse)))",
+		"margin-inline-start", "calc(--value(length, percentage) * var(--tw-space-x-reverse))",
 	))
 	spaceX.Negatable = true
 	register(spaceX)
 	spaceY := cssUtilityWithSelector("space-y", childSel, decls(
 		"--tw-space-y-reverse", "0",
-		"margin-block-end", "calc(--value(--spacing) * var(--tw-space-y-reverse))",
-		"margin-block-start", "calc(--value(--spacing) * calc(1 - var(--tw-space-y-reverse)))",
-		"margin-block-end", "calc(--value(length, percentage) * var(--tw-space-y-reverse))",
-		"margin-block-start", "calc(--value(length, percentage) * calc(1 - var(--tw-space-y-reverse)))",
+		"margin-block-end", "calc(--value(--spacing) * calc(1 - var(--tw-space-y-reverse)))",
+		"margin-block-start", "calc(--value(--spacing) * var(--tw-space-y-reverse))",
+		"margin-block-end", "calc(--value(length, percentage) * calc(1 - var(--tw-space-y-reverse)))",
+		"margin-block-start", "calc(--value(length, percentage) * var(--tw-space-y-reverse))",
 	))
 	spaceY.Negatable = true
 	register(spaceY)
