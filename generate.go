@@ -124,6 +124,15 @@ func resolveClass(
 		return nil
 	}
 
+	// When before: or after: pseudo-element variants are used,
+	// TailwindCSS injects content: var(--tw-content) into the rule.
+	for _, v := range pc.Variants {
+		if v == "before" || v == "after" {
+			decls = append([]Declaration{{Property: "content", Value: "var(--tw-content)"}}, decls...)
+			break
+		}
+	}
+
 	// Build the selector and apply variant selector transforms.
 	selector := buildSelector(pc)
 	selector = resolveVariantSelector(selector, pc.Variants, variants)
@@ -1161,12 +1170,22 @@ func resolveArbitraryProperty(pc ParsedClass, variants map[string]*VariantDef) *
 	selector := buildSelector(pc)
 	mediaQueries := resolveVariants(pc.Variants, variants)
 
+	decls := []Declaration{{
+		Property: pc.Utility,
+		Value:    pc.Arbitrary,
+	}}
+
+	// Inject content: var(--tw-content) for before:/after: variants.
+	for _, v := range pc.Variants {
+		if v == "before" || v == "after" {
+			decls = append([]Declaration{{Property: "content", Value: "var(--tw-content)"}}, decls...)
+			break
+		}
+	}
+
 	return &generatedRule{
-		selector: selector,
-		declarations: []Declaration{{
-			Property: pc.Utility,
-			Value:    pc.Arbitrary,
-		}},
+		selector:     selector,
+		declarations: decls,
 		important:    pc.Important,
 		mediaQueries: mediaQueries,
 		order:        9999, // arbitrary properties sort last

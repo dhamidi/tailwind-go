@@ -1165,6 +1165,28 @@ group-hover:focus:text-white
   apply "group-hover": .group:hover .group-hover\:focus\:text-white:focus
 ```
 
+### 8.1.1 Pseudo-Element Content Injection
+
+The `before` and `after` variants target `::before` and `::after` pseudo-elements. Because these pseudo-elements require a `content` property to render, the engine automatically prepends `content: var(--tw-content)` to the declarations of any rule using a `before:` or `after:` variant:
+
+```
+after:block →
+  .after\:block::after {
+    content: var(--tw-content);
+    display: block;
+  }
+```
+
+This ensures the pseudo-element is visible without requiring an explicit `content-*` utility. The `--tw-content` custom property defaults to `""` (empty string) and can be overridden by an explicit `content-*` utility, which adds a second `content` declaration that takes precedence via CSS cascade:
+
+```
+before:content-['hello'] →
+  .before\:content-\['hello'\]::before {
+    content: var(--tw-content);
+    content: 'hello';
+  }
+```
+
 ### 8.2 Media Query Variants
 
 Media query variants wrap the rule in an `@media` block:
