@@ -138,8 +138,13 @@ func resolveClass(
 	selector = resolveVariantSelector(selector, pc.Variants, variants)
 
 	// Append child selector suffix if the utility defines one.
-	if entry.utilitySelector() != "" {
-		selector = selector + " " + entry.utilitySelector()
+	if s := entry.utilitySelector(); s != "" {
+		if strings.HasPrefix(s, "&") {
+			// Pseudo-element/pseudo-class: replace & with the current selector.
+			selector = strings.Replace(s, "&", selector, 1)
+		} else {
+			selector = selector + " " + s
+		}
 	}
 
 	// Apply variant media query wrapping.

@@ -268,7 +268,9 @@ func extractModifier(s string) (base, modifier string) {
 		if isNumeric(segment) && segment != "" {
 			num := parseSimpleInt(segment)
 			den := parseSimpleInt(right)
-			if den > 0 && num < den {
+			// Only treat as a fraction for small values typical of Tailwind fractions
+			// (e.g., w-1/2, w-5/12). Color shades like 50/70 must not be misidentified.
+			if den > 0 && num < den && num <= 12 && den <= 12 {
 				return s, ""
 			}
 		}

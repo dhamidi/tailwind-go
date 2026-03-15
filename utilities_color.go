@@ -183,6 +183,11 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 	divideReg.Selector = "> :not(:last-child)"
 	register(divideReg)
 
+	// === Placeholder color (targets ::placeholder pseudo-element) ===
+	placeholderReg := colorUtility("placeholder", makeColorCompileFn("color", "placeholder-color", "color"))
+	placeholderReg.Selector = "&::placeholder"
+	register(placeholderReg)
+
 	// === Background color ===
 	register(colorUtility("bg", makeBgCompileFn()))
 

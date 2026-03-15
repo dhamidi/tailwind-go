@@ -2409,6 +2409,19 @@ object-top          → object-position: top
 
 All object utilities are static with fixed keyword values.
 
+### 16.30 Placeholder Color Utility
+
+The `placeholder-*` utility sets the text color of form input placeholder text via the `::placeholder` pseudo-element:
+
+```
+placeholder-gray-400       → .placeholder-gray-400::placeholder { color: var(--color-gray-400); }
+placeholder-amber-900/60   → .placeholder-amber-900\/60::placeholder { color: color-mix(in oklab, var(--color-amber-900) 60%, transparent); }
+placeholder-transparent    → .placeholder-transparent::placeholder { color: transparent; }
+placeholder-current        → .placeholder-current::placeholder { color: currentcolor; }
+```
+
+This is a standalone color utility (not to be confused with the `placeholder:` pseudo-element variant). It resolves colors from the `--placeholder-color-*` and `--color-*` theme namespaces, and supports opacity modifiers.
+
 ## 17. Dark Mode
 
 ### 17.1 Media-Based (Default)
