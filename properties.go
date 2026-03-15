@@ -237,6 +237,14 @@ const twPropertyDeclarations = `@property --tw-translate-x {
   syntax: "*";
   inherits: false;
 }
+@property --tw-gradient-via-stops {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-gradient-position {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-gradient-from-position {
   syntax: "*";
   inherits: false;

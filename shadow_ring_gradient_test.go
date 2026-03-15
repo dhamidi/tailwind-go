@@ -115,7 +115,7 @@ func TestShadowColors(t *testing.T) {
 	}{
 		{"shadow-red-500", "--tw-shadow-color", "color-mix(in oklab, var(--color-red-500) var(--tw-shadow-alpha), transparent)"},
 		{"shadow-blue-500/50", "--tw-shadow-color", "color-mix(in oklab, color-mix(in oklab, var(--color-blue-500) 50%, transparent) var(--tw-shadow-alpha), transparent)"},
-		{"shadow-current", "--tw-shadow-color", "color-mix(in oklab, currentColor var(--tw-shadow-alpha), transparent)"},
+		{"shadow-current", "--tw-shadow-color", "color-mix(in oklab, currentcolor var(--tw-shadow-alpha), transparent)"},
 		{"shadow-transparent", "--tw-shadow-color", "color-mix(in oklab, transparent var(--tw-shadow-alpha), transparent)"},
 		{"shadow-black/25", "--tw-shadow-color", "color-mix(in oklab, color-mix(in oklab, var(--color-black) 25%, transparent) var(--tw-shadow-alpha), transparent)"},
 	}
@@ -211,7 +211,7 @@ func TestRingColors(t *testing.T) {
 	}{
 		{"ring-blue-500", "--tw-ring-color", "var(--color-blue-500)"},
 		{"ring-red-500/50", "--tw-ring-color", "color-mix(in oklab, var(--color-red-500) 50%, transparent)"},
-		{"ring-current", "--tw-ring-color", "currentColor"},
+		{"ring-current", "--tw-ring-color", "currentcolor"},
 		{"ring-transparent", "--tw-ring-color", "transparent"},
 	}
 	for _, tt := range tests {
@@ -634,8 +634,8 @@ func TestGradientFromSetsStops(t *testing.T) {
 	e := newShadowRingTestEngine(t)
 	e.Write([]byte("from-blue-500"))
 	result := e.CSS()
-	// from sets --tw-gradient-stops with from and to
-	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from) var(--tw-gradient-from-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)") {
+	// from sets --tw-gradient-stops with via-stops fallback
+	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position))") {
 		t.Errorf("from-blue-500 missing gradient-stops composition:\n%s", result)
 	}
 }
@@ -644,8 +644,11 @@ func TestGradientViaSetsStops(t *testing.T) {
 	e := newShadowRingTestEngine(t)
 	e.Write([]byte("via-purple-500"))
 	result := e.CSS()
-	// via sets --tw-gradient-stops with from, via, and to
-	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from, transparent) var(--tw-gradient-from-position,), var(--tw-gradient-via) var(--tw-gradient-via-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)") {
-		t.Errorf("via-purple-500 missing gradient-stops composition:\n%s", result)
+	// via sets --tw-gradient-via-stops and --tw-gradient-stops
+	if !strings.Contains(result, "--tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position)") {
+		t.Errorf("via-purple-500 missing gradient-via-stops composition:\n%s", result)
+	}
+	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-via-stops)") {
+		t.Errorf("via-purple-500 missing gradient-stops:\n%s", result)
 	}
 }

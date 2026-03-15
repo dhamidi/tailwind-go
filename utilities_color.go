@@ -9,7 +9,7 @@ func resolveColorValue(c ResolvedCandidate, themeKeys ...string) string {
 	// Special keywords
 	switch c.Value {
 	case "current":
-		return applyColorModifier("currentColor", c)
+		return applyColorModifier("currentcolor", c)
 	case "inherit":
 		return "inherit"
 	case "transparent":
@@ -82,6 +82,19 @@ func resolveGradientInterpolation(modifier string) string {
 	default:
 		return ""
 	}
+}
+
+// hasActiveModifier returns true if the candidate has an opacity modifier that
+// will produce a color-mix() wrapper (i.e., modifier is present and not 100%).
+func hasActiveModifier(c ResolvedCandidate) bool {
+	if c.Modifier == "" {
+		return false
+	}
+	// Check if the modifier resolves to 100% (identity - no wrapping)
+	if isNumeric(c.Modifier) && c.Modifier == "100" {
+		return false
+	}
+	return true
 }
 
 // resolveGradientStopPosition checks if a candidate value is a percentage position
@@ -197,10 +210,13 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 		if val == "" {
 			return nil
 		}
-		return []Declaration{
+		decls := []Declaration{
 			{Property: "--tw-gradient-from", Value: val},
-			{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-from) var(--tw-gradient-from-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)"},
 		}
+		if !hasActiveModifier(c) {
+			decls = append(decls, Declaration{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position))"})
+		}
+		return decls
 	}))
 
 	register(colorUtility("via", func(c ResolvedCandidate) []Declaration {
@@ -214,10 +230,16 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 		if val == "" {
 			return nil
 		}
-		return []Declaration{
+		decls := []Declaration{
 			{Property: "--tw-gradient-via", Value: val},
-			{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-from, transparent) var(--tw-gradient-from-position,), var(--tw-gradient-via) var(--tw-gradient-via-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)"},
 		}
+		if !hasActiveModifier(c) {
+			decls = append(decls,
+				Declaration{Property: "--tw-gradient-via-stops", Value: "var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position)"},
+				Declaration{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-via-stops)"},
+			)
+		}
+		return decls
 	}))
 
 	register(colorUtility("to", func(c ResolvedCandidate) []Declaration {
@@ -231,9 +253,13 @@ func registerColorUtilities(idx *utilityIndex, register func(*UtilityRegistratio
 		if val == "" {
 			return nil
 		}
-		return []Declaration{
+		decls := []Declaration{
 			{Property: "--tw-gradient-to", Value: val},
 		}
+		if !hasActiveModifier(c) {
+			decls = append(decls, Declaration{Property: "--tw-gradient-stops", Value: "var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position))"})
+		}
+		return decls
 	}))
 }
 
@@ -363,7 +389,7 @@ func resolveTextColorValue(c ResolvedCandidate) string {
 	// Special keywords (resolved via the no-namespace --value(color) alternative)
 	switch c.Value {
 	case "current":
-		return applyColorModifier("currentColor", c)
+		return applyColorModifier("currentcolor", c)
 	case "inherit":
 		return "inherit"
 	case "transparent":

@@ -196,7 +196,7 @@ func TestDivideColorUtilitiesEmbedded(t *testing.T) {
 		},
 		{
 			class:    "divide-current",
-			contains: []string{"> :not(:last-child)", "border-color", "currentColor"},
+			contains: []string{"> :not(:last-child)", "border-color", "currentcolor"},
 		},
 		{
 			class:    "divide-transparent",

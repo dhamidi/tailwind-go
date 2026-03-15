@@ -1809,6 +1809,31 @@ via-purple-500 via-30%    → middle at 30%
 to-pink-500 to-90%        → end at 90%
 ```
 
+#### CSS Custom Property Pattern
+
+The gradient stops use a `--tw-gradient-via-stops` variable to compose the stops dynamically:
+
+- **`from-*`** sets `--tw-gradient-from` and `--tw-gradient-stops`:
+  ```css
+  --tw-gradient-from: <color>;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  ```
+
+- **`via-*`** sets `--tw-gradient-via`, `--tw-gradient-via-stops`, and `--tw-gradient-stops`:
+  ```css
+  --tw-gradient-via: <color>;
+  --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-via-stops);
+  ```
+
+- **`to-*`** sets `--tw-gradient-to` and `--tw-gradient-stops`:
+  ```css
+  --tw-gradient-to: <color>;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  ```
+
+When an **opacity modifier** is present (e.g., `from-red-500/50`), only the color variable is set — `--tw-gradient-stops` is not emitted. This allows opacity-only updates without overriding the gradient structure.
+
 ### 15.5 Gradient Color Interpolation
 
 TailwindCSS v4 supports color interpolation modifiers that control how colors blend across the gradient:

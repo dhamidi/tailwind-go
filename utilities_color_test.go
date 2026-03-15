@@ -70,7 +70,7 @@ func TestColorUtility_BgTransparent(t *testing.T) {
 
 func TestColorUtility_BgCurrent(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "bg-current", "background-color", "currentColor")
+	assertCSS(t, e, "bg-current", "background-color", "currentcolor")
 }
 
 func TestColorUtility_BgInherit(t *testing.T) {
@@ -117,7 +117,7 @@ func TestColorUtility_TextColorOpacity(t *testing.T) {
 
 func TestColorUtility_TextCurrent(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "text-current", "color", "currentColor")
+	assertCSS(t, e, "text-current", "color", "currentcolor")
 }
 
 func TestColorUtility_TextTransparent(t *testing.T) {
@@ -147,7 +147,7 @@ func TestColorUtility_BorderColorOpacity(t *testing.T) {
 
 func TestColorUtility_BorderCurrentColorOpacity(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "border-current/50", "border-color", "color-mix(in oklab, currentColor 50%, transparent)")
+	assertCSS(t, e, "border-current/50", "border-color", "color-mix(in oklab, currentcolor 50%, transparent)")
 }
 
 func TestColorUtility_BorderTopColor(t *testing.T) {
@@ -282,7 +282,7 @@ func TestColorUtility_GradientFrom(t *testing.T) {
 	if !strings.Contains(result, "--tw-gradient-from: var(--color-red-500)") {
 		t.Errorf("from-red-500 missing gradient-from:\n%s", result)
 	}
-	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from) var(--tw-gradient-from-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)") {
+	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position))") {
 		t.Errorf("from-red-500 missing gradient-stops:\n%s", result)
 	}
 }
@@ -294,7 +294,10 @@ func TestColorUtility_GradientVia(t *testing.T) {
 	if !strings.Contains(result, "--tw-gradient-via: var(--color-red-500)") {
 		t.Errorf("via-red-500 missing gradient-via:\n%s", result)
 	}
-	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-from, transparent) var(--tw-gradient-from-position,), var(--tw-gradient-via) var(--tw-gradient-via-position,), var(--tw-gradient-to, transparent) var(--tw-gradient-to-position,)") {
+	if !strings.Contains(result, "--tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position)") {
+		t.Errorf("via-red-500 missing gradient-via-stops:\n%s", result)
+	}
+	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-via-stops)") {
 		t.Errorf("via-red-500 missing gradient-stops:\n%s", result)
 	}
 }
@@ -494,12 +497,12 @@ func TestColorUtility_ArbitraryColorTypeHint(t *testing.T) {
 
 func TestColorUtility_FillCurrent(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "fill-current", "fill", "currentColor")
+	assertCSS(t, e, "fill-current", "fill", "currentcolor")
 }
 
 func TestColorUtility_StrokeCurrent(t *testing.T) {
 	e := newColorTestEngine(t)
-	assertCSS(t, e, "stroke-current", "stroke", "currentColor")
+	assertCSS(t, e, "stroke-current", "stroke", "currentcolor")
 }
 
 func TestColorUtility_BgArbitraryWithOpacity(t *testing.T) {
