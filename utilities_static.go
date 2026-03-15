@@ -648,12 +648,12 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("border-be-8", decls("border-block-end-width", "8px")))
 
 	// ===== Border Style =====
-	register(staticUtility("border-solid", decls("border-style", "solid")))
-	register(staticUtility("border-dashed", decls("border-style", "dashed")))
-	register(staticUtility("border-dotted", decls("border-style", "dotted")))
-	register(staticUtility("border-double", decls("border-style", "double")))
-	register(staticUtility("border-hidden", decls("border-style", "hidden")))
-	register(staticUtility("border-none", decls("border-style", "none")))
+	register(staticUtility("border-solid", decls("--tw-border-style", "solid", "border-style", "solid")))
+	register(staticUtility("border-dashed", decls("--tw-border-style", "dashed", "border-style", "dashed")))
+	register(staticUtility("border-dotted", decls("--tw-border-style", "dotted", "border-style", "dotted")))
+	register(staticUtility("border-double", decls("--tw-border-style", "double", "border-style", "double")))
+	register(staticUtility("border-hidden", decls("--tw-border-style", "hidden", "border-style", "hidden")))
+	register(staticUtility("border-none", decls("--tw-border-style", "none", "border-style", "none")))
 
 	// ===== Border Color =====
 	register(staticUtility("border-inherit", decls("border-color", "inherit")))
@@ -990,10 +990,10 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Outline =====
 	register(staticUtility("outline-none", decls("outline", "2px solid transparent", "outline-offset", "2px")))
-	register(staticUtility("outline", decls("outline-style", "solid")))
-	register(staticUtility("outline-dashed", decls("outline-style", "dashed")))
-	register(staticUtility("outline-dotted", decls("outline-style", "dotted")))
-	register(staticUtility("outline-double", decls("outline-style", "double")))
+	register(staticUtility("outline", decls("--tw-outline-style", "solid", "outline-style", "solid")))
+	register(staticUtility("outline-dashed", decls("--tw-outline-style", "dashed", "outline-style", "dashed")))
+	register(staticUtility("outline-dotted", decls("--tw-outline-style", "dotted", "outline-style", "dotted")))
+	register(staticUtility("outline-double", decls("--tw-outline-style", "double", "outline-style", "double")))
 	register(staticUtility("outline-0", decls("outline-width", "0px")))
 	register(staticUtility("outline-1", decls("outline-width", "1px")))
 	register(staticUtility("outline-2", decls("outline-width", "2px")))
@@ -1095,9 +1095,9 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Scroll Snap Type =====
 	register(staticUtility("snap-none", decls("scroll-snap-type", "none")))
-	register(staticUtility("snap-x", decls("scroll-snap-type", "x var(--tw-scroll-snap-strictness, proximity)")))
-	register(staticUtility("snap-y", decls("scroll-snap-type", "y var(--tw-scroll-snap-strictness, proximity)")))
-	register(staticUtility("snap-both", decls("scroll-snap-type", "both var(--tw-scroll-snap-strictness, proximity)")))
+	register(staticUtility("snap-x", decls("scroll-snap-type", "x var(--tw-scroll-snap-strictness)")))
+	register(staticUtility("snap-y", decls("scroll-snap-type", "y var(--tw-scroll-snap-strictness)")))
+	register(staticUtility("snap-both", decls("scroll-snap-type", "both var(--tw-scroll-snap-strictness)")))
 	register(staticUtility("snap-mandatory", decls("--tw-scroll-snap-strictness", "mandatory")))
 	register(staticUtility("snap-proximity", decls("--tw-scroll-snap-strictness", "proximity")))
 
@@ -1190,11 +1190,11 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("blur-2xl", decls("--tw-blur", "blur(var(--blur-2xl))", "filter", filterChain)))
 	register(staticUtility("blur-3xl", decls("--tw-blur", "blur(var(--blur-3xl))", "filter", filterChain)))
 	register(staticUtility("grayscale", decls("--tw-grayscale", "grayscale(100%)", "filter", filterChain)))
-	register(staticUtility("grayscale-0", decls("--tw-grayscale", "grayscale(0)", "filter", filterChain)))
+	register(staticUtility("grayscale-0", decls("--tw-grayscale", "grayscale(0%)", "filter", filterChain)))
 	register(staticUtility("invert", decls("--tw-invert", "invert(100%)", "filter", filterChain)))
-	register(staticUtility("invert-0", decls("--tw-invert", "invert(0)", "filter", filterChain)))
+	register(staticUtility("invert-0", decls("--tw-invert", "invert(0%)", "filter", filterChain)))
 	register(staticUtility("sepia", decls("--tw-sepia", "sepia(100%)", "filter", filterChain)))
-	register(staticUtility("sepia-0", decls("--tw-sepia", "sepia(0)", "filter", filterChain)))
+	register(staticUtility("sepia-0", decls("--tw-sepia", "sepia(0%)", "filter", filterChain)))
 	register(staticUtility("drop-shadow-none", decls("--tw-drop-shadow", "drop-shadow(0 0 #0000)", "filter", filterChain)))
 	register(staticUtility("drop-shadow-xs", decls("--tw-drop-shadow", "drop-shadow(var(--drop-shadow-xs, 0 1px 1px rgb(0 0 0 / 0.05)))", "filter", filterChain)))
 	register(staticUtility("drop-shadow-sm", decls("--tw-drop-shadow", "drop-shadow(var(--drop-shadow-sm, 0 1px 2px rgb(0 0 0 / 0.15)))", "filter", filterChain)))
@@ -1205,7 +1205,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("drop-shadow-2xl", decls("--tw-drop-shadow", "drop-shadow(var(--drop-shadow-2xl, 0 25px 25px rgb(0 0 0 / 0.15)))", "filter", filterChain)))
 
 	// ===== Backdrop Filter =====
-	backdropChain := "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,) var(--tw-backdrop-opacity,)"
+	backdropChain := "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,)"
 	register(staticUtility("backdrop-blur-none", decls("--tw-backdrop-blur", "blur(0)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-blur-sm", decls("--tw-backdrop-blur", "blur(var(--blur-sm))", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-blur", decls("--tw-backdrop-blur", "blur(var(--blur-md))", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
@@ -1215,11 +1215,11 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("backdrop-blur-2xl", decls("--tw-backdrop-blur", "blur(var(--blur-2xl))", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-blur-3xl", decls("--tw-backdrop-blur", "blur(var(--blur-3xl))", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-grayscale", decls("--tw-backdrop-grayscale", "grayscale(100%)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-grayscale-0", decls("--tw-backdrop-grayscale", "grayscale(0)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-grayscale-0", decls("--tw-backdrop-grayscale", "grayscale(0%)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-invert", decls("--tw-backdrop-invert", "invert(100%)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-invert-0", decls("--tw-backdrop-invert", "invert(0)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-invert-0", decls("--tw-backdrop-invert", "invert(0%)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 	register(staticUtility("backdrop-sepia", decls("--tw-backdrop-sepia", "sepia(100%)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
-	register(staticUtility("backdrop-sepia-0", decls("--tw-backdrop-sepia", "sepia(0)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
+	register(staticUtility("backdrop-sepia-0", decls("--tw-backdrop-sepia", "sepia(0%)", "-webkit-backdrop-filter", backdropChain, "backdrop-filter", backdropChain)))
 
 	// ===== Mix Blend Mode =====
 	register(staticUtility("mix-blend-normal", decls("mix-blend-mode", "normal")))

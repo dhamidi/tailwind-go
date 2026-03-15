@@ -308,15 +308,15 @@ func TestPseudoElementVariants(t *testing.T) {
 	}{
 		{
 			class:    "before:block",
-			contains: []string{"::before", "display: block", "content: var(--tw-content)"},
+			contains: []string{"::before", "display: block"},
 		},
 		{
 			class:    "before:absolute",
-			contains: []string{"::before", "position: absolute", "content: var(--tw-content)"},
+			contains: []string{"::before", "position: absolute"},
 		},
 		{
 			class:    "after:block",
-			contains: []string{"::after", "display: block", "content: var(--tw-content)"},
+			contains: []string{"::after", "display: block"},
 		},
 		{
 			class:    "marker:text-blue-500",

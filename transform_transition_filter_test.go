@@ -9,7 +9,7 @@ import (
 const filterChainSubstr = "var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,)"
 
 // backdropChainSubstr is the expected backdrop-filter composition value.
-const backdropChainSubstr = "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,) var(--tw-backdrop-opacity,)"
+const backdropChainSubstr = "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,)"
 
 // ===== Transform — Scale =====
 
@@ -386,12 +386,12 @@ func TestSkewUtilities(t *testing.T) {
 		class   string
 		wantVal string
 	}{
-		{"skew-x-1", "--tw-skew-x: 1deg"},
-		{"skew-x-2", "--tw-skew-x: 2deg"},
-		{"skew-x-3", "--tw-skew-x: 3deg"},
-		{"skew-x-6", "--tw-skew-x: 6deg"},
-		{"skew-x-12", "--tw-skew-x: 12deg"},
-		{"skew-y-3", "--tw-skew-y: 3deg"},
+		{"skew-x-1", "--tw-skew-x: skewX(1deg)"},
+		{"skew-x-2", "--tw-skew-x: skewX(2deg)"},
+		{"skew-x-3", "--tw-skew-x: skewX(3deg)"},
+		{"skew-x-6", "--tw-skew-x: skewX(6deg)"},
+		{"skew-x-12", "--tw-skew-x: skewX(12deg)"},
+		{"skew-y-3", "--tw-skew-y: skewY(3deg)"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.class, func(t *testing.T) {
@@ -409,8 +409,8 @@ func TestNegativeSkew(t *testing.T) {
 	e := New()
 	e.Write([]byte("-skew-x-6"))
 	result := e.CSS()
-	if !strings.Contains(result, "calc(6deg * -1)") {
-		t.Errorf("-skew-x-6: expected calc(6deg * -1) in:\n%s", result)
+	if !strings.Contains(result, "skewX(calc(6deg * -1))") {
+		t.Errorf("-skew-x-6: expected skewX(calc(6deg * -1)) in:\n%s", result)
 	}
 }
 
@@ -418,8 +418,8 @@ func TestSkewArbitrary(t *testing.T) {
 	e := New()
 	e.Write([]byte("skew-x-[17deg]"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-skew-x: 17deg") {
-		t.Errorf("expected --tw-skew-x: 17deg in:\n%s", result)
+	if !strings.Contains(result, "--tw-skew-x: skewX(17deg)") {
+		t.Errorf("expected --tw-skew-x: skewX(17deg) in:\n%s", result)
 	}
 }
 
@@ -834,8 +834,8 @@ func TestGrayscaleUtilities(t *testing.T) {
 		e := New()
 		e.Write([]byte("grayscale-0"))
 		result := e.CSS()
-		if !strings.Contains(result, "--tw-grayscale: grayscale(0)") {
-			t.Errorf("expected grayscale(0) in:\n%s", result)
+		if !strings.Contains(result, "--tw-grayscale: grayscale(0%)") {
+			t.Errorf("expected grayscale(0%%) in:\n%s", result)
 		}
 	})
 }
@@ -854,8 +854,8 @@ func TestInvertUtilities(t *testing.T) {
 		e := New()
 		e.Write([]byte("invert-0"))
 		result := e.CSS()
-		if !strings.Contains(result, "--tw-invert: invert(0)") {
-			t.Errorf("expected invert(0) in:\n%s", result)
+		if !strings.Contains(result, "--tw-invert: invert(0%)") {
+			t.Errorf("expected invert(0%%) in:\n%s", result)
 		}
 	})
 }
@@ -874,8 +874,8 @@ func TestSepiaUtilities(t *testing.T) {
 		e := New()
 		e.Write([]byte("sepia-0"))
 		result := e.CSS()
-		if !strings.Contains(result, "--tw-sepia: sepia(0)") {
-			t.Errorf("expected sepia(0) in:\n%s", result)
+		if !strings.Contains(result, "--tw-sepia: sepia(0%)") {
+			t.Errorf("expected sepia(0%%) in:\n%s", result)
 		}
 	})
 }

@@ -547,33 +547,43 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 	register(negatableCSSUtility("scroll-mx", decls(
 		"scroll-margin-inline", "--value(--spacing)",
+		"scroll-margin-inline", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-my", decls(
 		"scroll-margin-block", "--value(--spacing)",
+		"scroll-margin-block", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-ms", decls(
 		"scroll-margin-inline-start", "--value(--spacing)",
+		"scroll-margin-inline-start", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-me", decls(
 		"scroll-margin-inline-end", "--value(--spacing)",
+		"scroll-margin-inline-end", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-mbs", decls(
 		"scroll-margin-block-start", "--value(--spacing)",
+		"scroll-margin-block-start", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-mbe", decls(
 		"scroll-margin-block-end", "--value(--spacing)",
+		"scroll-margin-block-end", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-mt", decls(
 		"scroll-margin-top", "--value(--spacing)",
+		"scroll-margin-top", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-mr", decls(
 		"scroll-margin-right", "--value(--spacing)",
+		"scroll-margin-right", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-mb", decls(
 		"scroll-margin-bottom", "--value(--spacing)",
+		"scroll-margin-bottom", "--value(length, percentage)",
 	)))
 	register(negatableCSSUtility("scroll-ml", decls(
 		"scroll-margin-left", "--value(--spacing)",
+		"scroll-margin-left", "--value(length, percentage)",
 	)))
 
 	// ===== Scroll Padding =====
@@ -583,33 +593,43 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 	register(cssUtility("scroll-px", decls(
 		"scroll-padding-inline", "--value(--spacing)",
+		"scroll-padding-inline", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-py", decls(
 		"scroll-padding-block", "--value(--spacing)",
+		"scroll-padding-block", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-ps", decls(
 		"scroll-padding-inline-start", "--value(--spacing)",
+		"scroll-padding-inline-start", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pe", decls(
 		"scroll-padding-inline-end", "--value(--spacing)",
+		"scroll-padding-inline-end", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pbs", decls(
 		"scroll-padding-block-start", "--value(--spacing)",
+		"scroll-padding-block-start", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pbe", decls(
 		"scroll-padding-block-end", "--value(--spacing)",
+		"scroll-padding-block-end", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pt", decls(
 		"scroll-padding-top", "--value(--spacing)",
+		"scroll-padding-top", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pr", decls(
 		"scroll-padding-right", "--value(--spacing)",
+		"scroll-padding-right", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pb", decls(
 		"scroll-padding-bottom", "--value(--spacing)",
+		"scroll-padding-bottom", "--value(length, percentage)",
 	)))
 	register(cssUtility("scroll-pl", decls(
 		"scroll-padding-left", "--value(--spacing)",
+		"scroll-padding-left", "--value(length, percentage)",
 	)))
 
 	// ===== Filter =====
@@ -650,7 +670,7 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	// ===== Backdrop Filter =====
-	backdropChain := "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,) var(--tw-backdrop-opacity,)"
+	backdropChain := "var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,)"
 
 	register(cssUtility("backdrop-blur", decls(
 		"--tw-backdrop-blur", "blur(--value(--blur))",
@@ -780,12 +800,14 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 	)))
 
 	register(negatableCSSUtility("skew-x", decls(
-		"--tw-skew-x", "--value(--skew)",
-		"--tw-skew-x", "--value(number)",
+		"--tw-skew-x", "skewX(--value(--skew))",
+		"--tw-skew-x", "skewX(--value(number))",
+		"transform", "var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,)",
 	)))
 	register(negatableCSSUtility("skew-y", decls(
-		"--tw-skew-y", "--value(--skew)",
-		"--tw-skew-y", "--value(number)",
+		"--tw-skew-y", "skewY(--value(--skew))",
+		"--tw-skew-y", "skewY(--value(number))",
+		"transform", "var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,)",
 	)))
 
 	// ===== Perspective =====

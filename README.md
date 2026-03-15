@@ -159,7 +159,7 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Logical properties: `inline-*`, `block-*`, `min-inline-*`, `max-inline-*`, `min-block-*`, `max-block-*`
 - Variants: `hover:bg-blue-500`, `md:flex`, `dark:text-white`
 - Stacked variants: `dark:md:hover:bg-blue-500`
-- Pseudo-element variants: `before:block`, `after:content-['hello']` — automatically injects `content: var(--tw-content)`
+- Pseudo-element variants: `before:block`, `after:content-['hello']` — automatically injects `content: var(--tw-content)` when the pseudo-element is the innermost variant and no opacity modifier is present
 - Important modifier: `!p-4`
 - Negative values: `-translate-x-4`, `-m-4` (only for negatable utilities; non-negatable utilities like padding, width, opacity, and colors silently discard the negative prefix)
 - Arbitrary values: `w-[300px]`, `text-[#ff0000]`

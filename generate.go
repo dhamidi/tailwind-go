@@ -124,12 +124,13 @@ func resolveClass(
 		return nil
 	}
 
-	// When before: or after: pseudo-element variants are used,
-	// TailwindCSS injects content: var(--tw-content) into the rule.
-	for _, v := range pc.Variants {
-		if v == "before" || v == "after" {
+	// When before: or after: pseudo-element variants are used as the
+	// innermost variant (last in the list), TailwindCSS injects
+	// content: var(--tw-content), but only when there is no opacity modifier.
+	if pc.Modifier == "" && len(pc.Variants) > 0 {
+		last := pc.Variants[len(pc.Variants)-1]
+		if last == "before" || last == "after" {
 			decls = append([]Declaration{{Property: "content", Value: "var(--tw-content)"}}, decls...)
-			break
 		}
 	}
 
@@ -1180,14 +1181,6 @@ func resolveArbitraryProperty(pc ParsedClass, variants map[string]*VariantDef) *
 		Value:    pc.Arbitrary,
 	}}
 
-	// Inject content: var(--tw-content) for before:/after: variants.
-	for _, v := range pc.Variants {
-		if v == "before" || v == "after" {
-			decls = append([]Declaration{{Property: "content", Value: "var(--tw-content)"}}, decls...)
-			break
-		}
-	}
-
 	return &generatedRule{
 		selector:     selector,
 		declarations: decls,
@@ -1254,7 +1247,7 @@ func keywordToCSS(s string, property string) string {
 	case "unset":
 		return "unset"
 	case "current":
-		return "currentColor"
+		return "currentcolor"
 	case "transparent":
 		return "transparent"
 	}
