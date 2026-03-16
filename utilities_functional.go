@@ -831,7 +831,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			if interp == "" {
 				interp = " in oklab"
 			}
-			return decls("background-image", "linear-gradient("+c.Arbitrary+interp+", var(--tw-gradient-stops))")
+			return []Declaration{
+				{Property: "--tw-gradient-position", Value: c.Arbitrary + interp},
+				{Property: "background-image", Value: "linear-gradient(var(--tw-gradient-stops))"},
+			}
 		}
 		if c.Value == "" {
 			return nil
@@ -845,7 +848,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			if interp == "" {
 				interp = " in oklab"
 			}
-			return decls("background-image", "linear-gradient("+angle+"deg"+interp+", var(--tw-gradient-stops))")
+			return []Declaration{
+				{Property: "--tw-gradient-position", Value: angle + "deg" + interp},
+				{Property: "background-image", Value: "linear-gradient(var(--tw-gradient-stops))"},
+			}
 		}
 		return nil
 	})
@@ -859,7 +865,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			if interp == "" {
 				interp = " in oklab"
 			}
-			return decls("background-image", "radial-gradient("+c.Arbitrary+interp+", var(--tw-gradient-stops))")
+			return []Declaration{
+				{Property: "--tw-gradient-position", Value: c.Arbitrary + interp},
+				{Property: "background-image", Value: "radial-gradient(var(--tw-gradient-stops))"},
+			}
 		}
 		return nil
 	}))
@@ -871,7 +880,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			if interp == "" {
 				interp = " in oklab"
 			}
-			return decls("background-image", "conic-gradient("+c.Arbitrary+interp+", var(--tw-gradient-stops))")
+			return []Declaration{
+				{Property: "--tw-gradient-position", Value: c.Arbitrary + interp},
+				{Property: "background-image", Value: "conic-gradient(var(--tw-gradient-stops))"},
+			}
 		}
 		if c.Value == "" {
 			return nil
@@ -885,7 +897,10 @@ func registerFunctionalUtilities(idx *utilityIndex, register func(*UtilityRegist
 			if interp == "" {
 				interp = " in oklab"
 			}
-			return decls("background-image", "conic-gradient(from "+angle+"deg"+interp+", var(--tw-gradient-stops))")
+			return []Declaration{
+				{Property: "--tw-gradient-position", Value: "from " + angle + "deg" + interp},
+				{Property: "background-image", Value: "conic-gradient(var(--tw-gradient-stops))"},
+			}
 		}
 		return nil
 	})

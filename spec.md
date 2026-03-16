@@ -1789,28 +1789,42 @@ TailwindCSS v4 renames the gradient utilities from v3:
 | `bg-gradient-to-t` | `bg-linear-to-t` |
 | `bg-gradient-to-br` | `bg-linear-to-br` |
 
-The `bg-linear-to-*` utilities generate `background-image: linear-gradient(to <direction>, ...)` declarations.
+The gradient direction utilities set `--tw-gradient-position` with the direction and use `background-image: linear-gradient(var(--tw-gradient-stops))`. The direction flows through `--tw-gradient-position` into the gradient stops, matching upstream TailwindCSS v4 behavior:
+
+```
+bg-linear-to-r    → --tw-gradient-position: to right in oklab;
+                     background-image: linear-gradient(var(--tw-gradient-stops));
+bg-gradient-to-r  → --tw-gradient-position: to right;
+                     background-image: linear-gradient(var(--tw-gradient-stops));
+```
 
 Additionally, v4 introduces angle-based linear gradients:
 
 ```
-bg-linear-45      → background-image: linear-gradient(45deg, ...)
-bg-linear-90      → background-image: linear-gradient(90deg, ...)
-bg-linear-[137deg] → background-image: linear-gradient(137deg, ...)
+bg-linear-45       → --tw-gradient-position: 45deg in oklab;
+                      background-image: linear-gradient(var(--tw-gradient-stops));
+bg-linear-90       → --tw-gradient-position: 90deg in oklab;
+                      background-image: linear-gradient(var(--tw-gradient-stops));
+bg-linear-[137deg] → --tw-gradient-position: 137deg in oklab;
+                      background-image: linear-gradient(var(--tw-gradient-stops));
 ```
 
 ### 15.2 Radial Gradients
 
 ```
-bg-radial          → background-image: radial-gradient(...)
-bg-radial-[at_top] → background-image: radial-gradient(at top, ...)
+bg-radial          → --tw-gradient-position: in oklab;
+                      background-image: radial-gradient(var(--tw-gradient-stops));
+bg-radial-[at_top] → --tw-gradient-position: at top in oklab;
+                      background-image: radial-gradient(var(--tw-gradient-stops));
 ```
 
 ### 15.3 Conic Gradients
 
 ```
-bg-conic           → background-image: conic-gradient(...)
-bg-conic-[from_45deg] → background-image: conic-gradient(from 45deg, ...)
+bg-conic-45           → --tw-gradient-position: from 45deg in oklab;
+                         background-image: conic-gradient(var(--tw-gradient-stops));
+bg-conic-[from_45deg] → --tw-gradient-position: from 45deg in oklab;
+                         background-image: conic-gradient(var(--tw-gradient-stops));
 ```
 
 ### 15.4 Gradient Color Stops
@@ -1861,9 +1875,9 @@ When an **opacity modifier** is present (e.g., `from-red-500/50`), only the colo
 TailwindCSS v4 supports color interpolation modifiers that control how colors blend across the gradient:
 
 ```
-bg-linear-to-r/srgb     → linear-gradient(in srgb, ...)
-bg-linear-to-r/oklab    → linear-gradient(in oklab, ...)
-bg-linear-to-r/oklch    → linear-gradient(in oklch, ...)
+bg-linear-to-r/srgb     → --tw-gradient-position: to right in srgb
+bg-linear-to-r/oklab    → --tw-gradient-position: to right in oklab
+bg-linear-to-r/oklch    → --tw-gradient-position: to right in oklch
 ```
 
 The interpolation modifier appears after a `/` on the gradient utility. Supported color spaces include `srgb`, `srgb-linear`, `lab`, `oklab`, `lch`, `oklch`, `hsl`, and `hwb`.

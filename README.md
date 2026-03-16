@@ -190,6 +190,7 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Performance hints: `will-change-auto`, `will-change-scroll`, `will-change-contents`, `will-change-transform`
 - Accessibility: `forced-color-adjust-auto`, `forced-color-adjust-none`
 - Text size / line height associations: `text-sm` sets both `font-size` and `line-height`
+- Gradients: `bg-gradient-to-r` (legacy), `bg-linear-to-r` (v4), `bg-linear-45` (angle), `bg-radial`, `bg-conic-45` — direction utilities set `--tw-gradient-position` and use `linear-gradient(var(--tw-gradient-stops))`, matching upstream TailwindCSS v4. Color stops via `from-*`, `via-*`, `to-*` with position support (`from-5%`, `via-50%`, `to-100%`) and color interpolation modifiers (`bg-linear-to-r/oklch`).
 - Default configuration tokens: `--default-transition-duration`, `--default-transition-timing-function`, etc.
 
 For a comprehensive list of all default theme tokens, see [spec.md Appendix A](spec.md).

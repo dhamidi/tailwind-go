@@ -348,14 +348,14 @@ func TestGradientDirections(t *testing.T) {
 		class     string
 		wantGrad  string
 	}{
-		{"bg-gradient-to-t", "linear-gradient(to top, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-tr", "linear-gradient(to top right, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-r", "linear-gradient(to right, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-br", "linear-gradient(to bottom right, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-b", "linear-gradient(to bottom, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-bl", "linear-gradient(to bottom left, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-l", "linear-gradient(to left, var(--tw-gradient-stops))"},
-		{"bg-gradient-to-tl", "linear-gradient(to top left, var(--tw-gradient-stops))"},
+		{"bg-gradient-to-t", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-tr", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-r", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-br", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-b", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-bl", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-l", "linear-gradient(var(--tw-gradient-stops))"},
+		{"bg-gradient-to-tl", "linear-gradient(var(--tw-gradient-stops))"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.class, func(t *testing.T) {
@@ -455,7 +455,8 @@ func TestGradientFullComposition(t *testing.T) {
 		"--tw-gradient-from: var(--color-blue-500)",
 		"--tw-gradient-via: var(--color-purple-500)",
 		"--tw-gradient-to: var(--color-pink-500)",
-		"linear-gradient(to right, var(--tw-gradient-stops))",
+		"--tw-gradient-position: to right",
+		"linear-gradient(var(--tw-gradient-stops))",
 	}
 	for _, check := range checks {
 		if !strings.Contains(result, check) {
@@ -623,7 +624,10 @@ func TestGradientDirectionSetsBackgroundImage(t *testing.T) {
 	e := newShadowRingTestEngine(t)
 	e.Write([]byte("bg-gradient-to-r"))
 	result := e.CSS()
-	if !strings.Contains(result, "background-image: linear-gradient(to right, var(--tw-gradient-stops))") {
+	if !strings.Contains(result, "--tw-gradient-position: to right") {
+		t.Errorf("bg-gradient-to-r missing --tw-gradient-position:\n%s", result)
+	}
+	if !strings.Contains(result, "background-image: linear-gradient(var(--tw-gradient-stops))") {
 		t.Errorf("bg-gradient-to-r missing background-image:\n%s", result)
 	}
 }
@@ -650,5 +654,59 @@ func TestGradientViaSetsStops(t *testing.T) {
 	}
 	if !strings.Contains(result, "--tw-gradient-stops: var(--tw-gradient-via-stops)") {
 		t.Errorf("via-purple-500 missing gradient-stops:\n%s", result)
+	}
+}
+
+// ===== Gradient Direction Sets --tw-gradient-position =====
+// This test verifies that gradient direction utilities set --tw-gradient-position
+// so that the gradient stops formula produces valid CSS when variables are substituted.
+// Without --tw-gradient-position being set, the gradient stops become IACVT (Invalid
+// At Computed Value Time) and no gradient renders in the browser.
+
+func TestGradientDirectionSetsPosition(t *testing.T) {
+	tests := []struct {
+		class    string
+		wantPos  string
+	}{
+		{"bg-gradient-to-r", "to right"},
+		{"bg-gradient-to-t", "to top"},
+		{"bg-gradient-to-bl", "to bottom left"},
+		{"bg-linear-to-r", "to right in oklab"},
+		{"bg-linear-to-tr", "to top right in oklab"},
+		{"bg-linear-to-r/srgb", "to right in srgb"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := newShadowRingTestEngine(t)
+			e.Write([]byte(tt.class))
+			result := e.CSS()
+			if !strings.Contains(result, "--tw-gradient-position: "+tt.wantPos) {
+				t.Errorf("%s: expected --tw-gradient-position: %s\n%s", tt.class, tt.wantPos, result)
+			}
+			if !strings.Contains(result, "background-image: linear-gradient(var(--tw-gradient-stops))") {
+				t.Errorf("%s: expected background-image: linear-gradient(var(--tw-gradient-stops))\n%s", tt.class, result)
+			}
+		})
+	}
+}
+
+func TestGradientCompositionWithDirection(t *testing.T) {
+	// Verify that a full gradient (direction + from + via + to) produces CSS where
+	// --tw-gradient-position is set, ensuring the gradient stops formula is valid.
+	e := newShadowRingTestEngine(t)
+	e.Write([]byte(`class="bg-linear-to-r from-blue-500 via-purple-500 to-pink-500"`))
+	result := e.CSS()
+
+	checks := []string{
+		"--tw-gradient-position: to right in oklab",
+		"--tw-gradient-from: var(--color-blue-500)",
+		"--tw-gradient-via: var(--color-purple-500)",
+		"--tw-gradient-to: var(--color-pink-500)",
+		"background-image: linear-gradient(var(--tw-gradient-stops))",
+	}
+	for _, check := range checks {
+		if !strings.Contains(result, check) {
+			t.Errorf("full v4 gradient: expected %q:\n%s", check, result)
+		}
 	}
 }

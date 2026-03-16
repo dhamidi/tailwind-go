@@ -550,14 +550,14 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 
 	// ===== Gradient Direction =====
 	// Legacy bg-gradient-to-* (backward compat, no color interpolation)
-	register(staticUtility("bg-gradient-to-t", decls("background-image", "linear-gradient(to top, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-tr", decls("background-image", "linear-gradient(to top right, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-r", decls("background-image", "linear-gradient(to right, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-br", decls("background-image", "linear-gradient(to bottom right, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-b", decls("background-image", "linear-gradient(to bottom, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-bl", decls("background-image", "linear-gradient(to bottom left, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-l", decls("background-image", "linear-gradient(to left, var(--tw-gradient-stops))")))
-	register(staticUtility("bg-gradient-to-tl", decls("background-image", "linear-gradient(to top left, var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-t", decls("--tw-gradient-position", "to top", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-tr", decls("--tw-gradient-position", "to top right", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-r", decls("--tw-gradient-position", "to right", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-br", decls("--tw-gradient-position", "to bottom right", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-b", decls("--tw-gradient-position", "to bottom", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-bl", decls("--tw-gradient-position", "to bottom left", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-l", decls("--tw-gradient-position", "to left", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
+	register(staticUtility("bg-gradient-to-tl", decls("--tw-gradient-position", "to top left", "background-image", "linear-gradient(var(--tw-gradient-stops))")))
 
 	// V4 bg-linear-to-* (with color interpolation modifier support)
 	for _, gd := range []struct{ suffix, dir string }{
@@ -570,7 +570,13 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 			Kind: "static",
 			CompileFn: func(c ResolvedCandidate) []Declaration {
 				interp := resolveGradientInterpolation(c.Modifier)
-				return decls("background-image", "linear-gradient("+dir+interp+", var(--tw-gradient-stops))")
+				if interp == "" {
+					interp = " in oklab"
+				}
+				return []Declaration{
+					{Property: "--tw-gradient-position", Value: dir + interp},
+					{Property: "background-image", Value: "linear-gradient(var(--tw-gradient-stops))"},
+				}
 			},
 		})
 	}
@@ -584,7 +590,10 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 			if interp == "" {
 				interp = " in oklab"
 			}
-			return decls("background-image", "radial-gradient("+interp[1:]+", var(--tw-gradient-stops))")
+			return []Declaration{
+				{Property: "--tw-gradient-position", Value: interp[1:]},
+				{Property: "background-image", Value: "radial-gradient(var(--tw-gradient-stops))"},
+			}
 		},
 	})
 
