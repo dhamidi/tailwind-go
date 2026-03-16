@@ -26,6 +26,9 @@ type generatedRule struct {
 	nested []nestedBlock
 	// order controls sort position in output.
 	order int
+	// hasVariant is true when the rule was generated with any variant
+	// (selector-based or media-query-based).
+	hasVariant bool
 }
 
 // generate produces a CSS string for the given candidate classes.
@@ -63,19 +66,26 @@ func generate(
 
 	// Sort rules by definition order for stable, correct cascade.
 	// Per spec §10.1:
-	// 1. Utility definition's Order field (source order from the CSS)
-	// 2. Within same utility, variant-wrapped rules come after unwrapped ones
-	// 3. Responsive variants are ordered by breakpoint size (ascending)
-	// All variant-wrapped rules come after all unwrapped rules to ensure
-	// responsive overrides always win in the cascade.
+	// 1. Variant-wrapped rules (selector or media) come after unwrapped ones
+	// 2. Within same variant status, sort by definition order
+	// 3. Media-wrapped variants come after selector-only variants
+	// 4. Responsive variants are ordered by breakpoint size (ascending)
 	sort.SliceStable(rules, func(i, j int) bool {
+		// Variant-wrapped rules (selector or media) come after unwrapped ones
+		iHasVariant := rules[i].hasVariant
+		jHasVariant := rules[j].hasVariant
+		if iHasVariant != jHasVariant {
+			return !iHasVariant // unwrapped first
+		}
+		// Within same variant status, sort by definition order
+		if rules[i].order != rules[j].order {
+			return rules[i].order < rules[j].order
+		}
+		// Media-wrapped rules come after selector-only variant rules
 		iHasMedia := len(rules[i].mediaQueries) > 0
 		jHasMedia := len(rules[j].mediaQueries) > 0
 		if iHasMedia != jHasMedia {
-			return !iHasMedia // unwrapped first
-		}
-		if rules[i].order != rules[j].order {
-			return rules[i].order < rules[j].order
+			return !iHasMedia
 		}
 		return rules[i].selector < rules[j].selector
 	})
@@ -157,6 +167,7 @@ func resolveClass(
 		important:    pc.Important,
 		mediaQueries: mediaQueries,
 		order:        entry.utilityOrder(),
+		hasVariant:   len(pc.Variants) > 0,
 	}
 }
 
@@ -1191,6 +1202,7 @@ func resolveArbitraryProperty(pc ParsedClass, variants map[string]*VariantDef) *
 		important:    pc.Important,
 		mediaQueries: mediaQueries,
 		order:        9999, // arbitrary properties sort last
+		hasVariant:   len(pc.Variants) > 0,
 	}
 }
 

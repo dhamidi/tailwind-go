@@ -24,6 +24,7 @@ func registerContainerUtility(idx *utilityIndex, register func(*UtilityRegistrat
 				important:    pc.Important,
 				mediaQueries: variantMedia,
 				order:        0,
+				hasVariant:   len(pc.Variants) > 0,
 			}}
 
 			// Collect breakpoints from theme tokens.
@@ -59,6 +60,7 @@ func registerContainerUtility(idx *utilityIndex, register func(*UtilityRegistrat
 					important:    pc.Important,
 					mediaQueries: mq,
 					order:        0,
+					hasVariant:   len(pc.Variants) > 0,
 				})
 			}
 

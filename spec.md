@@ -1595,8 +1595,9 @@ The generated CSS is organized into layers following Tailwind's cascade:
 
 Within the utility layer, rules are ordered by:
 1. The utility definition's `Order` field (source order from the CSS)
-2. Within the same utility, variant-wrapped rules come after unwrapped ones
-3. Responsive variants are ordered by breakpoint size (ascending)
+2. Within the same utility, variant-wrapped rules come after unwrapped ones (this applies to **all** variants — both selector-based like `hover:`, `focus:`, `dark:` with class strategy, and media-query-based like `md:`, `dark:` with media strategy)
+3. Among variant-wrapped rules, media-query variants come after selector-only variants
+4. Responsive variants are ordered by breakpoint size (ascending)
 
 ### 10.2 Deduplication
 

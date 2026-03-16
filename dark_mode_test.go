@@ -104,6 +104,46 @@ func TestCustomVariantNewVariant(t *testing.T) {
 	}
 }
 
+func TestDarkModeClassStrategyOrdering(t *testing.T) {
+	e := New()
+	e.LoadCSS([]byte(`
+@theme { --color-white: #fff; --color-gray-900: #111827; }
+@utility text-* { color: --value(--color); }
+@variant dark (&:where(.dark, .dark *));
+`))
+	e.Write([]byte(`class="text-gray-900 dark:text-white"`))
+	css := e.CSS()
+
+	// dark:text-white must come AFTER text-gray-900 in the output
+	gray900Idx := strings.Index(css, ".text-gray-900")
+	darkWhiteIdx := strings.Index(css, `dark\:text-white`)
+	if gray900Idx < 0 || darkWhiteIdx < 0 {
+		t.Fatalf("missing rules in output:\n%s", css)
+	}
+	if darkWhiteIdx < gray900Idx {
+		t.Errorf("dark:text-white (pos %d) must come after text-gray-900 (pos %d) for correct cascade:\n%s", darkWhiteIdx, gray900Idx, css)
+	}
+}
+
+func TestSelectorVariantOrderingHoverFocus(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="bg-blue-500 hover:bg-blue-600 focus:bg-blue-700"`))
+	css := e.CSS()
+
+	baseIdx := strings.Index(css, ".bg-blue-500")
+	hoverIdx := strings.Index(css, `hover\:bg-blue-600`)
+	focusIdx := strings.Index(css, `focus\:bg-blue-700`)
+	if baseIdx < 0 || hoverIdx < 0 || focusIdx < 0 {
+		t.Fatalf("missing rules in output:\n%s", css)
+	}
+	if hoverIdx < baseIdx {
+		t.Errorf("hover:bg-blue-600 (pos %d) must come after bg-blue-500 (pos %d)", hoverIdx, baseIdx)
+	}
+	if focusIdx < baseIdx {
+		t.Errorf("focus:bg-blue-700 (pos %d) must come after bg-blue-500 (pos %d)", focusIdx, baseIdx)
+	}
+}
+
 func TestDarkModeClassStrategyParseVariant(t *testing.T) {
 	css := []byte(`@variant dark (&:where(.dark, .dark *));`)
 	ss, err := parseStylesheet(css)
