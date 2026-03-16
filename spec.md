@@ -1937,6 +1937,100 @@ mask-type-alpha       → mask-type: alpha
 mask-type-luminance   → mask-type: luminance
 ```
 
+#### Edge-based mask gradients
+
+Edge mask gradients apply a linear fade from a given edge. CSS variables use
+full edge names (`top`, `right`, `bottom`, `left`).
+
+```
+mask-t-from-<value>   → --tw-mask-top-from-position: <value>%;    mask-image: linear-gradient(to top, ...)
+mask-t-to-<value>     → --tw-mask-top-to-position: <value>%;      mask-image: linear-gradient(to top, ...)
+mask-r-from-<value>   → --tw-mask-right-from-position: <value>%;  mask-image: linear-gradient(to right, ...)
+mask-r-to-<value>     → --tw-mask-right-to-position: <value>%;    mask-image: linear-gradient(to right, ...)
+mask-b-from-<value>   → --tw-mask-bottom-from-position: <value>%; mask-image: linear-gradient(to bottom, ...)
+mask-b-to-<value>     → --tw-mask-bottom-to-position: <value>%;   mask-image: linear-gradient(to bottom, ...)
+mask-l-from-<value>   → --tw-mask-left-from-position: <value>%;   mask-image: linear-gradient(to left, ...)
+mask-l-to-<value>     → --tw-mask-left-to-position: <value>%;     mask-image: linear-gradient(to left, ...)
+```
+
+Bilateral shortcuts:
+
+```
+mask-x-from-<value>   → bilateral horizontal mask (left + right)
+mask-x-to-<value>     → bilateral horizontal mask (left + right)
+mask-y-from-<value>   → bilateral vertical mask (top + bottom)
+mask-y-to-<value>     → bilateral vertical mask (top + bottom)
+```
+
+#### Linear gradient masks
+
+```
+mask-linear-<angle>      → --tw-mask-linear-position: <angle>deg;         mask-image: linear-gradient(...)
+mask-linear-from-<value> → --tw-mask-linear-from-position: <value>%;      mask-image: linear-gradient(...)
+mask-linear-to-<value>   → --tw-mask-linear-to-position: <value>%;        mask-image: linear-gradient(...)
+```
+
+Linear gradients compose from these CSS custom properties:
+- `--tw-mask-linear-position` (default: `0deg`)
+- `--tw-mask-linear-from-color` (default: `black`)
+- `--tw-mask-linear-to-color` (default: `transparent`)
+- `--tw-mask-linear-from-position` (default: `0%`)
+- `--tw-mask-linear-to-position` (default: `100%`)
+
+Supports negative angles: `-mask-linear-45` → `--tw-mask-linear-position: -45deg`.
+
+#### Radial gradient masks
+
+```
+mask-circle                    → --tw-mask-radial-shape: circle
+mask-ellipse                   → --tw-mask-radial-shape: ellipse
+mask-radial-closest-corner     → --tw-mask-radial-size: closest-corner
+mask-radial-farthest-side      → --tw-mask-radial-size: farthest-side
+mask-radial-at-center          → --tw-mask-radial-position: center
+mask-radial-at-top             → --tw-mask-radial-position: top
+mask-radial-from-<value>       → --tw-mask-radial-from-position: <value>%
+mask-radial-to-<value>         → --tw-mask-radial-to-position: <value>%
+mask-radial-[<arbitrary>]      → mask-image: radial-gradient(<arbitrary>)
+```
+
+Radial gradients compose from these CSS custom properties:
+- `--tw-mask-radial-shape` (default: `ellipse`)
+- `--tw-mask-radial-size` (default: `farthest-corner`)
+- `--tw-mask-radial-position` (default: `center`)
+- `--tw-mask-radial-from-color` (default: `black`)
+- `--tw-mask-radial-to-color` (default: `transparent`)
+- `--tw-mask-radial-from-position` (default: `0%`)
+- `--tw-mask-radial-to-position` (default: `100%`)
+
+#### Conic gradient masks
+
+```
+mask-conic-<angle>             → --tw-mask-conic-position: <angle>deg;          mask-image: conic-gradient(...)
+mask-conic-from-<value>        → --tw-mask-conic-from-position: <value>%;       mask-image: conic-gradient(...)
+mask-conic-to-<value>          → --tw-mask-conic-to-position: <value>%;         mask-image: conic-gradient(...)
+mask-conic-[<arbitrary>]       → mask-image: conic-gradient(<arbitrary>)
+```
+
+Conic gradients compose from these CSS custom properties:
+- `--tw-mask-conic-position` (default: `0deg`)
+- `--tw-mask-conic-from-color` (default: `black`)
+- `--tw-mask-conic-to-color` (default: `transparent`)
+- `--tw-mask-conic-from-position` (default: `0%`)
+- `--tw-mask-conic-to-position` (default: `100%`)
+
+Supports negative angles: `-mask-conic-30` → `--tw-mask-conic-position: -30deg`.
+
+#### Composable mask layer variables
+
+The following CSS custom properties are registered as `@property` declarations
+with initial value `linear-gradient(#fff, #fff)` (fully opaque, no-op):
+
+- `--tw-mask-linear`, `--tw-mask-radial`, `--tw-mask-conic`
+- `--tw-mask-top`, `--tw-mask-bottom`, `--tw-mask-left`, `--tw-mask-right`
+
+These enable future composable mask architectures where multiple mask types
+can be combined via `mask-image: var(--tw-mask-linear) var(--tw-mask-radial) ...`.
+
 ### 16.3 Font Stretch Utilities
 
 ```

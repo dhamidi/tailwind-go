@@ -245,6 +245,8 @@ var fuzzMaskGradientColorPrefixes = []string{
 
 var fuzzMaskGradientPositionPrefixes = []string{
 	"mask-x-from", "mask-x-to", "mask-y-from", "mask-y-to",
+	"mask-t-from", "mask-t-to", "mask-r-from", "mask-r-to",
+	"mask-b-from", "mask-b-to", "mask-l-from", "mask-l-to",
 }
 
 var fuzzMaskGradientPositionValues = []string{

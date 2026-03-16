@@ -33,34 +33,40 @@ func resolveMaskAngleValue(c ResolvedCandidate) string {
 	return ""
 }
 
-// makeMaskEdgeFromFn creates a CompileFn for mask-{edge}-from-* utilities.
-func makeMaskEdgeFromFn(edge, direction string) CompileFn {
-	varFrom := "--tw-mask-" + edge + "-from"
-	varTo := "--tw-mask-" + edge + "-to"
+// makeMaskEdgeFromFn creates a CompileFn for mask-{abbr}-from-* utilities.
+// edgeName is the full edge name (top, right, bottom, left) used in CSS variable names.
+func makeMaskEdgeFromFn(edgeName, direction string) CompileFn {
+	varFromPos := "--tw-mask-" + edgeName + "-from-position"
+	varToPos := "--tw-mask-" + edgeName + "-to-position"
+	varFromColor := "--tw-mask-" + edgeName + "-from-color"
+	varToColor := "--tw-mask-" + edgeName + "-to-color"
 	return func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: varFrom, Value: val},
-			{Property: "mask-image", Value: "linear-gradient(" + direction + ", black " + "var(" + varFrom + ", 0%), transparent var(" + varTo + ", 100%))"},
+			{Property: varFromPos, Value: val},
+			{Property: "mask-image", Value: "linear-gradient(" + direction + ", var(" + varFromColor + ", black) var(" + varFromPos + ", 0%), var(" + varToColor + ", transparent) var(" + varToPos + ", 100%))"},
 		}
 	}
 }
 
-// makeMaskEdgeToFn creates a CompileFn for mask-{edge}-to-* utilities.
-func makeMaskEdgeToFn(edge, direction string) CompileFn {
-	varFrom := "--tw-mask-" + edge + "-from"
-	varTo := "--tw-mask-" + edge + "-to"
+// makeMaskEdgeToFn creates a CompileFn for mask-{abbr}-to-* utilities.
+// edgeName is the full edge name (top, right, bottom, left) used in CSS variable names.
+func makeMaskEdgeToFn(edgeName, direction string) CompileFn {
+	varFromPos := "--tw-mask-" + edgeName + "-from-position"
+	varToPos := "--tw-mask-" + edgeName + "-to-position"
+	varFromColor := "--tw-mask-" + edgeName + "-from-color"
+	varToColor := "--tw-mask-" + edgeName + "-to-color"
 	return func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: varTo, Value: val},
-			{Property: "mask-image", Value: "linear-gradient(" + direction + ", black " + "var(" + varFrom + ", 0%), transparent var(" + varTo + ", 100%))"},
+			{Property: varToPos, Value: val},
+			{Property: "mask-image", Value: "linear-gradient(" + direction + ", var(" + varFromColor + ", black) var(" + varFromPos + ", 0%), var(" + varToColor + ", transparent) var(" + varToPos + ", 100%))"},
 		}
 	}
 }
@@ -129,19 +135,21 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 
 	// ===== Edge-based mask gradients =====
 	// Each edge direction: t(top), r(right), b(bottom), l(left)
+	// CSS variables use full edge names (top, right, bottom, left) per upstream convention.
 	type edgeDef struct {
-		edge      string
-		direction string
+		abbr      string // abbreviated form for utility class name
+		full      string // full name for CSS variable names
+		direction string // gradient direction
 	}
 	edges := []edgeDef{
-		{"t", "to top"},
-		{"r", "to right"},
-		{"b", "to bottom"},
-		{"l", "to left"},
+		{"t", "top", "to top"},
+		{"r", "right", "to right"},
+		{"b", "bottom", "to bottom"},
+		{"l", "left", "to left"},
 	}
 	for _, ed := range edges {
-		register(functionalUtility("mask-"+ed.edge+"-from", makeMaskEdgeFromFn(ed.edge, ed.direction)))
-		register(functionalUtility("mask-"+ed.edge+"-to", makeMaskEdgeToFn(ed.edge, ed.direction)))
+		register(functionalUtility("mask-"+ed.abbr+"-from", makeMaskEdgeFromFn(ed.full, ed.direction)))
+		register(functionalUtility("mask-"+ed.abbr+"-to", makeMaskEdgeToFn(ed.full, ed.direction)))
 	}
 
 	// mask-x (horizontal: both left and right)
@@ -189,41 +197,41 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 	}))
 
 	// ===== Linear gradient masks =====
-	// mask-linear-<angle> → sets angle and mask-image
+	// mask-linear-<angle> → sets position and mask-image
 	maskLinear := functionalUtility("mask-linear", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskAngleValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-linear-angle", Value: val},
-			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-angle, 0deg), black var(--tw-mask-linear-from, 0%), transparent var(--tw-mask-linear-to, 100%))"},
+			{Property: "--tw-mask-linear-position", Value: val},
+			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-position, 0deg), var(--tw-mask-linear-from-color, black) var(--tw-mask-linear-from-position, 0%), var(--tw-mask-linear-to-color, transparent) var(--tw-mask-linear-to-position, 100%))"},
 		}
 	})
 	maskLinear.Negatable = true
 	register(maskLinear)
 
-	// mask-linear-from-* → gradient from stop
+	// mask-linear-from-* → gradient from stop position
 	register(functionalUtility("mask-linear-from", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-linear-from", Value: val},
-			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-angle, 0deg), black var(--tw-mask-linear-from, 0%), transparent var(--tw-mask-linear-to, 100%))"},
+			{Property: "--tw-mask-linear-from-position", Value: val},
+			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-position, 0deg), var(--tw-mask-linear-from-color, black) var(--tw-mask-linear-from-position, 0%), var(--tw-mask-linear-to-color, transparent) var(--tw-mask-linear-to-position, 100%))"},
 		}
 	}))
 
-	// mask-linear-to-* → gradient to stop
+	// mask-linear-to-* → gradient to stop position
 	register(functionalUtility("mask-linear-to", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-linear-to", Value: val},
-			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-angle, 0deg), black var(--tw-mask-linear-from, 0%), transparent var(--tw-mask-linear-to, 100%))"},
+			{Property: "--tw-mask-linear-to-position", Value: val},
+			{Property: "mask-image", Value: "linear-gradient(var(--tw-mask-linear-position, 0deg), var(--tw-mask-linear-from-color, black) var(--tw-mask-linear-from-position, 0%), var(--tw-mask-linear-to-color, transparent) var(--tw-mask-linear-to-position, 100%))"},
 		}
 	}))
 
@@ -256,36 +264,36 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 		}
 		// Without arbitrary, emit the composed radial gradient
 		return []Declaration{
-			{Property: "mask-image", Value: "radial-gradient(var(--tw-mask-radial-shape, circle) var(--tw-mask-radial-size, ) at var(--tw-mask-radial-position, center), black var(--tw-mask-radial-from, 0%), transparent var(--tw-mask-radial-to, 100%))"},
+			{Property: "mask-image", Value: "radial-gradient(var(--tw-mask-radial-shape, ellipse) var(--tw-mask-radial-size, farthest-corner) at var(--tw-mask-radial-position, center), var(--tw-mask-radial-from-color, black) var(--tw-mask-radial-from-position, 0%), var(--tw-mask-radial-to-color, transparent) var(--tw-mask-radial-to-position, 100%))"},
 		}
 	}))
 
-	// mask-radial-from-* → radial gradient from stop
+	// mask-radial-from-* → radial gradient from stop position
 	register(functionalUtility("mask-radial-from", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-radial-from", Value: val},
-			{Property: "mask-image", Value: "radial-gradient(var(--tw-mask-radial-shape, circle) var(--tw-mask-radial-size, ) at var(--tw-mask-radial-position, center), black var(--tw-mask-radial-from, 0%), transparent var(--tw-mask-radial-to, 100%))"},
+			{Property: "--tw-mask-radial-from-position", Value: val},
+			{Property: "mask-image", Value: "radial-gradient(var(--tw-mask-radial-shape, ellipse) var(--tw-mask-radial-size, farthest-corner) at var(--tw-mask-radial-position, center), var(--tw-mask-radial-from-color, black) var(--tw-mask-radial-from-position, 0%), var(--tw-mask-radial-to-color, transparent) var(--tw-mask-radial-to-position, 100%))"},
 		}
 	}))
 
-	// mask-radial-to-* → radial gradient to stop
+	// mask-radial-to-* → radial gradient to stop position
 	register(functionalUtility("mask-radial-to", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-radial-to", Value: val},
-			{Property: "mask-image", Value: "radial-gradient(var(--tw-mask-radial-shape, circle) var(--tw-mask-radial-size, ) at var(--tw-mask-radial-position, center), black var(--tw-mask-radial-from, 0%), transparent var(--tw-mask-radial-to, 100%))"},
+			{Property: "--tw-mask-radial-to-position", Value: val},
+			{Property: "mask-image", Value: "radial-gradient(var(--tw-mask-radial-shape, ellipse) var(--tw-mask-radial-size, farthest-corner) at var(--tw-mask-radial-position, center), var(--tw-mask-radial-from-color, black) var(--tw-mask-radial-from-position, 0%), var(--tw-mask-radial-to-color, transparent) var(--tw-mask-radial-to-position, 100%))"},
 		}
 	}))
 
 	// ===== Conic gradient masks =====
-	// mask-conic-<angle> → sets angle and mask-image
+	// mask-conic-<angle> → sets position (angle) and mask-image
 	// mask-conic-[...] → arbitrary conic gradient
 	maskConic := functionalUtility("mask-conic", func(c ResolvedCandidate) []Declaration {
 		if c.Arbitrary != "" {
@@ -300,8 +308,8 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 				angle = "-" + angle
 			}
 			return []Declaration{
-				{Property: "--tw-mask-conic-angle", Value: angle + "deg"},
-				{Property: "mask-image", Value: "conic-gradient(from var(--tw-mask-conic-angle, 0deg) at var(--tw-mask-conic-position, center), black var(--tw-mask-conic-from, 0%), transparent var(--tw-mask-conic-to, 100%))"},
+				{Property: "--tw-mask-conic-position", Value: angle + "deg"},
+				{Property: "mask-image", Value: "conic-gradient(from var(--tw-mask-conic-position, 0deg) at center, var(--tw-mask-conic-from-color, black) var(--tw-mask-conic-from-position, 0%), var(--tw-mask-conic-to-color, transparent) var(--tw-mask-conic-to-position, 100%))"},
 			}
 		}
 		return nil
@@ -309,27 +317,27 @@ func registerMaskUtilities(idx *utilityIndex, register func(*UtilityRegistration
 	maskConic.Negatable = true
 	register(maskConic)
 
-	// mask-conic-from-* → conic gradient from stop
+	// mask-conic-from-* → conic gradient from stop position
 	register(functionalUtility("mask-conic-from", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-conic-from", Value: val},
-			{Property: "mask-image", Value: "conic-gradient(from var(--tw-mask-conic-angle, 0deg) at var(--tw-mask-conic-position, center), black var(--tw-mask-conic-from, 0%), transparent var(--tw-mask-conic-to, 100%))"},
+			{Property: "--tw-mask-conic-from-position", Value: val},
+			{Property: "mask-image", Value: "conic-gradient(from var(--tw-mask-conic-position, 0deg) at center, var(--tw-mask-conic-from-color, black) var(--tw-mask-conic-from-position, 0%), var(--tw-mask-conic-to-color, transparent) var(--tw-mask-conic-to-position, 100%))"},
 		}
 	}))
 
-	// mask-conic-to-* → conic gradient to stop
+	// mask-conic-to-* → conic gradient to stop position
 	register(functionalUtility("mask-conic-to", func(c ResolvedCandidate) []Declaration {
 		val := resolveMaskStopValue(c)
 		if val == "" {
 			return nil
 		}
 		return []Declaration{
-			{Property: "--tw-mask-conic-to", Value: val},
-			{Property: "mask-image", Value: "conic-gradient(from var(--tw-mask-conic-angle, 0deg) at var(--tw-mask-conic-position, center), black var(--tw-mask-conic-from, 0%), transparent var(--tw-mask-conic-to, 100%))"},
+			{Property: "--tw-mask-conic-to-position", Value: val},
+			{Property: "mask-image", Value: "conic-gradient(from var(--tw-mask-conic-position, 0deg) at center, var(--tw-mask-conic-from-color, black) var(--tw-mask-conic-from-position, 0%), var(--tw-mask-conic-to-color, transparent) var(--tw-mask-conic-to-position, 100%))"},
 		}
 	}))
 

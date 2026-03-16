@@ -107,8 +107,8 @@ func TestMaskUtility_EdgeBottom(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-b-from-50"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-b-from: 50%") {
-		t.Errorf("mask-b-from-50 missing --tw-mask-b-from:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-bottom-from-position: 50%") {
+		t.Errorf("mask-b-from-50 missing --tw-mask-bottom-from-position:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: linear-gradient(to bottom") {
 		t.Errorf("mask-b-from-50 missing mask-image:\n%s", result)
@@ -119,8 +119,8 @@ func TestMaskUtility_EdgeTop(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-t-to-100"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-t-to: 100%") {
-		t.Errorf("mask-t-to-100 missing --tw-mask-t-to:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-top-to-position: 100%") {
+		t.Errorf("mask-t-to-100 missing --tw-mask-top-to-position:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: linear-gradient(to top") {
 		t.Errorf("mask-t-to-100 missing mask-image:\n%s", result)
@@ -131,8 +131,8 @@ func TestMaskUtility_EdgeRight(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-r-from-25"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-r-from: 25%") {
-		t.Errorf("mask-r-from-25 missing --tw-mask-r-from:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-right-from-position: 25%") {
+		t.Errorf("mask-r-from-25 missing --tw-mask-right-from-position:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: linear-gradient(to right") {
 		t.Errorf("mask-r-from-25 missing mask-image:\n%s", result)
@@ -143,7 +143,7 @@ func TestMaskUtility_EdgeLeft(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-l-to-75"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-l-to: 75%") {
+	if !strings.Contains(result, "--tw-mask-left-to-position: 75%") {
 		t.Errorf("mask-l-to-75 missing var:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: linear-gradient(to left") {
@@ -179,7 +179,7 @@ func TestMaskUtility_EdgeArbitrary(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-b-from-[25%]"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-b-from: 25%") {
+	if !strings.Contains(result, "--tw-mask-bottom-from-position: 25%") {
 		t.Errorf("mask-b-from-[25%%] missing var:\n%s", result)
 	}
 }
@@ -190,8 +190,8 @@ func TestMaskUtility_LinearAngle(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-linear-180"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-linear-angle: 180deg") {
-		t.Errorf("mask-linear-180 missing angle:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-linear-position: 180deg") {
+		t.Errorf("mask-linear-180 missing position:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: linear-gradient(") {
 		t.Errorf("mask-linear-180 missing mask-image:\n%s", result)
@@ -202,8 +202,8 @@ func TestMaskUtility_LinearNegativeAngle(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("-mask-linear-45"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-linear-angle: -45deg") {
-		t.Errorf("-mask-linear-45 missing negative angle:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-linear-position: -45deg") {
+		t.Errorf("-mask-linear-45 missing negative position:\n%s", result)
 	}
 }
 
@@ -211,7 +211,7 @@ func TestMaskUtility_LinearFrom(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-linear-from-50"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-linear-from: 50%") {
+	if !strings.Contains(result, "--tw-mask-linear-from-position: 50%") {
 		t.Errorf("mask-linear-from-50 missing var:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: linear-gradient(") {
@@ -223,7 +223,7 @@ func TestMaskUtility_LinearTo(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-linear-to-100"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-linear-to: 100%") {
+	if !strings.Contains(result, "--tw-mask-linear-to-position: 100%") {
 		t.Errorf("mask-linear-to-100 missing var:\n%s", result)
 	}
 }
@@ -264,7 +264,7 @@ func TestMaskUtility_RadialFrom(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-radial-from-30"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-radial-from: 30%") {
+	if !strings.Contains(result, "--tw-mask-radial-from-position: 30%") {
 		t.Errorf("mask-radial-from-30 missing var:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: radial-gradient(") {
@@ -276,7 +276,7 @@ func TestMaskUtility_RadialTo(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-radial-to-80"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-radial-to: 80%") {
+	if !strings.Contains(result, "--tw-mask-radial-to-position: 80%") {
 		t.Errorf("mask-radial-to-80 missing var:\n%s", result)
 	}
 }
@@ -287,8 +287,8 @@ func TestMaskUtility_ConicAngle(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-conic-90"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-conic-angle: 90deg") {
-		t.Errorf("mask-conic-90 missing angle:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-conic-position: 90deg") {
+		t.Errorf("mask-conic-90 missing position:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: conic-gradient(") {
 		t.Errorf("mask-conic-90 missing mask-image:\n%s", result)
@@ -299,8 +299,8 @@ func TestMaskUtility_ConicNegativeAngle(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("-mask-conic-30"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-conic-angle: -30deg") {
-		t.Errorf("-mask-conic-30 missing negative angle:\n%s", result)
+	if !strings.Contains(result, "--tw-mask-conic-position: -30deg") {
+		t.Errorf("-mask-conic-30 missing negative position:\n%s", result)
 	}
 }
 
@@ -308,7 +308,7 @@ func TestMaskUtility_ConicFrom(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-conic-from-25"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-conic-from: 25%") {
+	if !strings.Contains(result, "--tw-mask-conic-from-position: 25%") {
 		t.Errorf("mask-conic-from-25 missing var:\n%s", result)
 	}
 	if !strings.Contains(result, "mask-image: conic-gradient(") {
@@ -320,7 +320,7 @@ func TestMaskUtility_ConicTo(t *testing.T) {
 	e := newMaskTestEngine(t)
 	e.Write([]byte("mask-conic-to-75"))
 	result := e.CSS()
-	if !strings.Contains(result, "--tw-mask-conic-to: 75%") {
+	if !strings.Contains(result, "--tw-mask-conic-to-position: 75%") {
 		t.Errorf("mask-conic-to-75 missing var:\n%s", result)
 	}
 }
@@ -342,5 +342,77 @@ func TestMaskUtility_ArbitraryURL(t *testing.T) {
 	result := e.CSS()
 	if !strings.Contains(result, "mask-image: url(/img/mask.png)") {
 		t.Errorf("mask-[url(/img/mask.png)] missing:\n%s", result)
+	}
+}
+
+// === Gradient template structure ===
+
+func TestMaskUtility_LinearGradientTemplate(t *testing.T) {
+	e := newMaskTestEngine(t)
+	e.Write([]byte("mask-linear-from-50"))
+	result := e.CSS()
+	// Verify the gradient uses the new variable naming pattern
+	if !strings.Contains(result, "var(--tw-mask-linear-position, 0deg)") {
+		t.Errorf("linear gradient missing --tw-mask-linear-position reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-linear-from-color, black)") {
+		t.Errorf("linear gradient missing --tw-mask-linear-from-color reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-linear-to-color, transparent)") {
+		t.Errorf("linear gradient missing --tw-mask-linear-to-color reference:\n%s", result)
+	}
+}
+
+func TestMaskUtility_RadialGradientTemplate(t *testing.T) {
+	e := newMaskTestEngine(t)
+	e.Write([]byte("mask-radial-from-30"))
+	result := e.CSS()
+	// Verify radial gradient uses upstream-aligned defaults
+	if !strings.Contains(result, "var(--tw-mask-radial-shape, ellipse)") {
+		t.Errorf("radial gradient missing --tw-mask-radial-shape reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-radial-size, farthest-corner)") {
+		t.Errorf("radial gradient missing --tw-mask-radial-size reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-radial-from-color, black)") {
+		t.Errorf("radial gradient missing --tw-mask-radial-from-color reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-radial-to-color, transparent)") {
+		t.Errorf("radial gradient missing --tw-mask-radial-to-color reference:\n%s", result)
+	}
+}
+
+func TestMaskUtility_ConicGradientTemplate(t *testing.T) {
+	e := newMaskTestEngine(t)
+	e.Write([]byte("mask-conic-from-25"))
+	result := e.CSS()
+	// Verify conic gradient uses renamed variables
+	if !strings.Contains(result, "var(--tw-mask-conic-position, 0deg)") {
+		t.Errorf("conic gradient missing --tw-mask-conic-position reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-conic-from-color, black)") {
+		t.Errorf("conic gradient missing --tw-mask-conic-from-color reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-conic-to-color, transparent)") {
+		t.Errorf("conic gradient missing --tw-mask-conic-to-color reference:\n%s", result)
+	}
+}
+
+func TestMaskUtility_EdgeGradientTemplate(t *testing.T) {
+	e := newMaskTestEngine(t)
+	e.Write([]byte("mask-t-from-50"))
+	result := e.CSS()
+	// Verify edge gradient uses full edge names in variables
+	if !strings.Contains(result, "var(--tw-mask-top-from-color, black)") {
+		t.Errorf("edge gradient missing --tw-mask-top-from-color reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-top-to-color, transparent)") {
+		t.Errorf("edge gradient missing --tw-mask-top-to-color reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-top-from-position, 0%)") {
+		t.Errorf("edge gradient missing --tw-mask-top-from-position reference:\n%s", result)
+	}
+	if !strings.Contains(result, "var(--tw-mask-top-to-position, 100%)") {
+		t.Errorf("edge gradient missing --tw-mask-top-to-position reference:\n%s", result)
 	}
 }
