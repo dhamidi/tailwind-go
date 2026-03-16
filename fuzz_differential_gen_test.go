@@ -109,6 +109,8 @@ var staticUtilities = []string{
 	// gradient directions
 	"bg-linear-to-t", "bg-linear-to-tr", "bg-linear-to-r", "bg-linear-to-br",
 	"bg-linear-to-b", "bg-linear-to-bl", "bg-linear-to-l", "bg-linear-to-tl",
+	// gradient via reset
+	"via-none",
 	// background clip, origin, blend
 	"bg-clip-border", "bg-clip-padding", "bg-clip-content", "bg-clip-text",
 	"bg-origin-border", "bg-origin-padding", "bg-origin-content",
@@ -248,7 +250,7 @@ var fuzzMaskGradientPositionValues = []string{
 }
 
 var fuzzGradientPercentagePositions = []string{
-	"from-5%", "from-10%", "from-50%", "via-30%", "via-50%", "to-90%", "to-100%",
+	"from-0%", "from-5%", "from-10%", "from-50%", "via-30%", "via-50%", "to-90%", "to-100%",
 }
 
 var fuzzVariants = []string{

@@ -222,16 +222,19 @@ const twPropertyDeclarations = `@property --tw-translate-x {
   initial-value: 0;
 }
 @property --tw-gradient-from {
-  syntax: "*";
+  syntax: "<color>";
   inherits: false;
+  initial-value: #0000;
 }
 @property --tw-gradient-via {
-  syntax: "*";
+  syntax: "<color>";
   inherits: false;
+  initial-value: #0000;
 }
 @property --tw-gradient-to {
-  syntax: "*";
+  syntax: "<color>";
   inherits: false;
+  initial-value: #0000;
 }
 @property --tw-gradient-stops {
   syntax: "*";
@@ -246,16 +249,19 @@ const twPropertyDeclarations = `@property --tw-translate-x {
   inherits: false;
 }
 @property --tw-gradient-from-position {
-  syntax: "*";
+  syntax: "<length-percentage>";
   inherits: false;
+  initial-value: 0%;
 }
 @property --tw-gradient-via-position {
-  syntax: "*";
+  syntax: "<length-percentage>";
   inherits: false;
+  initial-value: 50%;
 }
 @property --tw-gradient-to-position {
-  syntax: "*";
+  syntax: "<length-percentage>";
   inherits: false;
+  initial-value: 100%;
 }
 @property --tw-ordinal {
   syntax: "*";
@@ -346,15 +352,15 @@ const twPropertiesFallbackLayer = `@layer properties {
       --tw-outline-style: initial;
       --tw-border-spacing-x: 0;
       --tw-border-spacing-y: 0;
-      --tw-gradient-from: initial;
-      --tw-gradient-via: initial;
-      --tw-gradient-to: initial;
+      --tw-gradient-from: #0000;
+      --tw-gradient-via: #0000;
+      --tw-gradient-to: #0000;
       --tw-gradient-stops: initial;
       --tw-gradient-via-stops: initial;
       --tw-gradient-position: initial;
-      --tw-gradient-from-position: initial;
-      --tw-gradient-via-position: initial;
-      --tw-gradient-to-position: initial;
+      --tw-gradient-from-position: 0%;
+      --tw-gradient-via-position: 50%;
+      --tw-gradient-to-position: 100%;
       --tw-ordinal: initial;
       --tw-slashed-zero: initial;
       --tw-numeric-figure: initial;
