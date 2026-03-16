@@ -114,6 +114,8 @@ func main() {
 
 	// Set up Tailwind
 	tw := tailwind.New()
+	// Use class-based dark mode so the JS toggle (adding/removing .dark on <html>) works.
+	tw.LoadCSS([]byte(`@variant dark (&:where(.dark, .dark *));`))
 
 	// Scan template files
 	for _, name := range []string{"layout.html", "home.html", "post.html", "archive.html", "editor.html", "drafts.html", "media.html", "login.html"} {
