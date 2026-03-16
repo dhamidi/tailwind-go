@@ -44,6 +44,25 @@ var staticUtilities = []string{
 	"will-change-auto", "will-change-scroll", "will-change-contents", "will-change-transform",
 	"transition", "transition-all", "transition-colors", "transition-opacity", "transition-shadow", "transition-transform", "transition-none",
 	"ease-linear", "ease-in", "ease-out", "ease-in-out",
+	// flexbox
+	"flex-row", "flex-row-reverse", "flex-col", "flex-col-reverse",
+	"flex-wrap", "flex-wrap-reverse", "flex-nowrap",
+	"flex-1", "flex-auto", "flex-initial", "flex-none",
+	// grid
+	"grid-flow-row", "grid-flow-col", "grid-flow-dense", "grid-flow-row-dense", "grid-flow-col-dense",
+	"col-auto", "row-auto",
+	// alignment
+	"justify-start", "justify-end", "justify-center", "justify-between", "justify-around", "justify-evenly", "justify-stretch", "justify-normal",
+	"justify-items-start", "justify-items-end", "justify-items-center", "justify-items-stretch", "justify-items-normal",
+	"justify-self-auto", "justify-self-start", "justify-self-end", "justify-self-center", "justify-self-stretch",
+	"items-start", "items-end", "items-center", "items-baseline", "items-stretch",
+	"self-auto", "self-start", "self-end", "self-center", "self-baseline", "self-stretch",
+	"content-start", "content-end", "content-center", "content-between", "content-around", "content-evenly", "content-stretch", "content-baseline", "content-normal",
+	"place-content-start", "place-content-end", "place-content-center", "place-content-between", "place-content-around", "place-content-evenly", "place-content-stretch", "place-content-baseline",
+	"place-items-start", "place-items-end", "place-items-center", "place-items-baseline", "place-items-stretch",
+	"place-self-auto", "place-self-start", "place-self-end", "place-self-center", "place-self-stretch",
+	// aspect ratio
+	"aspect-auto", "aspect-square", "aspect-video",
 	// font weight
 	"font-thin", "font-extralight", "font-light", "font-normal", "font-medium", "font-semibold", "font-bold", "font-extrabold", "font-black",
 	// font family
@@ -106,11 +125,17 @@ var staticUtilities = []string{
 var fuzzSpacingPrefixes = []string{
 	"p", "m", "px", "py", "pt", "pr", "pb", "pl",
 	"mx", "my", "mt", "mr", "mb", "ml",
+	// logical margin/padding
+	"ms", "me", "mbs", "mbe",
+	"ps", "pe", "pbs", "pbe",
 	"gap", "gap-x", "gap-y",
 	"space-x", "space-y",
 	"scroll-m", "scroll-p",
 	"scroll-mx", "scroll-my", "scroll-mt", "scroll-mr", "scroll-mb", "scroll-ml",
 	"scroll-px", "scroll-py", "scroll-pt", "scroll-pr", "scroll-pb", "scroll-pl",
+	// logical scroll margin/padding
+	"scroll-ms", "scroll-me", "scroll-mbs", "scroll-mbe",
+	"scroll-ps", "scroll-pe", "scroll-pbs", "scroll-pbe",
 	"leading",
 	"border-spacing", "border-spacing-x", "border-spacing-y",
 }
@@ -121,7 +146,7 @@ var fuzzSpacingValues = []string{
 	"44", "48", "52", "56", "60", "64", "72", "80", "96", "px", "auto",
 }
 
-var fuzzSizingPrefixes = []string{"w", "h", "min-w", "max-w", "min-h", "max-h", "size"}
+var fuzzSizingPrefixes = []string{"w", "h", "min-w", "max-w", "min-h", "max-h", "size", "size-inline", "min-inline", "max-inline"}
 
 var fuzzSizingValues = []string{
 	"0", "0.5", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "20",
@@ -171,6 +196,8 @@ var fuzzVariants = []string{
 	"aria-checked", "aria-disabled", "aria-expanded", "aria-hidden",
 	"group-hover", "group-focus",
 	"peer-hover", "peer-focus", "peer-checked",
+	// container query variants
+	"@sm", "@md", "@lg", "@xl", "@2xl",
 }
 
 var fuzzOpacityModifiers = []string{
@@ -179,10 +206,12 @@ var fuzzOpacityModifiers = []string{
 
 var fuzzNegatablePrefixes = []string{
 	"m", "mx", "my", "mt", "mr", "mb", "ml",
+	"ms", "me", "mbs", "mbe",
 	"translate-x", "translate-y", "rotate", "skew-x", "skew-y",
 	"order", "z", "indent", "tracking",
 	"space-x", "space-y",
 	"scroll-m", "scroll-mx", "scroll-my", "scroll-mt", "scroll-mr", "scroll-mb", "scroll-ml",
+	"scroll-ms", "scroll-me", "scroll-mbs", "scroll-mbe",
 }
 
 var fuzzNegatableValues = []string{
@@ -196,7 +225,42 @@ var fuzzArbitraryValuePrefixes = []string{
 	"rounded", "translate-x", "translate-y", "rotate", "scale",
 	"opacity", "z", "order", "grid-cols", "grid-rows",
 	"col-span", "row-span", "basis", "min-w", "max-w", "min-h", "max-h",
-	"line-clamp", "indent",
+	"line-clamp", "indent", "aspect",
+}
+
+var fuzzPositionLogicalPrefixes = []string{
+	"start", "end", "inset-bs", "inset-be",
+}
+
+var fuzzBasisValues = []string{
+	"0", "0.5", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "20",
+	"24", "32", "40", "48", "56", "64", "72", "80", "96",
+	"auto", "full", "1/2", "1/3", "2/3", "1/4", "3/4", "px",
+}
+
+var fuzzGridPrefixes = []string{
+	"grid-cols", "grid-rows",
+	"col-span", "col-start", "col-end",
+	"row-span", "row-start", "row-end",
+	"auto-cols", "auto-rows",
+}
+
+var fuzzGridValues = []string{
+	"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "none", "subgrid",
+}
+
+var fuzzAutoColRowValues = []string{
+	"auto", "min", "max", "fr",
+}
+
+var fuzzOrderValues = []string{
+	"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
+	"first", "last", "none",
+}
+
+var fuzzColumnsValues = []string{
+	"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
+	"auto", "3xs", "2xs", "xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl",
 }
 
 var fuzzFontSizePrefixes = []string{
@@ -397,9 +461,18 @@ func generateShadowUtility(rng *rand.Rand) string {
 	}
 }
 
+// generateGridUtility generates a grid parametric utility.
+func generateGridUtility(rng *rand.Rand) string {
+	prefix := pick(rng, fuzzGridPrefixes)
+	if prefix == "auto-cols" || prefix == "auto-rows" {
+		return prefix + "-" + pick(rng, fuzzAutoColRowValues)
+	}
+	return prefix + "-" + pick(rng, fuzzGridValues)
+}
+
 // generateBaseUtility generates a random utility without variants or modifiers.
 func generateBaseUtility(rng *rand.Rand) string {
-	category := rng.Intn(18)
+	category := rng.Intn(24)
 	switch category {
 	case 0: // static
 		return pick(rng, staticUtilities)
@@ -452,6 +525,19 @@ func generateBaseUtility(rng *rand.Rand) string {
 			return "duration-" + pick(rng, fuzzDurationDelayValues)
 		}
 		return "delay-" + pick(rng, fuzzDurationDelayValues)
+	case 18: // logical positioning
+		return pick(rng, fuzzPositionLogicalPrefixes) + "-" + pick(rng, fuzzSpacingValues)
+	case 19: // basis
+		return "basis-" + pick(rng, fuzzBasisValues)
+	case 20: // grid parametric
+		return generateGridUtility(rng)
+	case 21: // order
+		return "order-" + pick(rng, fuzzOrderValues)
+	case 22: // columns
+		return "columns-" + pick(rng, fuzzColumnsValues)
+	case 23: // aspect ratio arbitrary
+		arb := pick(rng, fuzzArbitraryValues)
+		return "aspect-[" + arb + "]"
 	}
 	return pick(rng, staticUtilities)
 }
