@@ -42,6 +42,12 @@ func main() {
 	dataDir := flag.String("data", "", "data directory for content (default: temp dir)")
 	flag.Parse()
 
+	// Determine listen address: -addr flag > PORT env > default ":8080"
+	listenAddr := *addr
+	if port := os.Getenv("PORT"); port != "" && !isFlagSet("addr") {
+		listenAddr = ":" + port
+	}
+
 	// Set up data directory
 	dir := *dataDir
 	if dir == "" {
@@ -119,8 +125,8 @@ func main() {
 	mux.HandleFunc("/admin/media", handleMediaRoute)
 	mux.HandleFunc("/admin/media/", handleMediaAction)
 
-	log.Printf("Starting blog server on %s", *addr)
-	log.Fatal(http.ListenAndServe(*addr, mux))
+	log.Printf("Starting blog server on %s", listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, mux))
 }
 
 func renderPage(w http.ResponseWriter, name string, data PageData) {
@@ -418,6 +424,17 @@ func slugify(title string) string {
 	}
 	s = strings.Trim(s, "-")
 	return s
+}
+
+// isFlagSet reports whether the named flag was explicitly set on the command line.
+func isFlagSet(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }
 
 func init() {

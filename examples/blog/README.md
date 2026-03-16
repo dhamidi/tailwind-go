@@ -21,6 +21,22 @@ Flags:
   -data string    data directory for content (default: copies embedded content to temp dir)
 ```
 
+The server also respects the `PORT` environment variable, which is set by
+many deployment platforms (Heroku, Cloud Run, Railway, etc.). The precedence
+order is:
+
+1. `-addr` flag (highest)
+2. `PORT` environment variable
+3. Default `:8080`
+
+```bash
+# Listen on :9090 via PORT
+PORT=9090 go run .
+
+# -addr flag takes precedence over PORT
+PORT=9090 go run . -addr :7070   # listens on :7070
+```
+
 ## Features
 
 - **Server-side rendering** with Go's `html/template`
