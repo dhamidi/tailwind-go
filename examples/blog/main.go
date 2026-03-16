@@ -345,6 +345,7 @@ func handleSavePost(w http.ResponseWriter, r *http.Request) {
 	body := r.FormValue("body")
 	tagsStr := r.FormValue("tags")
 	action := r.FormValue("action")
+	originalSlug := r.FormValue("original_slug")
 
 	var tags []string
 	for _, t := range strings.Split(tagsStr, ",") {
@@ -370,11 +371,22 @@ func handleSavePost(w http.ResponseWriter, r *http.Request) {
 	content.WriteByte('\n')
 	content.WriteString(body)
 
+	postDate := time.Now()
+	if originalSlug != "" {
+		// Editing existing post — preserve original date and remove old file
+		if orig, err := store.GetPost(originalSlug); err == nil {
+			postDate = orig.Date
+		}
+		// Clean up old file(s); ignore errors since file may only exist in one location
+		store.deleteBySlug("drafts", originalSlug)
+		store.deleteBySlug("posts", originalSlug)
+	}
+
 	post := Post{
 		Slug:      slug,
 		Title:     title,
 		Body:      content.String(),
-		Date:      time.Now(),
+		Date:      postDate,
 		Tags:      tags,
 		Published: published,
 	}
