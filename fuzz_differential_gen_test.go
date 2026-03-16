@@ -406,6 +406,63 @@ var fuzzArbitraryValues = []string{
 	"10px", "0.5", "200ms",
 }
 
+var fuzzTypeHints = []string{
+	"length", "color", "percentage", "number", "integer",
+	"ratio", "url", "shadow", "angle", "time", "any",
+}
+
+var fuzzTypeHintedValues = []string{
+	"length:--my-size", "color:--my-bg", "percentage:50%",
+	"number:1.5", "angle:45deg", "time:200ms",
+	"length:1.5rem", "color:red", "shadow:0_1px_2px_black",
+}
+
+var fuzzCustomProperties = []string{
+	"--my-color", "--sidebar-width", "--spacing-lg",
+	"--tw-ring-color", "--custom-bg", "--header-height",
+}
+
+var fuzzComplexArbitraryValues = []string{
+	"calc(100%_-_2rem)", "calc(100vh_-_4rem)",
+	"min(100%,_50rem)", "max(10rem,_50%)",
+	"clamp(1rem,_5vw,_3rem)",
+	"rgb(255,0,0)", "rgb(255_0_0)", "hsl(200,100%,50%)",
+	"oklch(0.7_0.15_200)", "var(--custom)",
+	"var(--x,_fallback)", "env(safe-area-inset-top)",
+	"url(data:image/svg+xml,...)",
+	"100cqw", "50cqh", "100dvh", "100svh", "100lvh",
+}
+
+var fuzzArbitraryProperties = []string{
+	"[mask-type:alpha]",
+	"[content-visibility:auto]",
+	"[contain:paint]",
+	"[text-wrap:balance]",
+	"[writing-mode:vertical-rl]",
+	"[clip-path:circle(50%)]",
+	"[scroll-timeline:--my-timeline]",
+	"[view-transition-name:hero]",
+	"[container-type:inline-size]",
+	"[overflow-anchor:none]",
+	"[overscroll-behavior:contain]",
+	"[paint-order:stroke_fill]",
+	"[text-rendering:optimizeLegibility]",
+	"[word-spacing:0.1em]",
+	"[tab-size:4]",
+}
+
+var fuzzArbitraryVariants = []string{
+	"[&:nth-child(3)]", "[&>svg]", "[&.active]",
+	"[&:not(:first-child)]", "[&_p]",
+	"[@media(min-width:900px)]",
+	"[@supports(display:grid)]",
+	"[@container(width>=40rem)]",
+}
+
+var fuzzArbitraryOpacityModifiers = []string{
+	"[.5]", "[0.75]", "[0.1]", "[var(--opacity)]", "[50%]",
+}
+
 var fuzzBorderWidthPrefixes = []string{
 	"border", "border-t", "border-r", "border-b", "border-l",
 	"border-x", "border-y",
@@ -556,6 +613,11 @@ const (
 	levelBorderVariant
 	levelFilterTransform
 	levelCompoundVariant
+	levelTypeHintedArbitrary
+	levelParenCustomProperty
+	levelComplexArbitrary
+	levelArbitraryVariant
+	levelArbitraryOpacityModifier
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -806,14 +868,7 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 		return prefix + "-[" + val + "]"
 
 	case levelArbitraryProperty:
-		props := []string{
-			"[mask-type:alpha]",
-			"[content-visibility:auto]",
-			"[contain:paint]",
-			"[text-wrap:balance]",
-			"[writing-mode:vertical-rl]",
-		}
-		return pick(rng, props)
+		return pick(rng, fuzzArbitraryProperties)
 
 	case levelKitchenSink:
 		variant := pick(rng, fuzzVariants)
@@ -899,6 +954,29 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 			}
 			return "**:" + generateBaseUtility(rng)
 		}
+
+	case levelTypeHintedArbitrary:
+		prefix := pick(rng, fuzzArbitraryValuePrefixes)
+		val := pick(rng, fuzzTypeHintedValues)
+		return prefix + "-[" + val + "]"
+
+	case levelParenCustomProperty:
+		prefix := pick(rng, fuzzArbitraryValuePrefixes)
+		prop := pick(rng, fuzzCustomProperties)
+		return prefix + "-(" + prop + ")"
+
+	case levelComplexArbitrary:
+		prefix := pick(rng, fuzzArbitraryValuePrefixes)
+		val := pick(rng, fuzzComplexArbitraryValues)
+		return prefix + "-[" + val + "]"
+
+	case levelArbitraryVariant:
+		variant := pick(rng, fuzzArbitraryVariants)
+		return variant + ":" + generateBaseUtility(rng)
+
+	case levelArbitraryOpacityModifier:
+		util := generateColorUtility(rng)
+		return util + "/" + pick(rng, fuzzArbitraryOpacityModifiers)
 	}
 	return generateBaseUtility(rng)
 }
@@ -907,20 +985,25 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 func generateRandomClasses(rng *rand.Rand, count int) []string {
 	classes := make([]string, 0, count)
 	weights := []int{
-		28, // simple
-		18, // with variant
-		9,  // with modifier
-		9,  // compound
-		7,  // multi-variant
-		6,  // negative
-		5,  // important
+		25, // simple
+		16, // with variant
+		8,  // with modifier
+		8,  // compound
+		6,  // multi-variant
+		5,  // negative
+		4,  // important
 		5,  // arbitrary value
-		3,  // arbitrary property
+		4,  // arbitrary property
 		2,  // kitchen sink
-		13, // typography
-		10, // border variant
-		10, // filter/transform
-		15, // compound variant
+		10, // typography
+		8,  // border variant
+		8,  // filter/transform
+		12, // compound variant
+		5,  // type-hinted arbitrary
+		4,  // parenthesized custom property
+		5,  // complex arbitrary
+		5,  // arbitrary variant
+		4,  // arbitrary opacity modifier
 	}
 
 	for i := 0; i < count; i++ {
@@ -934,10 +1017,10 @@ func generateRandomClasses(rng *rand.Rand, count int) []string {
 // This test does NOT require npm/node — it only tests the generator itself.
 func TestClassGenerator(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
-	classes := generateRandomClasses(rng, 100)
+	classes := generateRandomClasses(rng, 200)
 
-	if len(classes) != 100 {
-		t.Fatalf("expected 100 classes, got %d", len(classes))
+	if len(classes) != 200 {
+		t.Fatalf("expected 200 classes, got %d", len(classes))
 	}
 
 	// Verify all classes are non-empty strings.
@@ -949,7 +1032,7 @@ func TestClassGenerator(t *testing.T) {
 
 	// Verify determinism: same seed produces same output.
 	rng2 := rand.New(rand.NewSource(42))
-	classes2 := generateRandomClasses(rng2, 100)
+	classes2 := generateRandomClasses(rng2, 200)
 	for i := range classes {
 		if classes[i] != classes2[i] {
 			t.Errorf("non-deterministic at index %d: %q vs %q", i, classes[i], classes2[i])
@@ -961,6 +1044,9 @@ func TestClassGenerator(t *testing.T) {
 	hasNegative := false
 	hasArbitrary := false
 	hasCompoundVariant := false
+	hasTypeHinted := false
+	hasParenCustomProp := false
+	hasArbitraryVariant := false
 	for _, c := range classes {
 		if len(c) > 0 && c[0] == '-' {
 			hasNegative = true
@@ -977,6 +1063,20 @@ func TestClassGenerator(t *testing.T) {
 				hasCompoundVariant = true
 			}
 		}
+		// Detect type-hinted arbitrary values like text-[length:--my-size]
+		for _, hint := range fuzzTypeHints {
+			if strings.Contains(c, "["+hint+":") {
+				hasTypeHinted = true
+			}
+		}
+		// Detect parenthesized custom properties like w-(--my-color)
+		if strings.Contains(c, "(--") {
+			hasParenCustomProp = true
+		}
+		// Detect arbitrary variants like [&:nth-child(3)]:
+		if strings.HasPrefix(c, "[") && strings.Contains(c, "]:") {
+			hasArbitraryVariant = true
+		}
 	}
 	if !hasVariant {
 		t.Error("no variant classes generated")
@@ -989,6 +1089,15 @@ func TestClassGenerator(t *testing.T) {
 	}
 	if !hasCompoundVariant {
 		t.Error("no compound variant classes generated")
+	}
+	if !hasTypeHinted {
+		t.Error("no type-hinted arbitrary value classes generated")
+	}
+	if !hasParenCustomProp {
+		t.Error("no parenthesized custom property classes generated")
+	}
+	if !hasArbitraryVariant {
+		t.Error("no arbitrary variant classes generated")
 	}
 
 	// Verify 500 classes produces at least 400 unique (high diversity).
