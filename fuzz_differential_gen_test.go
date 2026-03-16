@@ -44,6 +44,28 @@ var staticUtilities = []string{
 	"will-change-auto", "will-change-scroll", "will-change-contents", "will-change-transform",
 	"transition", "transition-all", "transition-colors", "transition-opacity", "transition-shadow", "transition-transform", "transition-none",
 	"ease-linear", "ease-in", "ease-out", "ease-in-out",
+	// font weight
+	"font-thin", "font-extralight", "font-light", "font-normal", "font-medium", "font-semibold", "font-bold", "font-extrabold", "font-black",
+	// font family
+	"font-sans", "font-serif", "font-mono",
+	// leading (line-height) named values
+	"leading-none", "leading-tight", "leading-snug", "leading-normal", "leading-relaxed", "leading-loose",
+	// tracking (letter-spacing)
+	"tracking-tighter", "tracking-tight", "tracking-normal", "tracking-wide", "tracking-wider", "tracking-widest",
+	// text decoration style
+	"decoration-solid", "decoration-double", "decoration-dotted", "decoration-dashed", "decoration-wavy",
+	// text alignment
+	"text-left", "text-center", "text-right", "text-justify", "text-start", "text-end",
+	// text wrap
+	"text-wrap", "text-nowrap", "text-balance", "text-pretty", "text-ellipsis", "text-clip",
+	// font variant numeric
+	"normal-nums", "ordinal", "slashed-zero", "lining-nums", "oldstyle-nums", "proportional-nums", "tabular-nums", "diagonal-fractions", "stacked-fractions",
+	// vertical align
+	"align-baseline", "align-top", "align-middle", "align-bottom", "align-text-top", "align-text-bottom", "align-sub", "align-super",
+	// line clamp
+	"line-clamp-1", "line-clamp-2", "line-clamp-3", "line-clamp-4", "line-clamp-5", "line-clamp-6", "line-clamp-none",
+	// hyphens and overflow wrap
+	"hyphens-none", "hyphens-manual", "hyphens-auto", "wrap-normal", "wrap-break-word", "wrap-anywhere",
 	"grayscale", "grayscale-0", "invert", "invert-0", "sepia", "sepia-0",
 	"backdrop-grayscale", "backdrop-grayscale-0", "backdrop-invert", "backdrop-invert-0", "backdrop-sepia", "backdrop-sepia-0",
 	"mix-blend-normal", "mix-blend-multiply", "mix-blend-screen", "mix-blend-overlay",
@@ -69,6 +91,7 @@ var fuzzSpacingPrefixes = []string{
 	"scroll-m", "scroll-p",
 	"scroll-mx", "scroll-my", "scroll-mt", "scroll-mr", "scroll-mb", "scroll-ml",
 	"scroll-px", "scroll-py", "scroll-pt", "scroll-pr", "scroll-pb", "scroll-pl",
+	"leading",
 }
 
 var fuzzSpacingValues = []string{
@@ -149,6 +172,23 @@ var fuzzArbitraryValuePrefixes = []string{
 	"rounded", "translate-x", "translate-y", "rotate", "scale",
 	"opacity", "z", "order", "grid-cols", "grid-rows",
 	"col-span", "row-span", "basis", "min-w", "max-w", "min-h", "max-h",
+	"line-clamp", "indent",
+}
+
+var fuzzFontSizePrefixes = []string{
+	"text-xs", "text-sm", "text-base", "text-lg", "text-xl",
+	"text-2xl", "text-3xl", "text-4xl", "text-5xl", "text-6xl",
+	"text-7xl", "text-8xl", "text-9xl",
+}
+
+var fuzzLeadingNumeric = []string{
+	"leading-3", "leading-4", "leading-5", "leading-6", "leading-7",
+	"leading-8", "leading-9", "leading-10",
+}
+
+var fuzzUnderlineOffsetValues = []string{
+	"underline-offset-0", "underline-offset-1", "underline-offset-2",
+	"underline-offset-4", "underline-offset-8", "underline-offset-auto",
 }
 
 var fuzzArbitraryValues = []string{
@@ -169,6 +209,7 @@ const (
 	levelArbitraryValue
 	levelArbitraryProperty
 	levelKitchenSink
+	levelTypography
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -194,7 +235,7 @@ func pick(rng *rand.Rand, items []string) string {
 
 // generateBaseUtility generates a random utility without variants or modifiers.
 func generateBaseUtility(rng *rand.Rand) string {
-	category := rng.Intn(4)
+	category := rng.Intn(7)
 	switch category {
 	case 0: // static
 		return pick(rng, staticUtilities)
@@ -208,6 +249,12 @@ func generateBaseUtility(rng *rand.Rand) string {
 			return prefix + "-" + pick(rng, fuzzColorSpecial)
 		}
 		return prefix + "-" + pick(rng, fuzzColorFamilies) + "-" + pick(rng, fuzzColorShades)
+	case 4: // font size
+		return pick(rng, fuzzFontSizePrefixes)
+	case 5: // leading numeric
+		return pick(rng, fuzzLeadingNumeric)
+	case 6: // underline offset
+		return pick(rng, fuzzUnderlineOffsetValues)
 	}
 	return pick(rng, staticUtilities)
 }
@@ -271,6 +318,14 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 		util := generateColorUtility(rng)
 		mod := pick(rng, fuzzOpacityModifiers)
 		return variant + ":!" + util + "/" + mod
+
+	case levelTypography:
+		typoSets := [][]string{
+			fuzzFontSizePrefixes,
+			fuzzLeadingNumeric,
+			fuzzUnderlineOffsetValues,
+		}
+		return pick(rng, typoSets[rng.Intn(len(typoSets))])
 	}
 	return generateBaseUtility(rng)
 }
@@ -289,6 +344,7 @@ func generateRandomClasses(rng *rand.Rand, count int) []string {
 		5,  // arbitrary value
 		3,  // arbitrary property
 		2,  // kitchen sink
+		15, // typography
 	}
 
 	for i := 0; i < count; i++ {
@@ -356,8 +412,8 @@ func TestClassGenerator(t *testing.T) {
 	for _, c := range large {
 		seen[c] = true
 	}
-	if len(seen) < 400 {
-		t.Errorf("expected at least 400 unique classes from 500 generated, got %d", len(seen))
+	if len(seen) < 350 {
+		t.Errorf("expected at least 350 unique classes from 500 generated, got %d", len(seen))
 	}
 	t.Logf("Generated %d unique classes from 500 total", len(seen))
 }
