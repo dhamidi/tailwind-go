@@ -734,3 +734,65 @@ func TestNoPropertyDeclarationsForSimpleUtility(t *testing.T) {
 		t.Errorf("flex should not emit any @property declarations:\n%s", result)
 	}
 }
+
+func TestSnapXAloneProducesWorkingCSS(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="snap-x"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "scroll-snap-type: x var(--tw-scroll-snap-strictness)") {
+		t.Errorf("snap-x should emit scroll-snap-type with var(--tw-scroll-snap-strictness):\n%s", result)
+	}
+	if !strings.Contains(result, "@property --tw-scroll-snap-strictness") {
+		t.Errorf("snap-x should emit @property for --tw-scroll-snap-strictness:\n%s", result)
+	}
+	if !strings.Contains(result, "initial-value: proximity") {
+		t.Errorf("--tw-scroll-snap-strictness should have initial-value: proximity:\n%s", result)
+	}
+}
+
+func TestSnapXWithMandatory(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="snap-x snap-mandatory"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "scroll-snap-type: x var(--tw-scroll-snap-strictness)") {
+		t.Errorf("snap-x should emit scroll-snap-type:\n%s", result)
+	}
+	if !strings.Contains(result, "--tw-scroll-snap-strictness: mandatory") {
+		t.Errorf("snap-mandatory should set --tw-scroll-snap-strictness to mandatory:\n%s", result)
+	}
+}
+
+func TestBeforeContentArbitraryProperty(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="before:content-['hello']"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "::before") {
+		t.Errorf("before: variant should produce ::before selector:\n%s", result)
+	}
+	if !strings.Contains(result, `content: "hello"`) && !strings.Contains(result, "content: 'hello'") {
+		t.Errorf("content-['hello'] should set content to 'hello':\n%s", result)
+	}
+	if !strings.Contains(result, "@property --tw-content") {
+		t.Errorf("should emit @property for --tw-content:\n%s", result)
+	}
+}
+
+func TestDivideXPropertyDeclarations(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="divide-x"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "@property --tw-divide-x-reverse") {
+		t.Errorf("divide-x should emit @property for --tw-divide-x-reverse:\n%s", result)
+	}
+	if !strings.Contains(result, "initial-value: 0") {
+		t.Errorf("--tw-divide-x-reverse should have initial-value: 0:\n%s", result)
+	}
+}

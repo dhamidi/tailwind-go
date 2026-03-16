@@ -1274,3 +1274,91 @@ func TestClassGenerator(t *testing.T) {
 	}
 	t.Logf("Generated %d unique classes from 500 total", len(seen))
 }
+
+// TestFuzzPropertyDeclarationCoverage verifies that specific class combinations
+// involving --tw-content, --tw-scroll-snap-strictness, and --tw-divide-*-reverse
+// produce valid CSS with the correct @property declarations.
+func TestFuzzPropertyDeclarationCoverage(t *testing.T) {
+	cases := []struct {
+		name    string
+		classes string
+		check   func(t *testing.T, css string)
+	}{
+		{
+			name:    "snap-x alone",
+			classes: "snap-x",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "scroll-snap-type: x var(--tw-scroll-snap-strictness)") {
+					t.Error("snap-x should emit scroll-snap-type with strictness variable")
+				}
+			},
+		},
+		{
+			name:    "snap-y alone",
+			classes: "snap-y",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "scroll-snap-type: y var(--tw-scroll-snap-strictness)") {
+					t.Error("snap-y should emit scroll-snap-type with strictness variable")
+				}
+			},
+		},
+		{
+			name:    "snap-both alone",
+			classes: "snap-both",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "scroll-snap-type: both var(--tw-scroll-snap-strictness)") {
+					t.Error("snap-both should emit scroll-snap-type with strictness variable")
+				}
+			},
+		},
+		{
+			name:    "snap-x snap-mandatory combined",
+			classes: "snap-x snap-mandatory",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "scroll-snap-type: x var(--tw-scroll-snap-strictness)") {
+					t.Error("snap-x should emit scroll-snap-type")
+				}
+				if !strings.Contains(css, "--tw-scroll-snap-strictness: mandatory") {
+					t.Error("snap-mandatory should set strictness to mandatory")
+				}
+			},
+		},
+		{
+			name:    "divide-x",
+			classes: "divide-x",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "--tw-divide-x-reverse") {
+					t.Error("divide-x should reference --tw-divide-x-reverse")
+				}
+			},
+		},
+		{
+			name:    "divide-y",
+			classes: "divide-y",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "--tw-divide-y-reverse") {
+					t.Error("divide-y should reference --tw-divide-y-reverse")
+				}
+			},
+		},
+		{
+			name:    "before:content-['hello']",
+			classes: "before:content-['hello']",
+			check: func(t *testing.T, css string) {
+				if !strings.Contains(css, "::before") {
+					t.Error("before: variant should produce ::before pseudo-element")
+				}
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tc.classes + `"`))
+			css := e.CSS()
+			t.Logf("CSS for %q:\n%s", tc.classes, css)
+			tc.check(t, css)
+		})
+	}
+}

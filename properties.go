@@ -320,6 +320,26 @@ const twPropertyDeclarations = `@property --tw-translate-x {
   syntax: "*";
   inherits: false;
 }
+@property --tw-content {
+  syntax: "*";
+  inherits: false;
+  initial-value: "";
+}
+@property --tw-scroll-snap-strictness {
+  syntax: "*";
+  inherits: false;
+  initial-value: proximity;
+}
+@property --tw-divide-x-reverse {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-divide-y-reverse {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
 `
 
 // twPropertiesFallbackLayer provides the legacy fallback for browsers
@@ -400,6 +420,10 @@ const twPropertiesFallbackLayer = `@layer properties {
       --tw-pan-x: initial;
       --tw-pan-y: initial;
       --tw-pinch-zoom: initial;
+      --tw-content: "";
+      --tw-scroll-snap-strictness: proximity;
+      --tw-divide-x-reverse: 0;
+      --tw-divide-y-reverse: 0;
     }
   }
 }

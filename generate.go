@@ -1034,6 +1034,10 @@ var twPropertyDefs = map[string]string{
 	"--tw-pan-x":               "@property --tw-pan-x {\n  syntax: \"*\";\n  inherits: false;\n}\n",
 	"--tw-pan-y":               "@property --tw-pan-y {\n  syntax: \"*\";\n  inherits: false;\n}\n",
 	"--tw-pinch-zoom":          "@property --tw-pinch-zoom {\n  syntax: \"*\";\n  inherits: false;\n}\n",
+	"--tw-content":                    "@property --tw-content {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: \"\";\n}\n",
+	"--tw-scroll-snap-strictness":     "@property --tw-scroll-snap-strictness {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: proximity;\n}\n",
+	"--tw-divide-x-reverse":           "@property --tw-divide-x-reverse {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
+	"--tw-divide-y-reverse":           "@property --tw-divide-y-reverse {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n",
 }
 
 // collectPropertyDeclarations scans generated rules for --tw-* custom
