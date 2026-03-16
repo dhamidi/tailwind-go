@@ -2707,8 +2707,38 @@ func TestTextShadowColor(t *testing.T) {
 	if !strings.Contains(css, "--tw-text-shadow-color") {
 		t.Errorf("expected --tw-text-shadow-color, got:\n%s", css)
 	}
-	if !strings.Contains(css, "text-shadow:") {
-		t.Errorf("expected text-shadow property, got:\n%s", css)
+	// Should use color-mix with --tw-text-shadow-alpha
+	if !strings.Contains(css, "color-mix(in oklab,") {
+		t.Errorf("expected color-mix for alpha support, got:\n%s", css)
+	}
+	if !strings.Contains(css, "var(--tw-text-shadow-alpha)") {
+		t.Errorf("expected --tw-text-shadow-alpha reference, got:\n%s", css)
+	}
+}
+
+func TestTextShadowColorWithOpacity(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-shadow-red-500/50`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "--tw-text-shadow-color") {
+		t.Errorf("expected --tw-text-shadow-color, got:\n%s", css)
+	}
+	if !strings.Contains(css, "50%") {
+		t.Errorf("expected 50%% opacity, got:\n%s", css)
+	}
+	if !strings.Contains(css, "var(--tw-text-shadow-alpha)") {
+		t.Errorf("expected --tw-text-shadow-alpha reference, got:\n%s", css)
+	}
+}
+
+func TestTextShadowInitial(t *testing.T) {
+	e := New()
+	e.Write([]byte(`text-shadow-initial`))
+	css := e.CSS()
+	t.Logf("Generated CSS:\n%s", css)
+	if !strings.Contains(css, "--tw-text-shadow-color: initial") {
+		t.Errorf("expected --tw-text-shadow-color: initial, got:\n%s", css)
 	}
 }
 

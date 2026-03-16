@@ -102,6 +102,8 @@ var staticUtilities = []string{
 	"backface-visible", "backface-hidden",
 	// text-shadow
 	"text-shadow-sm", "text-shadow", "text-shadow-lg", "text-shadow-none",
+	"text-shadow-initial", "text-shadow-inherit",
+	"text-shadow-red-500", "text-shadow-blue-300/50",
 	"bg-fixed", "bg-local", "bg-scroll",
 	"bg-center", "bg-top", "bg-bottom", "bg-left", "bg-right",
 	"bg-repeat", "bg-no-repeat", "bg-repeat-x", "bg-repeat-y",

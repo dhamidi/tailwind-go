@@ -1363,6 +1363,7 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("text-shadow-md", decls("text-shadow", "0 2px 4px rgb(0 0 0 / 0.1)")))
 	register(staticUtility("text-shadow-lg", decls("text-shadow", "0 4px 8px rgb(0 0 0 / 0.1)")))
 	register(staticUtility("text-shadow-none", decls("text-shadow", "none")))
+	register(staticUtility("text-shadow-initial", decls("--tw-text-shadow-color", "initial")))
 
 	// ===== Font Stretch =====
 	register(staticUtility("font-stretch-ultra-condensed", decls("font-stretch", "ultra-condensed")))

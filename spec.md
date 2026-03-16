@@ -1881,9 +1881,21 @@ text-shadow       → text-shadow: 0 1px 3px rgb(0 0 0 / 0.1)
 text-shadow-md    → text-shadow: 0 2px 4px rgb(0 0 0 / 0.1)
 text-shadow-lg    → text-shadow: 0 4px 8px rgb(0 0 0 / 0.1)
 text-shadow-none  → text-shadow: none
+text-shadow-initial → --tw-text-shadow-color: initial
 ```
 
 Values are resolved from the `--text-shadow-*` theme namespace.
+
+#### Text shadow color
+
+Color utilities set `--tw-text-shadow-color` with alpha support via `--tw-text-shadow-alpha`:
+
+```
+text-shadow-red-500     → --tw-text-shadow-color: color-mix(in oklab, var(--color-red-500) var(--tw-text-shadow-alpha), transparent)
+text-shadow-red-500/50  → --tw-text-shadow-color: color-mix(in oklab, color-mix(in oklab, var(--color-red-500) 50%, transparent) var(--tw-text-shadow-alpha), transparent)
+```
+
+The `--tw-text-shadow-alpha` custom property defaults to `100%` and controls the base opacity of the text shadow color, paralleling `--tw-shadow-alpha` for box shadows.
 
 ### 16.2 Mask Utilities
 

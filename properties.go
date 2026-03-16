@@ -195,6 +195,15 @@ const twPropertyDeclarations = `@property --tw-translate-x {
   inherits: false;
   initial-value: 100%;
 }
+@property --tw-text-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-text-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
 @property --tw-drop-shadow-size {
   syntax: "*";
   inherits: false;
@@ -363,6 +372,8 @@ const twPropertiesFallbackLayer = `@layer properties {
       --tw-drop-shadow-color: initial;
       --tw-drop-shadow-alpha: 100%;
       --tw-drop-shadow-size: initial;
+      --tw-text-shadow-color: initial;
+      --tw-text-shadow-alpha: 100%;
       --tw-duration: initial;
       --tw-ease: initial;
       --tw-outline-style: initial;

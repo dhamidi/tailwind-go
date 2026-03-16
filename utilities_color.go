@@ -561,6 +561,11 @@ func makeShadowCompileFn() CompileFn {
 	}
 }
 
+// wrapTextShadowAlpha wraps a color value with --tw-text-shadow-alpha using color-mix.
+func wrapTextShadowAlpha(colorValue string) string {
+	return "color-mix(in oklab, " + colorValue + " var(--tw-text-shadow-alpha), transparent)"
+}
+
 // makeTextShadowCompileFn creates the compile function for text-shadow-* utilities.
 // Handles both text-shadow values (from theme) and text-shadow color.
 func makeTextShadowCompileFn() CompileFn {
@@ -571,7 +576,7 @@ func makeTextShadowCompileFn() CompileFn {
 			if val == "" {
 				return nil
 			}
-			return decls("--tw-text-shadow-color", val, "text-shadow", "0px 1px 0px var(--tw-text-shadow-color)")
+			return decls("--tw-text-shadow-color", wrapTextShadowAlpha(val))
 		}
 
 		// Arbitrary value without type hint → text-shadow
@@ -591,7 +596,7 @@ func makeTextShadowCompileFn() CompileFn {
 		// Named: try color themes for text-shadow color
 		val := resolveColorValue(c, "color")
 		if val != "" {
-			return decls("--tw-text-shadow-color", val, "text-shadow", "0px 1px 0px var(--tw-text-shadow-color)")
+			return decls("--tw-text-shadow-color", wrapTextShadowAlpha(val))
 		}
 
 		return nil
