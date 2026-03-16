@@ -584,6 +584,20 @@ var fuzzConicGradientValues = []string{
 	"bg-conic",
 }
 
+var fuzzColorInterpolation = []string{
+	"srgb", "oklab", "oklch", "lab", "lch", "hsl", "hwb", "srgb-linear",
+}
+
+var fuzzMaskGradientDirections = []string{
+	"mask-linear-to-t", "mask-linear-to-r", "mask-linear-to-b", "mask-linear-to-l",
+	"mask-radial", "mask-conic",
+}
+
+var fuzzLinearDirections = []string{
+	"bg-linear-to-t", "bg-linear-to-tr", "bg-linear-to-r", "bg-linear-to-br",
+	"bg-linear-to-b", "bg-linear-to-bl", "bg-linear-to-l", "bg-linear-to-tl",
+}
+
 var fuzzStrokeWidthValues = []string{"0", "1", "2"}
 
 var fuzzInsetPrefixes = []string{
@@ -637,6 +651,9 @@ const (
 	levelNegativeWithVariant
 	levelNegativeArbitrary
 	levelImportantArbitrary
+	levelGradientChain
+	levelGradientInterpolation
+	levelMaskGradientDirection
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -714,6 +731,34 @@ func generateShadowUtility(rng *rand.Rand) string {
 		}
 		return "text-shadow-" + size
 	}
+}
+
+// generateGradientChain generates a complete gradient specification (from + via + to).
+func generateGradientChain(rng *rand.Rand) []string {
+	allDirections := make([]string, 0, len(fuzzRadialGradientValues)+len(fuzzLinearDirections)+len(fuzzConicGradientValues))
+	allDirections = append(allDirections, fuzzRadialGradientValues...)
+	allDirections = append(allDirections, fuzzLinearDirections...)
+	allDirections = append(allDirections, fuzzConicGradientValues...)
+
+	direction := pick(rng, allDirections)
+	fromColor := "from-" + pick(rng, fuzzColorFamilies) + "-" + pick(rng, fuzzColorShades)
+	toColor := "to-" + pick(rng, fuzzColorFamilies) + "-" + pick(rng, fuzzColorShades)
+
+	classes := []string{direction, fromColor}
+
+	// Optionally add via
+	if rng.Intn(2) == 0 {
+		viaColor := "via-" + pick(rng, fuzzColorFamilies) + "-" + pick(rng, fuzzColorShades)
+		classes = append(classes, viaColor)
+	}
+
+	// Optionally add positions
+	if rng.Intn(3) == 0 {
+		classes = append(classes, "from-"+pick(rng, []string{"5%", "10%", "25%", "50%"}))
+	}
+
+	classes = append(classes, toColor)
+	return classes
 }
 
 // generateGridUtility generates a grid parametric utility.
@@ -1017,6 +1062,20 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 		prefix := pick(rng, fuzzImportantArbitraryPrefixes)
 		val := pick(rng, fuzzImportantArbitraryValues)
 		return "!" + prefix + "-" + val
+
+	case levelGradientChain:
+		chain := generateGradientChain(rng)
+		return pick(rng, chain)
+
+	case levelGradientInterpolation:
+		allDirections := make([]string, 0, len(fuzzLinearDirections)+len(fuzzRadialGradientValues)+len(fuzzConicGradientValues))
+		allDirections = append(allDirections, fuzzLinearDirections...)
+		allDirections = append(allDirections, fuzzRadialGradientValues...)
+		allDirections = append(allDirections, fuzzConicGradientValues...)
+		return pick(rng, allDirections) + "/" + pick(rng, fuzzColorInterpolation)
+
+	case levelMaskGradientDirection:
+		return pick(rng, fuzzMaskGradientDirections)
 	}
 	return generateBaseUtility(rng)
 }
@@ -1048,6 +1107,9 @@ func generateRandomClasses(rng *rand.Rand, count int) []string {
 		4,  // negative with variant
 		4,  // negative with arbitrary value
 		4,  // important with arbitrary value
+		6,  // gradient chain
+		4,  // gradient with color interpolation
+		3,  // mask gradient direction
 	}
 
 	for i := 0; i < count; i++ {
@@ -1094,6 +1156,9 @@ func TestClassGenerator(t *testing.T) {
 	hasNegativeImportant := false
 	hasNegativeArbitrary := false
 	hasImportantArbitrary := false
+	hasGradientInterpolation := false
+	hasRadialOrConic := false
+	hasMaskGradientDir := false
 	for _, c := range classes {
 		if len(c) > 0 && c[0] == '-' {
 			hasNegative = true
@@ -1136,6 +1201,22 @@ func TestClassGenerator(t *testing.T) {
 		if len(c) > 0 && c[0] == '!' && strings.Contains(c, "[") {
 			hasImportantArbitrary = true
 		}
+		// Detect gradient with color interpolation like bg-linear-to-r/oklab
+		for _, interp := range fuzzColorInterpolation {
+			if strings.HasSuffix(c, "/"+interp) {
+				hasGradientInterpolation = true
+			}
+		}
+		// Detect radial or conic gradients
+		if strings.HasPrefix(c, "bg-radial") || strings.HasPrefix(c, "bg-conic") {
+			hasRadialOrConic = true
+		}
+		// Detect mask gradient directions
+		for _, d := range fuzzMaskGradientDirections {
+			if c == d {
+				hasMaskGradientDir = true
+			}
+		}
 	}
 	if !hasVariant {
 		t.Error("no variant classes generated")
@@ -1166,6 +1247,15 @@ func TestClassGenerator(t *testing.T) {
 	}
 	if !hasImportantArbitrary {
 		t.Error("no important with arbitrary value classes generated")
+	}
+	if !hasGradientInterpolation {
+		t.Error("no gradient with color interpolation classes generated")
+	}
+	if !hasRadialOrConic {
+		t.Error("no radial or conic gradient classes generated")
+	}
+	if !hasMaskGradientDir {
+		t.Error("no mask gradient direction classes generated")
 	}
 
 	// Verify 500 classes produces at least 400 unique (high diversity).
