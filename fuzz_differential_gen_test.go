@@ -488,6 +488,58 @@ var fuzzDurationDelayValues = []string{
 	"0", "75", "100", "150", "200", "300", "500", "700", "1000",
 }
 
+var fuzzPerspectiveValues = []string{
+	"dramatic", "near", "normal", "midrange", "far", "extreme", "none",
+}
+
+var fuzzPerspectiveOriginValues = []string{
+	"center", "top", "top-right", "right", "bottom-right",
+	"bottom", "bottom-left", "left", "top-left",
+}
+
+var fuzzOriginValues = []string{
+	"center", "top", "top-right", "right", "bottom-right",
+	"bottom", "bottom-left", "left", "top-left",
+}
+
+var fuzzRadialGradientValues = []string{
+	"bg-radial", "bg-radial-at-t", "bg-radial-at-tl", "bg-radial-at-tr",
+	"bg-radial-at-b", "bg-radial-at-bl", "bg-radial-at-br",
+	"bg-radial-at-l", "bg-radial-at-r", "bg-radial-at-c",
+}
+
+var fuzzConicGradientValues = []string{
+	"bg-conic",
+}
+
+var fuzzStrokeWidthValues = []string{"0", "1", "2"}
+
+var fuzzInsetPrefixes = []string{
+	"inset", "inset-x", "inset-y",
+	"top", "right", "bottom", "left",
+	"start", "end", "inset-bs", "inset-be",
+}
+
+var fuzzIndentValues = []string{
+	"0", "0.5", "1", "2", "4", "8", "px",
+}
+
+var fuzzFontStretchValues = []string{
+	"ultra-condensed", "extra-condensed", "condensed", "semi-condensed",
+	"normal", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded",
+}
+
+var fuzzAnimationValues = []string{
+	"spin", "ping", "pulse", "bounce", "none",
+}
+
+var fuzzSafeAlignmentValues = []string{
+	"items-center-safe", "items-end-safe",
+	"justify-center-safe", "justify-end-safe",
+	"content-center-safe", "content-end-safe",
+	"self-center-safe", "self-end-safe",
+}
+
 // Complexity levels for class generation.
 const (
 	levelSimple = iota
@@ -594,7 +646,7 @@ func generateGridUtility(rng *rand.Rand) string {
 
 // generateBaseUtility generates a random utility without variants or modifiers.
 func generateBaseUtility(rng *rand.Rand) string {
-	category := rng.Intn(28)
+	category := rng.Intn(37)
 	switch category {
 	case 0: // static
 		return pick(rng, staticUtilities)
@@ -673,6 +725,38 @@ func generateBaseUtility(rng *rand.Rand) string {
 		return prefix + "-[" + pick(rng, fuzzMaskGradientPositionValues) + "]"
 	case 27: // gradient percentage positions
 		return pick(rng, fuzzGradientPercentagePositions)
+	case 28: // perspective
+		if rng.Intn(2) == 0 {
+			return "perspective-" + pick(rng, fuzzPerspectiveValues)
+		}
+		return "perspective-origin-" + pick(rng, fuzzPerspectiveOriginValues)
+	case 29: // transform origin
+		return "origin-" + pick(rng, fuzzOriginValues)
+	case 30: // advanced gradients (radial and conic)
+		if rng.Intn(3) == 0 {
+			return pick(rng, fuzzConicGradientValues)
+		}
+		return pick(rng, fuzzRadialGradientValues)
+	case 31: // stroke width
+		return "stroke-" + pick(rng, fuzzStrokeWidthValues)
+	case 32: // inset positioning
+		return pick(rng, fuzzInsetPrefixes) + "-" + pick(rng, fuzzSpacingValues)
+	case 33: // indent
+		val := pick(rng, fuzzIndentValues)
+		if rng.Intn(3) == 0 {
+			return "-indent-" + val
+		}
+		return "indent-" + val
+	case 34: // font-stretch
+		return "font-stretch-" + pick(rng, fuzzFontStretchValues)
+	case 35: // content and animation
+		if rng.Intn(2) == 0 {
+			contentValues := []string{"content-none", "content-['hello']", "content-[attr(data-label)]"}
+			return pick(rng, contentValues)
+		}
+		return "animate-" + pick(rng, fuzzAnimationValues)
+	case 36: // safe alignment
+		return pick(rng, fuzzSafeAlignmentValues)
 	}
 	return pick(rng, staticUtilities)
 }
