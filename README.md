@@ -144,7 +144,7 @@ full := tw.FullCSS()              // theme + preflight + utilities + properties 
 
 ## Explanation
 
-The engine works by ingesting Tailwind's own CSS v4 source as its specification. Rather than hardcoding a list of utilities, it parses `@theme`, `@utility`, `@variant`, and `@keyframes` directives from real Tailwind CSS. This means the engine's behavior is defined entirely by the CSS it loads — the same way Tailwind v4 itself works.
+The engine works by ingesting Tailwind's own CSS v4 source as its specification. Rather than hardcoding a list of utilities, it parses `@theme`, `@utility`, `@variant`/`@custom-variant`, and `@keyframes` directives from real Tailwind CSS. This means the engine's behavior is defined entirely by the CSS it loads — the same way Tailwind v4 itself works.
 
 The scanner is format-agnostic: it extracts candidate class-name tokens from raw bytes without parsing HTML, JSX, or any other template syntax. You can feed it any text — markup, source code, Markdown — and it will find anything that looks like a Tailwind class. False positives are harmless; unrecognized candidates are silently discarded during CSS generation.
 
@@ -170,11 +170,11 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Type hints: `text-[length:1.5em]`
 - Custom properties: `w-[--sidebar-width]`
 - Arbitrary variants: `[@media(min-width:900px)]:bg-red-500`
-- `@theme`, `@utility`, `@variant`, `@keyframes` directives
+- `@theme`, `@utility`, `@variant`, `@custom-variant`, `@keyframes` directives
 - Compound variants: `group-hover:text-white`, `peer-focus:ring-2`, `not-hover:opacity-100`, `has-checked:bg-gray-50`, `in-data-current:font-bold`
 - `not-*` media negation: `not-dark:bg-white` → `@media not (prefers-color-scheme: dark) { ... }`
 - Named groups/peers: `group/sidebar`, `group-hover/sidebar:flex`, `peer-focus/email:text-white`
-- Dark mode class strategy: both `@media (prefers-color-scheme: dark)` and class-based (`.dark` selector)
+- Dark mode class strategy: both `@media (prefers-color-scheme: dark)` and class-based (`.dark` selector) via `@custom-variant dark (&:where(.dark, .dark *))`
 - Container queries: `@md:flex`, `@lg:grid`, built-in `@3xs` through `@7xl`
 - `@supports` variants: `supports-grid:flex`, `supports-[display:grid]:grid`, `supports-backdrop-filter:flex`, `not-supports-[display:grid]:hidden`, `[@supports(display:grid)]:flex`
 - `@starting-style` variant: `starting:opacity-0`

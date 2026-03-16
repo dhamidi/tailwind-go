@@ -65,6 +65,45 @@ func TestDarkModeOverrideFromDefault(t *testing.T) {
 	}
 }
 
+func TestCustomVariantDirective(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; }
+@utility text-* { color: --value(--color); }
+@custom-variant dark (&:where(.dark, .dark *));
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="dark:text-white"`))
+	result := e.CSS()
+	if strings.Contains(result, "@media") {
+		t.Errorf("should not have media query for class strategy via @custom-variant, got: %s", result)
+	}
+	if !strings.Contains(result, ".dark") {
+		t.Errorf("missing .dark class selector, got: %s", result)
+	}
+	if !strings.Contains(result, "color: #fff") {
+		t.Errorf("missing color declaration, got: %s", result)
+	}
+}
+
+func TestCustomVariantNewVariant(t *testing.T) {
+	css := []byte(`
+@theme { --color-white: #fff; }
+@utility text-* { color: --value(--color); }
+@custom-variant theme-midnight (&:where([data-theme="midnight"] *));
+`)
+	e := New()
+	e.LoadCSS(css)
+	e.Write([]byte(`class="theme-midnight:text-white"`))
+	result := e.CSS()
+	if !strings.Contains(result, `data-theme="midnight"`) {
+		t.Errorf("missing data-theme selector, got: %s", result)
+	}
+	if !strings.Contains(result, "color: #fff") {
+		t.Errorf("missing color declaration, got: %s", result)
+	}
+}
+
 func TestDarkModeClassStrategyParseVariant(t *testing.T) {
 	css := []byte(`@variant dark (&:where(.dark, .dark *));`)
 	ss, err := parseStylesheet(css)

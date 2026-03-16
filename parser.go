@@ -59,7 +59,7 @@ func (p *parser) parse() (*Stylesheet, error) {
 				p.parseTheme(ss)
 			case "@utility":
 				p.parseUtility(ss)
-			case "@variant":
+			case "@variant", "@custom-variant":
 				p.parseVariant(ss)
 			case "@keyframes":
 				p.parseKeyframes(ss)
