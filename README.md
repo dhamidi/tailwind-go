@@ -186,7 +186,7 @@ The `Engine` is safe for concurrent use. It uses `sync.RWMutex` internally, so c
 - Touch action: `touch-auto`, `touch-none`, `touch-pan-x`, `touch-pan-y`, `touch-pinch-zoom`, `touch-manipulation` — composable via custom properties (e.g., `touch-pan-x touch-pan-y` combines both)
 - Scroll snap: `snap-x`, `snap-y`, `snap-both`, `snap-mandatory`, `snap-proximity`, `snap-start`, `snap-center`, `snap-end`
 - Object fit/position: `object-cover`, `object-contain`, `object-center`, `object-left-top`, etc.
-- Containment: `contain-none`, `contain-content`, `contain-strict`, `contain-size`, `contain-layout`, `contain-paint`, `contain-style`
+- Containment: `contain-none`, `contain-content`, `contain-strict`, `contain-size`, `contain-inline-size`, `contain-layout`, `contain-paint`, `contain-style` — composable via custom properties (e.g., `contain-size contain-layout` combines both)
 - Performance hints: `will-change-auto`, `will-change-scroll`, `will-change-contents`, `will-change-transform`
 - Accessibility: `forced-color-adjust-auto`, `forced-color-adjust-none`
 - Text size / line height associations: `text-sm` sets both `font-size` and `line-height`

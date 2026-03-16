@@ -1449,14 +1449,17 @@ func registerStaticUtilities(idx *utilityIndex, register func(*UtilityRegistrati
 	register(staticUtility("transform-view", decls("transform-box", "view-box")))
 
 	// ===== Contain =====
+	// Composable via custom properties (trailing-comma trick) so that
+	// contain-size + contain-layout + contain-paint + contain-style combine correctly.
+	containChain := "var(--tw-contain-size,) var(--tw-contain-layout,) var(--tw-contain-paint,) var(--tw-contain-style,)"
 	register(staticUtility("contain-none", decls("contain", "none")))
 	register(staticUtility("contain-content", decls("contain", "content")))
 	register(staticUtility("contain-strict", decls("contain", "strict")))
-	register(staticUtility("contain-size", decls("contain", "size")))
-	register(staticUtility("contain-inline-size", decls("contain", "inline-size")))
-	register(staticUtility("contain-layout", decls("contain", "layout")))
-	register(staticUtility("contain-paint", decls("contain", "paint")))
-	register(staticUtility("contain-style", decls("contain", "style")))
+	register(staticUtility("contain-size", decls("--tw-contain-size", "size", "contain", containChain)))
+	register(staticUtility("contain-inline-size", decls("--tw-contain-size", "inline-size", "contain", containChain)))
+	register(staticUtility("contain-layout", decls("--tw-contain-layout", "layout", "contain", containChain)))
+	register(staticUtility("contain-paint", decls("--tw-contain-paint", "paint", "contain", containChain)))
+	register(staticUtility("contain-style", decls("--tw-contain-style", "style", "contain", containChain)))
 
 	// ===== @container (Container Query Context) =====
 	// @container makes an element a container query context.

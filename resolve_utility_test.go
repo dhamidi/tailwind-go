@@ -624,6 +624,70 @@ func TestTouchActionDirectionVariants(t *testing.T) {
 	}
 }
 
+func TestContainSingle(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="contain-size"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "--tw-contain-size: size") {
+		t.Errorf("contain-size should set --tw-contain-size: size:\n%s", result)
+	}
+
+	containValue := "var(--tw-contain-size,) var(--tw-contain-layout,) var(--tw-contain-paint,) var(--tw-contain-style,)"
+	if !strings.Contains(result, "contain: "+containValue) {
+		t.Errorf("contain-size should use composed contain value:\n%s", result)
+	}
+
+	if strings.Contains(result, "contain: size;") {
+		t.Errorf("contain-size should not use bare value:\n%s", result)
+	}
+}
+
+func TestContainComposition(t *testing.T) {
+	e := New()
+	e.Write([]byte(`class="contain-size contain-layout"`))
+	result := e.CSS()
+	t.Logf("Generated CSS:\n%s", result)
+
+	if !strings.Contains(result, "--tw-contain-size: size") {
+		t.Errorf("contain-size should set --tw-contain-size: size:\n%s", result)
+	}
+	if !strings.Contains(result, "--tw-contain-layout: layout") {
+		t.Errorf("contain-layout should set --tw-contain-layout: layout:\n%s", result)
+	}
+
+	containValue := "var(--tw-contain-size,) var(--tw-contain-layout,) var(--tw-contain-paint,) var(--tw-contain-style,)"
+	if !strings.Contains(result, "contain: "+containValue) {
+		t.Errorf("should use composed contain value:\n%s", result)
+	}
+}
+
+func TestContainDirectUtilities(t *testing.T) {
+	tests := []struct {
+		class string
+		value string
+	}{
+		{"contain-none", "none"},
+		{"contain-content", "content"},
+		{"contain-strict", "strict"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.class, func(t *testing.T) {
+			e := New()
+			e.Write([]byte(`class="` + tt.class + `"`))
+			result := e.CSS()
+			expected := "contain: " + tt.value
+			if !strings.Contains(result, expected) {
+				t.Errorf("%s should contain %q:\n%s", tt.class, expected, result)
+			}
+			if strings.Contains(result, "--tw-contain") {
+				t.Errorf("%s should not use custom properties:\n%s", tt.class, result)
+			}
+		})
+	}
+}
+
 func TestPropertyDeclarationsInCSS(t *testing.T) {
 	e := New()
 	e.Write([]byte(`class="translate-x-4"`))
