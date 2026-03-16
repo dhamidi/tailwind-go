@@ -69,6 +69,16 @@ var staticUtilities = []string{
 	"grayscale", "grayscale-0", "invert", "invert-0", "sepia", "sepia-0",
 	"backdrop-grayscale", "backdrop-grayscale-0", "backdrop-invert", "backdrop-invert-0", "backdrop-sepia", "backdrop-sepia-0",
 	"mix-blend-normal", "mix-blend-multiply", "mix-blend-screen", "mix-blend-overlay",
+	"mix-blend-darken", "mix-blend-lighten", "mix-blend-color-dodge", "mix-blend-color-burn",
+	"mix-blend-hard-light", "mix-blend-soft-light", "mix-blend-difference", "mix-blend-exclusion",
+	"mix-blend-hue", "mix-blend-saturation", "mix-blend-color", "mix-blend-luminosity",
+	"mix-blend-plus-darker", "mix-blend-plus-lighter",
+	// transform
+	"transform-3d", "transform-flat", "transform-none",
+	"translate-none", "rotate-none",
+	"backface-visible", "backface-hidden",
+	// text-shadow
+	"text-shadow-sm", "text-shadow", "text-shadow-lg", "text-shadow-none",
 	"bg-fixed", "bg-local", "bg-scroll",
 	"bg-center", "bg-top", "bg-bottom", "bg-left", "bg-right",
 	"bg-repeat", "bg-no-repeat", "bg-repeat-x", "bg-repeat-y",
@@ -127,7 +137,7 @@ var fuzzSizingValues = []string{
 var fuzzColorPrefixes = []string{
 	"bg", "text", "border", "outline", "ring",
 	"accent", "caret", "fill", "stroke",
-	"shadow", "decoration", "divide", "placeholder",
+	"shadow", "inset-shadow", "decoration", "divide", "placeholder",
 	"from", "via", "to",
 	// border color per-side
 	"border-t", "border-r", "border-b", "border-l", "border-x", "border-y",
@@ -237,6 +247,62 @@ var fuzzDivideWidthPrefixes = []string{"divide-x", "divide-y"}
 
 var fuzzDivideWidthValues = []string{"0", "2", "4", "8", "reverse"}
 
+var fuzzFilterPrefixes = []string{
+	"blur", "brightness", "contrast", "saturate", "hue-rotate", "drop-shadow",
+}
+
+var fuzzFilterValues = []string{
+	"none", "sm", "md", "lg", "xl", "2xl", "3xl",
+}
+
+var fuzzBrightnessContrastValues = []string{
+	"0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+}
+
+var fuzzBackdropFilterPrefixes = []string{
+	"backdrop-blur", "backdrop-brightness", "backdrop-contrast",
+	"backdrop-saturate", "backdrop-hue-rotate", "backdrop-opacity",
+}
+
+var fuzzTransformPrefixes = []string{
+	"translate-x", "translate-y", "translate-z",
+	"rotate", "rotate-x", "rotate-y", "rotate-z",
+	"scale", "scale-x", "scale-y", "scale-z",
+	"skew-x", "skew-y",
+}
+
+var fuzzTranslateValues = []string{
+	"0", "1", "2", "4", "8", "12", "16", "px", "full", "1/2", "1/3", "1/4",
+}
+
+var fuzzRotateValues = []string{
+	"0", "1", "2", "3", "6", "12", "45", "90", "180",
+}
+
+var fuzzScaleValues = []string{
+	"0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+}
+
+var fuzzSkewValues = []string{
+	"0", "1", "2", "3", "6", "12",
+}
+
+var fuzzShadowSizes = []string{
+	"2xs", "xs", "sm", "", "md", "lg", "xl", "2xl", "none",
+}
+
+var fuzzInsetShadowSizes = []string{
+	"2xs", "xs", "sm", "", "md", "lg", "xl", "2xl", "none",
+}
+
+var fuzzOpacityValues = []string{
+	"0", "5", "10", "15", "20", "25", "30", "40", "50", "60", "70", "75", "80", "90", "95", "100",
+}
+
+var fuzzDurationDelayValues = []string{
+	"0", "75", "100", "150", "200", "300", "500", "700", "1000",
+}
+
 // Complexity levels for class generation.
 const (
 	levelSimple = iota
@@ -251,6 +317,7 @@ const (
 	levelKitchenSink
 	levelTypography
 	levelBorderVariant
+	levelFilterTransform
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -274,9 +341,65 @@ func pick(rng *rand.Rand, items []string) string {
 	return items[rng.Intn(len(items))]
 }
 
+// generateFilterUtility generates a filter or backdrop-filter utility.
+func generateFilterUtility(rng *rand.Rand, prefixes []string) string {
+	prefix := pick(rng, prefixes)
+	switch {
+	case strings.HasSuffix(prefix, "brightness") || strings.HasSuffix(prefix, "contrast") ||
+		strings.HasSuffix(prefix, "saturate") || strings.HasSuffix(prefix, "opacity"):
+		return prefix + "-" + pick(rng, fuzzBrightnessContrastValues)
+	case strings.HasSuffix(prefix, "hue-rotate"):
+		return prefix + "-" + pick(rng, fuzzRotateValues)
+	default: // blur, drop-shadow
+		return prefix + "-" + pick(rng, fuzzFilterValues)
+	}
+}
+
+// generateTransformUtility generates a transform utility.
+func generateTransformUtility(rng *rand.Rand) string {
+	prefix := pick(rng, fuzzTransformPrefixes)
+	switch {
+	case strings.HasPrefix(prefix, "translate"):
+		return prefix + "-" + pick(rng, fuzzTranslateValues)
+	case strings.HasPrefix(prefix, "rotate"):
+		return prefix + "-" + pick(rng, fuzzRotateValues)
+	case strings.HasPrefix(prefix, "scale"):
+		return prefix + "-" + pick(rng, fuzzScaleValues)
+	case strings.HasPrefix(prefix, "skew"):
+		return prefix + "-" + pick(rng, fuzzSkewValues)
+	}
+	return prefix + "-" + pick(rng, fuzzScaleValues)
+}
+
+// generateShadowUtility generates a shadow, inset-shadow, or text-shadow utility.
+func generateShadowUtility(rng *rand.Rand) string {
+	sub := rng.Intn(3)
+	switch sub {
+	case 0: // shadow
+		size := pick(rng, fuzzShadowSizes)
+		if size == "" {
+			return "shadow"
+		}
+		return "shadow-" + size
+	case 1: // inset-shadow
+		size := pick(rng, fuzzInsetShadowSizes)
+		if size == "" {
+			return "inset-shadow"
+		}
+		return "inset-shadow-" + size
+	default: // text-shadow
+		sizes := []string{"sm", "", "lg", "none"}
+		size := pick(rng, sizes)
+		if size == "" {
+			return "text-shadow"
+		}
+		return "text-shadow-" + size
+	}
+}
+
 // generateBaseUtility generates a random utility without variants or modifiers.
 func generateBaseUtility(rng *rand.Rand) string {
-	category := rng.Intn(12)
+	category := rng.Intn(18)
 	switch category {
 	case 0: // static
 		return pick(rng, staticUtilities)
@@ -314,6 +437,21 @@ func generateBaseUtility(rng *rand.Rand) string {
 		default:
 			return pick(rng, fuzzDivideWidthPrefixes) + "-" + pick(rng, fuzzDivideWidthValues)
 		}
+	case 12: // filter
+		return generateFilterUtility(rng, fuzzFilterPrefixes)
+	case 13: // backdrop filter
+		return generateFilterUtility(rng, fuzzBackdropFilterPrefixes)
+	case 14: // transform
+		return generateTransformUtility(rng)
+	case 15: // shadow
+		return generateShadowUtility(rng)
+	case 16: // opacity
+		return "opacity-" + pick(rng, fuzzOpacityValues)
+	case 17: // duration/delay
+		if rng.Intn(2) == 0 {
+			return "duration-" + pick(rng, fuzzDurationDelayValues)
+		}
+		return "delay-" + pick(rng, fuzzDurationDelayValues)
 	}
 	return pick(rng, staticUtilities)
 }
@@ -399,6 +537,28 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 		default: // outline offset with variant
 			return variant + ":" + pick(rng, fuzzOutlineOffsetPrefixes) + "-" + pick(rng, fuzzOutlineOffsetValues)
 		}
+
+	case levelFilterTransform:
+		sub := rng.Intn(5)
+		switch sub {
+		case 0: // filter
+			return generateFilterUtility(rng, fuzzFilterPrefixes)
+		case 1: // backdrop filter
+			return generateFilterUtility(rng, fuzzBackdropFilterPrefixes)
+		case 2: // transform
+			return generateTransformUtility(rng)
+		case 3: // shadow
+			return generateShadowUtility(rng)
+		default: // opacity/duration/delay
+			switch rng.Intn(3) {
+			case 0:
+				return "opacity-" + pick(rng, fuzzOpacityValues)
+			case 1:
+				return "duration-" + pick(rng, fuzzDurationDelayValues)
+			default:
+				return "delay-" + pick(rng, fuzzDurationDelayValues)
+			}
+		}
 	}
 	return generateBaseUtility(rng)
 }
@@ -419,6 +579,7 @@ func generateRandomClasses(rng *rand.Rand, count int) []string {
 		2,  // kitchen sink
 		15, // typography
 		12, // border variant
+		12, // filter/transform
 	}
 
 	for i := 0; i < count; i++ {
