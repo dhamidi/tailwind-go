@@ -1,0 +1,57 @@
+{{define "title"}}{{.Post.Title}}{{end}}
+{{define "content"}}
+<article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 animate-fade-in">
+    <!-- Header -->
+    <header class="mb-10">
+        <div class="flex items-center gap-3 mb-4">
+            <time class="text-sm font-semibold text-violet-600 dark:text-violet-400">
+                {{.Post.Date.Format "January 2, 2006"}}
+            </time>
+            {{if not .Post.Published}}
+            <span class="rounded-full px-3 py-1 text-xs font-semibold bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">Draft</span>
+            {{end}}
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent mb-4">
+            {{.Post.Title}}
+        </h1>
+        {{if .Post.Tags}}
+        <div class="flex flex-wrap gap-2">
+            {{range .Post.Tags}}
+            <span class="rounded-full px-3 py-1 text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300">{{.}}</span>
+            {{end}}
+        </div>
+        {{end}}
+    </header>
+
+    <!-- Body -->
+    <div class="prose-custom space-y-0">
+        {{.Post.HTML}}
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-16 pt-8 border-t border-gray-200 dark:border-gray-800">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {{if .Prev}}
+            <a href="/posts/{{.Prev.Slug}}" class="group flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200">
+                <span class="inline-block transition-transform duration-200 group-hover:-translate-x-1">&larr;</span>
+                {{.Prev.Title}}
+            </a>
+            {{else}}
+            <div></div>
+            {{end}}
+            {{if .Next}}
+            <a href="/posts/{{.Next.Slug}}" class="group flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200">
+                {{.Next.Title}}
+                <span class="inline-block transition-transform duration-200 group-hover:translate-x-1">&rarr;</span>
+            </a>
+            {{end}}
+        </div>
+        <div class="mt-6 text-center">
+            <a href="/posts" class="inline-flex items-center gap-2 text-sm font-bold text-violet-600 dark:text-violet-400 hover:text-amber-500 transition-colors duration-200 group">
+                <span class="inline-block transition-transform duration-200 group-hover:-translate-x-1">&larr;</span>
+                Back to all posts
+            </a>
+        </div>
+    </div>
+</article>
+{{end}}

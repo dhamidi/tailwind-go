@@ -1,0 +1,53 @@
+{{define "title"}}Drafts{{end}}
+{{define "content"}}
+<section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 animate-fade-in">
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-10">
+        Drafts
+    </h1>
+
+    {{if .Drafts}}
+    <div class="space-y-4">
+        {{range .Drafts}}
+        <article class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-xl bg-white dark:bg-gray-900 border-2 border-amber-200 dark:border-amber-800 shadow-sm">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">Draft</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate">{{.Title}}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{.Summary}}</p>
+                {{if .Tags}}
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                    {{range .Tags}}
+                    <span class="rounded-full px-2 py-0.5 text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300">{{.}}</span>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="/admin/editor/{{.Slug}}" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200">
+                    Edit
+                </a>
+                <form method="POST" action="/admin/drafts/{{.Slug}}/publish" class="inline">
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow hover:shadow-lg transition-all duration-200">
+                        Publish
+                    </button>
+                </form>
+                <form method="POST" action="/admin/posts/{{.Slug}}/delete" class="inline">
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors duration-200">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </article>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="text-center py-16">
+        <p class="text-lg text-gray-500 dark:text-gray-400 mb-4">No drafts yet.</p>
+        <a href="/admin/editor" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
+            Create a new post
+        </a>
+    </div>
+    {{end}}
+</section>
+{{end}}

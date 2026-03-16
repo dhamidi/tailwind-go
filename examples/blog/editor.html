@@ -1,0 +1,63 @@
+{{define "title"}}{{if .Post.Slug}}Edit Post{{else}}New Post{{end}}{{end}}
+{{define "content"}}
+<section class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 animate-fade-in">
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-8">
+        {{if .Post.Slug}}Edit Post{{else}}New Post{{end}}
+    </h1>
+
+    <form method="POST" action="/admin/posts" class="space-y-6">
+        {{if .Post.Slug}}
+        <input type="hidden" name="original_slug" value="{{.Post.Slug}}">
+        {{end}}
+
+        <!-- Title -->
+        <div>
+            <label for="title" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Title</label>
+            <input type="text" id="title" name="title" value="{{.Post.Title}}"
+                class="w-full text-3xl font-bold bg-transparent border-b-2 border-gray-200 dark:border-gray-700 focus:border-violet-500 dark:focus:border-violet-400 outline-none py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 transition-colors duration-200"
+                placeholder="Post title..." required>
+        </div>
+
+        <!-- Tags -->
+        <div>
+            <label for="tags" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tags</label>
+            <input type="text" id="tags" name="tags" value="{{range $i, $t := .Post.Tags}}{{if $i}}, {{end}}{{$t}}{{end}}"
+                class="w-full text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
+                placeholder="go, tailwind, tutorial">
+        </div>
+
+        <!-- Body -->
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label for="body" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Content (Markdown)</label>
+                <span id="charcount" class="text-xs text-gray-400 dark:text-gray-500 font-mono">0 chars</span>
+            </div>
+            <textarea id="body" name="body"
+                class="w-full min-h-[400px] font-mono text-sm bg-gray-900 dark:bg-gray-950 text-gray-100 border border-gray-700 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y leading-relaxed"
+                placeholder="Write your post in markdown...">{{.Post.Body}}</textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button type="submit" name="action" value="publish"
+                class="flex-1 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 text-sm">
+                Publish
+            </button>
+            <button type="submit" name="action" value="draft"
+                class="flex-1 px-6 py-3 rounded-xl font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow hover:shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 text-sm">
+                Save as Draft
+            </button>
+        </div>
+    </form>
+
+    <script>
+        (function() {
+            var body = document.getElementById('body');
+            var counter = document.getElementById('charcount');
+            function update() { counter.textContent = body.value.length + ' chars'; }
+            body.addEventListener('input', update);
+            update();
+        })();
+    </script>
+</section>
+{{end}}

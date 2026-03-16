@@ -1,4 +1,4 @@
-module github.com/dhamidi/tailwind-go/examples/docs-viewer
+module github.com/dhamidi/tailwind-go/examples/blog
 
 go 1.22
 

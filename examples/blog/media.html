@@ -1,0 +1,49 @@
+{{define "title"}}Media{{end}}
+{{define "content"}}
+<section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 animate-fade-in">
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-10">
+        Media Library
+    </h1>
+
+    <!-- Upload Form -->
+    <div class="mb-10">
+        <form method="POST" action="/admin/media" enctype="multipart/form-data">
+            <div class="relative flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900 hover:border-violet-400 dark:hover:border-violet-600 transition-colors duration-200">
+                <div class="text-center mb-4">
+                    <div class="text-4xl text-gray-300 dark:text-gray-600 mb-2">&#128206;</div>
+                    <p class="text-sm font-semibold text-gray-600 dark:text-gray-400">Choose a file to upload</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Any file type accepted</p>
+                </div>
+                <input type="file" name="file" required
+                    class="block w-full max-w-xs text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-100 file:text-violet-700 dark:file:bg-violet-900 dark:file:text-violet-300 hover:file:bg-violet-200 dark:hover:file:bg-violet-800 transition-colors cursor-pointer">
+                <button type="submit"
+                    class="mt-4 px-6 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow hover:shadow-lg transition-all duration-200 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400">
+                    Upload
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Media Grid -->
+    {{if .Media}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {{range .Media}}
+        <div class="group relative flex flex-col items-center p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-lg transition-shadow duration-200">
+            <div class="w-full h-24 flex items-center justify-center text-4xl text-gray-300 dark:text-gray-600 mb-3 rounded-lg bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                &#128196;
+            </div>
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate w-full text-center" title="{{.Name}}">{{.Name}}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{.Size}} bytes</p>
+            <form method="POST" action="/admin/media/{{.Name}}/delete" class="mt-2">
+                <button type="submit" class="opacity-50 hover:opacity-100 text-xs font-semibold text-red-500 dark:text-red-400 transition-opacity duration-200">
+                    Delete
+                </button>
+            </form>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <p class="text-center text-lg text-gray-500 dark:text-gray-400 py-8">No media files yet. Upload your first file above.</p>
+    {{end}}
+</section>
+{{end}}

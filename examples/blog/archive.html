@@ -1,0 +1,40 @@
+{{define "title"}}Archive{{end}}
+{{define "content"}}
+<section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 animate-fade-in">
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-10">
+        All Posts
+    </h1>
+
+    {{range .Years}}
+    <div class="mb-10">
+        <h2 class="text-2xl font-extrabold text-violet-600 dark:text-violet-400 mb-6">{{.Year}}</h2>
+        <div class="space-y-4">
+            {{range .Posts}}
+            <article class="group relative flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-6 p-4 sm:p-6 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
+                <time class="shrink-0 text-sm font-mono font-semibold text-gray-400 dark:text-gray-500 w-28">
+                    {{.Date.Format "Jan 02"}}
+                </time>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors duration-200">
+                        <a href="/posts/{{.Slug}}" class="after:absolute after:inset-0">{{.Title}}</a>
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{.Summary}}</p>
+                    {{if .Tags}}
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                        {{range .Tags}}
+                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300">{{.}}</span>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </article>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
+    {{if eq (len .Years) 0}}
+    <p class="text-lg text-gray-500 dark:text-gray-400">No posts yet.</p>
+    {{end}}
+</section>
+{{end}}

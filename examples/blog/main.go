@@ -1,0 +1,434 @@
+package main
+
+import (
+	"flag"
+	"html/template"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	tailwind "github.com/dhamidi/tailwind-go"
+)
+
+var templates *template.Template
+var store *Store
+
+// PageData is the common data passed to all templates.
+type PageData struct {
+	TailwindURL string
+	Posts       []Post
+	Post        Post
+	Prev        *Post
+	Next        *Post
+	Drafts      []Post
+	Media       []Media
+	Years       []YearGroup
+}
+
+// YearGroup groups posts by year for the archive page.
+type YearGroup struct {
+	Year  int
+	Posts []Post
+}
+
+var tailwindURL string
+
+func main() {
+	addr := flag.String("addr", ":8080", "listen address")
+	dataDir := flag.String("data", "", "data directory for content (default: temp dir)")
+	flag.Parse()
+
+	// Set up data directory
+	dir := *dataDir
+	if dir == "" {
+		tmp, err := os.MkdirTemp("", "blog-*")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer os.RemoveAll(tmp)
+		dir = tmp
+	}
+
+	store = NewStore(dir)
+	if err := store.Init(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Parse templates
+	templates = template.Must(template.ParseFiles(
+		"layout.html",
+		"home.html",
+		"post.html",
+		"archive.html",
+		"editor.html",
+		"drafts.html",
+		"media.html",
+	))
+
+	// Set up Tailwind
+	tw := tailwind.New()
+
+	// Scan template files
+	for _, name := range []string{"layout.html", "home.html", "post.html", "archive.html", "editor.html", "drafts.html", "media.html"} {
+		data, err := os.ReadFile(name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tw.Write(data)
+	}
+
+	// Register classes used by the markdown renderer at runtime
+	tw.Write([]byte(`
+		text-4xl font-black tracking-tight mb-6 text-gray-900 dark:text-white
+		text-3xl font-extrabold tracking-tight mt-10 mb-4
+		text-2xl font-bold tracking-tight mt-8 mb-4
+		text-lg leading-relaxed text-gray-700 dark:text-gray-300 mb-4
+		font-bold text-gray-900 dark:text-white
+		italic
+		underline decoration-violet-500 decoration-2 underline-offset-2
+		line-through text-gray-400 dark:text-gray-500
+		bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-violet-600 dark:text-violet-400
+		list-disc list-inside space-y-2 mb-6
+		list-decimal list-inside space-y-2 mb-6
+		leading-relaxed
+		my-8 border-t-2 border-gray-200 dark:border-gray-700
+		space-y-0 prose-custom
+	`))
+
+	handler := tailwind.NewHandler(tw)
+	handler.Build()
+	tailwindURL = handler.URL()
+
+	mux := http.NewServeMux()
+	mux.Handle(handler.URL(), handler)
+
+	// Routes
+	mux.HandleFunc("/", handleHome)
+	mux.HandleFunc("/posts", handleArchive)
+	mux.HandleFunc("/posts/", handlePost)
+	mux.HandleFunc("/admin/editor", handleEditor)
+	mux.HandleFunc("/admin/editor/", handleEditor)
+	mux.HandleFunc("/admin/posts", handleSavePost)
+	mux.HandleFunc("/admin/posts/", handlePostAction)
+	mux.HandleFunc("/admin/drafts", handleDrafts)
+	mux.HandleFunc("/admin/drafts/", handleDraftAction)
+	mux.HandleFunc("/admin/media", handleMediaRoute)
+	mux.HandleFunc("/admin/media/", handleMediaAction)
+
+	log.Printf("Starting blog server on %s", *addr)
+	log.Fatal(http.ListenAndServe(*addr, mux))
+}
+
+func renderPage(w http.ResponseWriter, name string, data PageData) {
+	data.TailwindURL = tailwindURL
+	// We need to execute layout with the content block
+	err := templates.ExecuteTemplate(w, "layout", data)
+	if err != nil {
+		log.Printf("template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	posts, err := store.ListPosts()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// Show at most 3 recent posts
+	if len(posts) > 3 {
+		posts = posts[:3]
+	}
+
+	// Re-parse templates to pick up the home content block
+	tmpl := template.Must(template.ParseFiles("layout.html", "home.html"))
+	data := PageData{TailwindURL: tailwindURL, Posts: posts}
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handleArchive(w http.ResponseWriter, r *http.Request) {
+	posts, err := store.ListPosts()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	years := groupByYear(posts)
+
+	tmpl := template.Must(template.ParseFiles("layout.html", "archive.html"))
+	data := PageData{TailwindURL: tailwindURL, Years: years}
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handlePost(w http.ResponseWriter, r *http.Request) {
+	slug := strings.TrimPrefix(r.URL.Path, "/posts/")
+	if slug == "" {
+		handleArchive(w, r)
+		return
+	}
+
+	posts, err := store.ListPosts()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var post *Post
+	var idx int
+	for i, p := range posts {
+		if p.Slug == slug {
+			post = &posts[i]
+			idx = i
+			break
+		}
+	}
+	if post == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	data := PageData{TailwindURL: tailwindURL, Post: *post}
+	if idx > 0 {
+		data.Next = &posts[idx-1]
+	}
+	if idx < len(posts)-1 {
+		data.Prev = &posts[idx+1]
+	}
+
+	tmpl := template.Must(template.ParseFiles("layout.html", "post.html"))
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handleEditor(w http.ResponseWriter, r *http.Request) {
+	slug := strings.TrimPrefix(r.URL.Path, "/admin/editor/")
+	slug = strings.TrimPrefix(slug, "/admin/editor")
+
+	var post Post
+	if slug != "" {
+		p, err := store.GetPost(slug)
+		if err == nil {
+			post = p
+		}
+	}
+
+	tmpl := template.Must(template.ParseFiles("layout.html", "editor.html"))
+	data := PageData{TailwindURL: tailwindURL, Post: post}
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handleSavePost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	title := r.FormValue("title")
+	body := r.FormValue("body")
+	tagsStr := r.FormValue("tags")
+	action := r.FormValue("action")
+
+	var tags []string
+	for _, t := range strings.Split(tagsStr, ",") {
+		t = strings.TrimSpace(t)
+		if t != "" {
+			tags = append(tags, t)
+		}
+	}
+
+	slug := slugify(title)
+	published := action == "publish"
+
+	// Build the full markdown content
+	var content strings.Builder
+	content.WriteString("# ")
+	content.WriteString(title)
+	content.WriteByte('\n')
+	if len(tags) > 0 {
+		content.WriteString("tags: ")
+		content.WriteString(strings.Join(tags, ", "))
+		content.WriteByte('\n')
+	}
+	content.WriteByte('\n')
+	content.WriteString(body)
+
+	post := Post{
+		Slug:      slug,
+		Title:     title,
+		Body:      content.String(),
+		Date:      time.Now(),
+		Tags:      tags,
+		Published: published,
+	}
+
+	if err := store.SavePost(post); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if published {
+		http.Redirect(w, r, "/posts/"+slug, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/admin/drafts", http.StatusSeeOther)
+	}
+}
+
+func handlePostAction(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/admin/posts/")
+	if strings.HasSuffix(path, "/delete") {
+		slug := strings.TrimSuffix(path, "/delete")
+		if r.Method == http.MethodPost {
+			store.DeletePost(slug)
+			// Also try deleting from drafts
+			store.deleteBySlug("drafts", slug)
+		}
+		http.Redirect(w, r, "/posts", http.StatusSeeOther)
+		return
+	}
+}
+
+func handleDrafts(w http.ResponseWriter, r *http.Request) {
+	drafts, err := store.ListDrafts()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("layout.html", "drafts.html"))
+	data := PageData{TailwindURL: tailwindURL, Drafts: drafts}
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handleDraftAction(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/admin/drafts/")
+	if strings.HasSuffix(path, "/publish") && r.Method == http.MethodPost {
+		slug := strings.TrimSuffix(path, "/publish")
+		if err := store.PublishDraft(slug); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/posts", http.StatusSeeOther)
+		return
+	}
+}
+
+func handleMediaRoute(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		handleUploadMedia(w, r)
+		return
+	}
+	handleMediaList(w, r)
+}
+
+func handleMediaList(w http.ResponseWriter, r *http.Request) {
+	media, err := store.ListMedia()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("layout.html", "media.html"))
+	data := PageData{TailwindURL: tailwindURL, Media: media}
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handleUploadMedia(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(32 << 20) // 32MB max
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	name := filepath.Base(header.Filename)
+	if err := store.SaveMedia(name, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/admin/media", http.StatusSeeOther)
+}
+
+func handleMediaAction(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/admin/media/")
+	if strings.HasSuffix(path, "/delete") && r.Method == http.MethodPost {
+		name := strings.TrimSuffix(path, "/delete")
+		store.DeleteMedia(name)
+		http.Redirect(w, r, "/admin/media", http.StatusSeeOther)
+		return
+	}
+}
+
+func groupByYear(posts []Post) []YearGroup {
+	if len(posts) == 0 {
+		return nil
+	}
+	var groups []YearGroup
+	currentYear := -1
+	for _, p := range posts {
+		year := p.Date.Year()
+		if year != currentYear {
+			groups = append(groups, YearGroup{Year: year})
+			currentYear = year
+		}
+		groups[len(groups)-1].Posts = append(groups[len(groups)-1].Posts, p)
+	}
+	return groups
+}
+
+func slugify(title string) string {
+	s := strings.ToLower(title)
+	s = strings.Map(func(r rune) rune {
+		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' {
+			return r
+		}
+		if r == ' ' || r == '-' {
+			return '-'
+		}
+		return -1
+	}, s)
+	// Collapse multiple hyphens
+	for strings.Contains(s, "--") {
+		s = strings.ReplaceAll(s, "--", "-")
+	}
+	s = strings.Trim(s, "-")
+	return s
+}
+
+func init() {
+	// Change to the directory containing this program if running via go run
+	// This helps find template files
+	if _, err := os.Stat("layout.html"); os.IsNotExist(err) {
+		if exe, err := os.Executable(); err == nil {
+			dir := filepath.Dir(exe)
+			if _, err := os.Stat(filepath.Join(dir, "layout.html")); err == nil {
+				os.Chdir(dir)
+			}
+		}
+	}
+}
