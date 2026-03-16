@@ -400,6 +400,21 @@ var fuzzUnderlineOffsetValues = []string{
 	"underline-offset-4", "underline-offset-8", "underline-offset-auto",
 }
 
+var fuzzNegativeArbitraryValues = []string{
+	"[2rem]", "[10px]", "[0.5em]", "[calc(1rem+4px)]", "[var(--offset)]",
+}
+
+var fuzzImportantArbitraryPrefixes = []string{
+	"w", "h", "p", "m", "px", "py", "pt", "mt",
+	"bg", "text", "border", "gap",
+	"top", "right", "bottom", "left", "inset",
+	"rounded", "opacity", "z", "order",
+}
+
+var fuzzImportantArbitraryValues = []string{
+	"[300px]", "[1.5rem]", "[#ff0000]", "[50%]", "[2em]", "[var(--custom)]",
+}
+
 var fuzzArbitraryValues = []string{
 	"300px", "1.5rem", "2em", "50%", "100vh",
 	"calc(100%-2rem)", "var(--custom)", "#ff0000", "#3b82f6",
@@ -618,6 +633,10 @@ const (
 	levelComplexArbitrary
 	levelArbitraryVariant
 	levelArbitraryOpacityModifier
+	levelNegativeImportant
+	levelNegativeWithVariant
+	levelNegativeArbitrary
+	levelImportantArbitrary
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -977,6 +996,27 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 	case levelArbitraryOpacityModifier:
 		util := generateColorUtility(rng)
 		return util + "/" + pick(rng, fuzzArbitraryOpacityModifiers)
+
+	case levelNegativeImportant:
+		prefix := pick(rng, fuzzNegatablePrefixes)
+		val := pick(rng, fuzzNegatableValues)
+		return "!-" + prefix + "-" + val
+
+	case levelNegativeWithVariant:
+		prefix := pick(rng, fuzzNegatablePrefixes)
+		val := pick(rng, fuzzNegatableValues)
+		variant := pick(rng, fuzzVariants)
+		return variant + ":-" + prefix + "-" + val
+
+	case levelNegativeArbitrary:
+		prefix := pick(rng, fuzzNegatablePrefixes)
+		val := pick(rng, fuzzNegativeArbitraryValues)
+		return "-" + prefix + "-" + val
+
+	case levelImportantArbitrary:
+		prefix := pick(rng, fuzzImportantArbitraryPrefixes)
+		val := pick(rng, fuzzImportantArbitraryValues)
+		return "!" + prefix + "-" + val
 	}
 	return generateBaseUtility(rng)
 }
@@ -1004,6 +1044,10 @@ func generateRandomClasses(rng *rand.Rand, count int) []string {
 		5,  // complex arbitrary
 		5,  // arbitrary variant
 		4,  // arbitrary opacity modifier
+		4,  // negative + important
+		4,  // negative with variant
+		4,  // negative with arbitrary value
+		4,  // important with arbitrary value
 	}
 
 	for i := 0; i < count; i++ {
@@ -1047,6 +1091,9 @@ func TestClassGenerator(t *testing.T) {
 	hasTypeHinted := false
 	hasParenCustomProp := false
 	hasArbitraryVariant := false
+	hasNegativeImportant := false
+	hasNegativeArbitrary := false
+	hasImportantArbitrary := false
 	for _, c := range classes {
 		if len(c) > 0 && c[0] == '-' {
 			hasNegative = true
@@ -1077,6 +1124,18 @@ func TestClassGenerator(t *testing.T) {
 		if strings.HasPrefix(c, "[") && strings.Contains(c, "]:") {
 			hasArbitraryVariant = true
 		}
+		// Detect negative+important like !-translate-x-4
+		if strings.HasPrefix(c, "!-") {
+			hasNegativeImportant = true
+		}
+		// Detect negative with arbitrary values like -m-[10px]
+		if len(c) > 0 && c[0] == '-' && strings.Contains(c, "[") {
+			hasNegativeArbitrary = true
+		}
+		// Detect important with arbitrary values like !w-[300px]
+		if len(c) > 0 && c[0] == '!' && strings.Contains(c, "[") {
+			hasImportantArbitrary = true
+		}
 	}
 	if !hasVariant {
 		t.Error("no variant classes generated")
@@ -1098,6 +1157,15 @@ func TestClassGenerator(t *testing.T) {
 	}
 	if !hasArbitraryVariant {
 		t.Error("no arbitrary variant classes generated")
+	}
+	if !hasNegativeImportant {
+		t.Error("no negative+important classes generated")
+	}
+	if !hasNegativeArbitrary {
+		t.Error("no negative with arbitrary value classes generated")
+	}
+	if !hasImportantArbitrary {
+		t.Error("no important with arbitrary value classes generated")
 	}
 
 	// Verify 500 classes produces at least 400 unique (high diversity).

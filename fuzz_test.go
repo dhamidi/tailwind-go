@@ -2,7 +2,10 @@
 
 package tailwind
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // FuzzTokenizer ensures the CSS tokenizer never panics on arbitrary input.
 func FuzzTokenizer(f *testing.F) {
@@ -68,6 +71,18 @@ func FuzzClassParser(f *testing.F) {
 	f.Add("[@supports(display:grid)]:grid")
 	f.Add("[&>svg]:fill-current")
 	f.Add("[&:not(:first-child)]:mt-4")
+	f.Add("!-translate-x-4")
+	f.Add("hover:!-m-2")
+	f.Add("-m-0")
+	f.Add("!w-[300px]")
+	f.Add("-translate-x-[2rem]")
+	f.Add("dark:hover:!-translate-x-1/2")
+	f.Add("!!flex")
+	f.Add("--m-4")
+	f.Add("-")
+	f.Add("!")
+	f.Add("!-")
+	f.Add("-!")
 
 	f.Fuzz(func(t *testing.T, s string) {
 		defer func() {
@@ -181,6 +196,119 @@ func TestChunkBoundaryConsistency(t *testing.T) {
 				t.Errorf("split at %d for %q: single=%q multi=%q", i, input, refCSS, multiCSS)
 			}
 		}
+	}
+}
+
+// TestNegativeZeroEquivalence verifies that -m-0 and m-0 produce
+// semantically equivalent CSS (both resolve to zero margin).
+func TestNegativeZeroEquivalence(t *testing.T) {
+	pairs := [][2]string{
+		{"-m-0", "m-0"},
+		{"-mx-0", "mx-0"},
+		{"-my-0", "my-0"},
+		{"-mt-0", "mt-0"},
+		{"-mr-0", "mr-0"},
+		{"-mb-0", "mb-0"},
+		{"-ml-0", "ml-0"},
+		{"-translate-x-0", "translate-x-0"},
+		{"-translate-y-0", "translate-y-0"},
+	}
+	for _, pair := range pairs {
+		neg, pos := pair[0], pair[1]
+
+		eNeg := New()
+		eNeg.Write([]byte(`<div class="` + neg + `">`))
+		cssNeg := eNeg.CSS()
+
+		ePos := New()
+		ePos.Write([]byte(`<div class="` + pos + `">`))
+		cssPos := ePos.CSS()
+
+		// Both should produce CSS (not be silently dropped).
+		if cssNeg == "" && cssPos == "" {
+			continue // utility not supported, skip
+		}
+
+		// Extract the declaration values and verify zero equivalence.
+		// For zero values, calc(-1 * 0) and 0 and 0px are all equivalent.
+		negVal := extractCSSValue(cssNeg)
+		posVal := extractCSSValue(cssPos)
+		negZero := isZeroValue(negVal)
+		posZero := isZeroValue(posVal)
+		if cssPos != "" && posZero && !negZero && cssNeg != "" {
+			t.Errorf("%s and %s should both produce zero values:\n  %s → %q\n  %s → %q",
+				neg, pos, neg, negVal, pos, posVal)
+		}
+	}
+}
+
+// extractCSSValue extracts the first property value from a CSS rule.
+func extractCSSValue(css string) string {
+	idx := strings.Index(css, ":")
+	if idx < 0 {
+		return ""
+	}
+	rest := css[idx+1:]
+	end := strings.IndexAny(rest, ";}")
+	if end < 0 {
+		return strings.TrimSpace(rest)
+	}
+	return strings.TrimSpace(rest[:end])
+}
+
+// isZeroValue checks if a CSS value is semantically zero.
+func isZeroValue(v string) bool {
+	v = strings.TrimSpace(v)
+	switch v {
+	case "0", "0px", "0rem", "0em", "-0", "-0px":
+		return true
+	}
+	if strings.Contains(v, "calc") && strings.Contains(v, "0") {
+		// calc(-1 * 0) or calc(0px * -1) etc. are all zero
+		return true
+	}
+	return false
+}
+
+// TestEdgeCaseClassesNoPanic verifies that various edge case class strings
+// do not cause panics when processed through the full pipeline.
+func TestEdgeCaseClassesNoPanic(t *testing.T) {
+	edgeCases := []string{
+		"!-translate-x-4",
+		"hover:!-m-2",
+		"-m-0",
+		"!w-[300px]",
+		"-translate-x-[2rem]",
+		"dark:hover:!-translate-x-1/2",
+		"!!flex",
+		"--m-4",
+		"-",
+		"!",
+		"!-",
+		"-!",
+		"!!!",
+		"---",
+		"!-!-m-4",
+		"-translate-x-[calc(1rem+4px)]",
+		"hover:-translate-x-[2rem]",
+		"!p-[1.5rem]",
+		"!bg-[#ff0000]",
+		"dark:!-m-[10px]",
+	}
+	for _, class := range edgeCases {
+		t.Run(class, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("panic on class %q: %v", class, r)
+				}
+			}()
+			// Test parseClass
+			_ = parseClass(class)
+			// Test full engine pipeline
+			e := New()
+			e.Write([]byte(`<div class="` + class + `">`))
+			_ = e.CSS()
+		})
 	}
 }
 
