@@ -21,9 +21,15 @@ Flags:
   -data string    data directory for content (default: copies embedded content to temp dir)
 ```
 
-The server also respects the `PORT` environment variable, which is set by
-many deployment platforms (Heroku, Cloud Run, Railway, etc.). The precedence
-order is:
+The server also respects the following environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Listen port (set by many deployment platforms) |
+| `ADMIN_USER` | Username for admin login |
+| `ADMIN_PASSWORD` | Password for admin login |
+
+The listen address precedence order is:
 
 1. `-addr` flag (highest)
 2. `PORT` environment variable
@@ -37,8 +43,24 @@ PORT=9090 go run .
 PORT=9090 go run . -addr :7070   # listens on :7070
 ```
 
+## Authentication
+
+Admin routes (`/admin/*`) are protected by session-based authentication. Set the
+`ADMIN_USER` and `ADMIN_PASSWORD` environment variables to enable login:
+
+```bash
+ADMIN_USER=admin ADMIN_PASSWORD=secret go run .
+```
+
+Visit `/login` to sign in. After successful authentication, the navbar shows
+admin links (New Post, Drafts, Media, Logout). Unauthenticated requests to any
+`/admin/` route are redirected to `/login`.
+
+Public routes (`/`, `/posts`, `/posts/{slug}`) remain accessible without login.
+
 ## Features
 
+- **Authentication** — session-based login protecting all admin routes
 - **Server-side rendering** with Go's `html/template`
 - **Dark mode** with localStorage persistence and system preference detection
 - **Responsive design** using Tailwind breakpoints (`sm:`, `md:`, `lg:`)
@@ -56,6 +78,7 @@ PORT=9090 go run . -addr :7070   # listens on :7070
 | `content.go` | `Post`, `Draft`, and `Media` types; `Store` for filesystem CRUD |
 | `markdown.go` | Pure-function markdown-to-HTML renderer with Tailwind classes |
 | `markdown_test.go` | Unit tests for the markdown renderer (no I/O) |
+| `login.html` | Login form page |
 | `layout.html` | Base template: nav, footer, dark mode toggle |
 | `home.html` | Hero section and recent posts grid |
 | `post.html` | Single post view with prev/next navigation |

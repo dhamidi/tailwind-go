@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
 	"html/template"
 	"io"
@@ -9,10 +11,42 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	tailwind "github.com/dhamidi/tailwind-go"
 )
+
+var (
+	sessions   = map[string]bool{}
+	sessionsMu sync.Mutex
+)
+
+func newSession() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+func isLoggedIn(r *http.Request) bool {
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		return false
+	}
+	sessionsMu.Lock()
+	defer sessionsMu.Unlock()
+	return sessions[cookie.Value]
+}
+
+func requireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isLoggedIn(r) {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		next(w, r)
+	}
+}
 
 var templates *template.Template
 var store *Store
@@ -27,6 +61,8 @@ type PageData struct {
 	Drafts      []Post
 	Media       []Media
 	Years       []YearGroup
+	LoggedIn    bool
+	LoginError  string
 }
 
 // YearGroup groups posts by year for the archive page.
@@ -73,13 +109,14 @@ func main() {
 		"editor.html",
 		"drafts.html",
 		"media.html",
+		"login.html",
 	))
 
 	// Set up Tailwind
 	tw := tailwind.New()
 
 	// Scan template files
-	for _, name := range []string{"layout.html", "home.html", "post.html", "archive.html", "editor.html", "drafts.html", "media.html"} {
+	for _, name := range []string{"layout.html", "home.html", "post.html", "archive.html", "editor.html", "drafts.html", "media.html", "login.html"} {
 		data, err := os.ReadFile(name)
 		if err != nil {
 			log.Fatal(err)
@@ -116,14 +153,16 @@ func main() {
 	mux.HandleFunc("/", handleHome)
 	mux.HandleFunc("/posts", handleArchive)
 	mux.HandleFunc("/posts/", handlePost)
-	mux.HandleFunc("/admin/editor", handleEditor)
-	mux.HandleFunc("/admin/editor/", handleEditor)
-	mux.HandleFunc("/admin/posts", handleSavePost)
-	mux.HandleFunc("/admin/posts/", handlePostAction)
-	mux.HandleFunc("/admin/drafts", handleDrafts)
-	mux.HandleFunc("/admin/drafts/", handleDraftAction)
-	mux.HandleFunc("/admin/media", handleMediaRoute)
-	mux.HandleFunc("/admin/media/", handleMediaAction)
+	mux.HandleFunc("/login", handleLogin)
+	mux.HandleFunc("/logout", handleLogout)
+	mux.HandleFunc("/admin/editor", requireAuth(handleEditor))
+	mux.HandleFunc("/admin/editor/", requireAuth(handleEditor))
+	mux.HandleFunc("/admin/posts", requireAuth(handleSavePost))
+	mux.HandleFunc("/admin/posts/", requireAuth(handlePostAction))
+	mux.HandleFunc("/admin/drafts", requireAuth(handleDrafts))
+	mux.HandleFunc("/admin/drafts/", requireAuth(handleDraftAction))
+	mux.HandleFunc("/admin/media", requireAuth(handleMediaRoute))
+	mux.HandleFunc("/admin/media/", requireAuth(handleMediaAction))
 
 	log.Printf("Starting blog server on %s", listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, mux))
@@ -137,6 +176,65 @@ func renderPage(w http.ResponseWriter, name string, data PageData) {
 		log.Printf("template error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+func handleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		tmpl := template.Must(template.ParseFiles("layout.html", "login.html"))
+		data := PageData{TailwindURL: tailwindURL}
+		if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+			log.Printf("template error: %v", err)
+		}
+		return
+	}
+
+	user := r.FormValue("username")
+	pass := r.FormValue("password")
+	adminUser := os.Getenv("ADMIN_USER")
+	adminPass := os.Getenv("ADMIN_PASSWORD")
+
+	if adminUser == "" || adminPass == "" {
+		http.Error(w, "Admin credentials not configured", http.StatusInternalServerError)
+		return
+	}
+
+	if user == adminUser && pass == adminPass {
+		token := newSession()
+		sessionsMu.Lock()
+		sessions[token] = true
+		sessionsMu.Unlock()
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    token,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+		})
+		http.Redirect(w, r, "/admin/drafts", http.StatusSeeOther)
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("layout.html", "login.html"))
+	data := PageData{TailwindURL: tailwindURL, LoginError: "Invalid username or password"}
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Printf("template error: %v", err)
+	}
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session")
+	if err == nil {
+		sessionsMu.Lock()
+		delete(sessions, cookie.Value)
+		sessionsMu.Unlock()
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +254,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	// Re-parse templates to pick up the home content block
 	tmpl := template.Must(template.ParseFiles("layout.html", "home.html"))
-	data := PageData{TailwindURL: tailwindURL, Posts: posts}
+	data := PageData{TailwindURL: tailwindURL, Posts: posts, LoggedIn: isLoggedIn(r)}
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		log.Printf("template error: %v", err)
 	}
@@ -171,7 +269,7 @@ func handleArchive(w http.ResponseWriter, r *http.Request) {
 	years := groupByYear(posts)
 
 	tmpl := template.Must(template.ParseFiles("layout.html", "archive.html"))
-	data := PageData{TailwindURL: tailwindURL, Years: years}
+	data := PageData{TailwindURL: tailwindURL, Years: years, LoggedIn: isLoggedIn(r)}
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		log.Printf("template error: %v", err)
 	}
@@ -204,7 +302,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := PageData{TailwindURL: tailwindURL, Post: *post}
+	data := PageData{TailwindURL: tailwindURL, Post: *post, LoggedIn: isLoggedIn(r)}
 	if idx > 0 {
 		data.Next = &posts[idx-1]
 	}
@@ -231,7 +329,7 @@ func handleEditor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles("layout.html", "editor.html"))
-	data := PageData{TailwindURL: tailwindURL, Post: post}
+	data := PageData{TailwindURL: tailwindURL, Post: post, LoggedIn: isLoggedIn(r)}
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		log.Printf("template error: %v", err)
 	}
@@ -315,7 +413,7 @@ func handleDrafts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles("layout.html", "drafts.html"))
-	data := PageData{TailwindURL: tailwindURL, Drafts: drafts}
+	data := PageData{TailwindURL: tailwindURL, Drafts: drafts, LoggedIn: isLoggedIn(r)}
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		log.Printf("template error: %v", err)
 	}
@@ -350,7 +448,7 @@ func handleMediaList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles("layout.html", "media.html"))
-	data := PageData{TailwindURL: tailwindURL, Media: media}
+	data := PageData{TailwindURL: tailwindURL, Media: media, LoggedIn: isLoggedIn(r)}
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		log.Printf("template error: %v", err)
 	}
