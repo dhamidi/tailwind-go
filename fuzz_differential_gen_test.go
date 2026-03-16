@@ -33,6 +33,10 @@ var staticUtilities = []string{
 	"object-center", "object-top", "object-bottom", "object-left", "object-right",
 	"whitespace-normal", "whitespace-nowrap", "whitespace-pre", "whitespace-pre-line", "whitespace-pre-wrap",
 	"cursor-pointer", "cursor-default", "cursor-wait", "cursor-text", "cursor-move", "cursor-not-allowed",
+	"cursor-auto", "cursor-cell", "cursor-crosshair", "cursor-grab", "cursor-grabbing",
+	"cursor-help", "cursor-no-drop", "cursor-context-menu", "cursor-col-resize",
+	"cursor-row-resize", "cursor-all-scroll", "cursor-zoom-in", "cursor-zoom-out",
+	"cursor-copy", "cursor-alias", "cursor-progress", "cursor-none",
 	"select-none", "select-text", "select-all", "select-auto",
 	"pointer-events-none", "pointer-events-auto",
 	"list-inside", "list-outside", "list-none", "list-disc", "list-decimal",
@@ -102,6 +106,15 @@ var staticUtilities = []string{
 	"bg-center", "bg-top", "bg-bottom", "bg-left", "bg-right",
 	"bg-repeat", "bg-no-repeat", "bg-repeat-x", "bg-repeat-y",
 	"bg-cover", "bg-contain", "bg-auto",
+	// gradient directions
+	"bg-linear-to-t", "bg-linear-to-tr", "bg-linear-to-r", "bg-linear-to-br",
+	"bg-linear-to-b", "bg-linear-to-bl", "bg-linear-to-l", "bg-linear-to-tl",
+	// background clip, origin, blend
+	"bg-clip-border", "bg-clip-padding", "bg-clip-content", "bg-clip-text",
+	"bg-origin-border", "bg-origin-padding", "bg-origin-content",
+	"bg-blend-normal", "bg-blend-multiply", "bg-blend-screen", "bg-blend-overlay",
+	"bg-blend-darken", "bg-blend-lighten", "bg-blend-color-dodge", "bg-blend-color-burn",
+	"bg-blend-hard-light", "bg-blend-soft-light", "bg-blend-difference", "bg-blend-exclusion",
 	"border-solid", "border-dashed", "border-dotted", "border-double", "border-none",
 	"outline-none", "outline", "outline-dashed", "outline-dotted", "outline-double",
 	"ring-inset",
@@ -116,7 +129,26 @@ var staticUtilities = []string{
 	// divide style
 	"divide-solid", "divide-dashed", "divide-dotted", "divide-double", "divide-none",
 	"accent-auto",
+	// box decoration break
+	"box-decoration-clone", "box-decoration-slice",
+	// break before/after/inside
+	"break-before-auto", "break-before-avoid", "break-before-all", "break-before-page",
+	"break-before-left", "break-before-right", "break-before-column",
+	"break-after-auto", "break-after-avoid", "break-after-all", "break-after-page",
+	"break-after-left", "break-after-right", "break-after-column",
+	"break-inside-auto", "break-inside-avoid", "break-inside-avoid-page", "break-inside-avoid-column",
+	// color scheme
+	"color-scheme-normal", "color-scheme-light", "color-scheme-dark", "color-scheme-light-dark",
+	// field sizing
+	"field-sizing-content", "field-sizing-fixed",
+	// contain
+	"contain-none", "contain-content", "contain-strict",
+	"contain-size", "contain-inline-size", "contain-layout", "contain-paint", "contain-style",
+	// caption side
+	"caption-top", "caption-bottom",
 	"touch-auto", "touch-none", "touch-manipulation",
+	"touch-pan-x", "touch-pan-y", "touch-pan-up", "touch-pan-down",
+	"touch-pan-left", "touch-pan-right", "touch-pinch-zoom",
 	"scroll-auto", "scroll-smooth",
 	"snap-none", "snap-x", "snap-y", "snap-both", "snap-mandatory", "snap-proximity",
 	"forced-color-adjust-auto", "forced-color-adjust-none",
@@ -181,6 +213,44 @@ var fuzzColorShades = []string{
 
 var fuzzColorSpecial = []string{"transparent", "current", "inherit", "white", "black"}
 
+var fuzzMaskStatic = []string{
+	"mask-clip-border", "mask-clip-padding", "mask-clip-content", "mask-clip-fill",
+	"mask-clip-stroke", "mask-clip-view", "mask-clip-none",
+	"mask-composite-add", "mask-composite-subtract", "mask-composite-intersect", "mask-composite-exclude",
+	"mask-image-none",
+	"mask-alpha", "mask-luminance", "mask-match",
+	"mask-origin-border", "mask-origin-padding", "mask-origin-content",
+	"mask-origin-fill", "mask-origin-stroke", "mask-origin-view",
+	"mask-position-center", "mask-position-top", "mask-position-bottom",
+	"mask-position-left", "mask-position-right",
+	"mask-repeat", "mask-no-repeat", "mask-repeat-x", "mask-repeat-y",
+	"mask-repeat-round", "mask-repeat-space",
+	"mask-size-auto", "mask-size-cover", "mask-size-contain",
+	"mask-type-alpha", "mask-type-luminance",
+	"mask-circle", "mask-ellipse",
+	"mask-radial-closest-side", "mask-radial-closest-corner",
+	"mask-radial-farthest-side", "mask-radial-farthest-corner",
+	"mask-radial-at-center", "mask-radial-at-top", "mask-radial-at-bottom",
+	"mask-radial-at-left", "mask-radial-at-right",
+}
+
+var fuzzMaskGradientColorPrefixes = []string{
+	"mask-linear-from", "mask-linear-to", "mask-radial-from", "mask-radial-to",
+	"mask-conic-from", "mask-conic-to",
+}
+
+var fuzzMaskGradientPositionPrefixes = []string{
+	"mask-x-from", "mask-x-to", "mask-y-from", "mask-y-to",
+}
+
+var fuzzMaskGradientPositionValues = []string{
+	"0%", "5%", "10%", "25%", "50%", "75%", "100%",
+}
+
+var fuzzGradientPercentagePositions = []string{
+	"from-5%", "from-10%", "from-50%", "via-30%", "via-50%", "to-90%", "to-100%",
+}
+
 var fuzzVariants = []string{
 	"hover", "focus", "active", "visited", "disabled", "checked", "required",
 	"invalid", "empty", "first", "last", "odd", "even",
@@ -225,7 +295,7 @@ var fuzzArbitraryValuePrefixes = []string{
 	"rounded", "translate-x", "translate-y", "rotate", "scale",
 	"opacity", "z", "order", "grid-cols", "grid-rows",
 	"col-span", "row-span", "basis", "min-w", "max-w", "min-h", "max-h",
-	"line-clamp", "indent", "aspect",
+	"line-clamp", "indent", "aspect", "content",
 }
 
 var fuzzPositionLogicalPrefixes = []string{
@@ -472,7 +542,7 @@ func generateGridUtility(rng *rand.Rand) string {
 
 // generateBaseUtility generates a random utility without variants or modifiers.
 func generateBaseUtility(rng *rand.Rand) string {
-	category := rng.Intn(24)
+	category := rng.Intn(28)
 	switch category {
 	case 0: // static
 		return pick(rng, staticUtilities)
@@ -538,6 +608,19 @@ func generateBaseUtility(rng *rand.Rand) string {
 	case 23: // aspect ratio arbitrary
 		arb := pick(rng, fuzzArbitraryValues)
 		return "aspect-[" + arb + "]"
+	case 24: // mask static
+		return pick(rng, fuzzMaskStatic)
+	case 25: // mask gradient color stops
+		prefix := pick(rng, fuzzMaskGradientColorPrefixes)
+		if rng.Intn(5) == 0 {
+			return prefix + "-" + pick(rng, fuzzColorSpecial)
+		}
+		return prefix + "-" + pick(rng, fuzzColorFamilies) + "-" + pick(rng, fuzzColorShades)
+	case 26: // mask gradient positions
+		prefix := pick(rng, fuzzMaskGradientPositionPrefixes)
+		return prefix + "-[" + pick(rng, fuzzMaskGradientPositionValues) + "]"
+	case 27: // gradient percentage positions
+		return pick(rng, fuzzGradientPercentagePositions)
 	}
 	return pick(rng, staticUtilities)
 }

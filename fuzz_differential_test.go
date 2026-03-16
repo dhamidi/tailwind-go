@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	fuzzCount = flag.Int("fuzz-count", 500, "number of classes to generate for differential fuzzing")
+	fuzzCount = flag.Int("fuzz-count", 1000, "number of classes to generate for differential fuzzing")
 	fuzzSeed  = flag.Int64("fuzz-seed", 42, "random seed for class generation")
 )
 
