@@ -99,6 +99,91 @@ func FuzzScanner(f *testing.F) {
 	})
 }
 
+// FuzzEngineMultiWrite ensures the engine produces identical output regardless
+// of how input bytes are chunked across multiple Write calls.
+func FuzzEngineMultiWrite(f *testing.F) {
+	f.Add([]byte(`<div class="flex items-center p-4">`), uint8(5))
+	f.Add([]byte(`<div class="bg-blue-500 hover:bg-blue-700 text-white">`), uint8(1))
+	f.Add([]byte(`<div class="w-[calc(100%-2rem)] md:grid-cols-3">`), uint8(3))
+	f.Add([]byte(`<div class="dark:md:hover:!-translate-x-1/2">`), uint8(7))
+	f.Add([]byte{}, uint8(0))
+
+	f.Fuzz(func(t *testing.T, data []byte, splitSeed uint8) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("panic: %v", r)
+			}
+		}()
+
+		// Single-write reference.
+		ref := New()
+		ref.Write(data)
+		refCSS := ref.CSS()
+
+		// Multi-write: split data at various points based on seed.
+		multi := New()
+		if len(data) > 0 {
+			// Generate split points from the seed.
+			numSplits := int(splitSeed)%5 + 1
+			step := len(data) / (numSplits + 1)
+			if step == 0 {
+				step = 1
+			}
+			pos := 0
+			for i := 0; i < numSplits && pos < len(data); i++ {
+				end := pos + step
+				if end > len(data) {
+					end = len(data)
+				}
+				multi.Write(data[pos:end])
+				pos = end
+			}
+			if pos < len(data) {
+				multi.Write(data[pos:])
+			}
+		}
+		multiCSS := multi.CSS()
+
+		if refCSS != multiCSS {
+			t.Errorf("output differs between single-write and multi-write:\nsingle: %q\nmulti:  %q", refCSS, multiCSS)
+		}
+	})
+}
+
+// TestChunkBoundaryConsistency splits known tricky tokens at every possible
+// byte boundary and verifies the output matches a single Write call.
+func TestChunkBoundaryConsistency(t *testing.T) {
+	inputs := []string{
+		`<div class="bg-blue-500">`,
+		`<div class="hover:bg-blue-500">`,
+		`<div class="w-[calc(100%-2rem)]">`,
+		`<div class="dark:md:hover:!-translate-x-1/2">`,
+		`<div class="[mask-type:alpha]">`,
+		`<div class="bg-(--my-color)">`,
+		`<div class="text-[length:--my-size]">`,
+		`<div class="group-hover/sidebar:flex">`,
+	}
+
+	for _, input := range inputs {
+		data := []byte(input)
+		ref := New()
+		ref.Write(data)
+		refCSS := ref.CSS()
+
+		// Split at every byte position.
+		for i := 0; i <= len(data); i++ {
+			multi := New()
+			multi.Write(data[:i])
+			multi.Write(data[i:])
+			multiCSS := multi.CSS()
+
+			if refCSS != multiCSS {
+				t.Errorf("split at %d for %q: single=%q multi=%q", i, input, refCSS, multiCSS)
+			}
+		}
+	}
+}
+
 // FuzzEngine ensures the full pipeline never panics.
 func FuzzEngine(f *testing.F) {
 	f.Add([]byte(`<div class="flex items-center p-4">`))
