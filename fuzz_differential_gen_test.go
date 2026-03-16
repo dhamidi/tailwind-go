@@ -268,6 +268,57 @@ var fuzzVariants = []string{
 	"peer-hover", "peer-focus", "peer-checked",
 	// container query variants
 	"@sm", "@md", "@lg", "@xl", "@2xl",
+	// missing pseudo-class variants
+	"target", "enabled", "indeterminate", "default", "valid",
+	"placeholder-shown", "autofill", "read-only",
+	"user-valid", "user-invalid", "optional", "inert",
+	"in-range", "out-of-range", "only-of-type",
+	// media query variants
+	"portrait", "landscape",
+	"contrast-more", "contrast-less",
+	"forced-colors", "not-forced-colors",
+	"noscript", "inverted-colors",
+	"pointer-fine", "pointer-coarse", "pointer-none",
+	"any-pointer-fine", "any-pointer-coarse", "any-pointer-none",
+	"hover-hover", "hover-none", "any-hover-hover", "any-hover-none",
+	// max-* responsive variants
+	"max-sm", "max-md", "max-lg", "max-xl", "max-2xl",
+	// missing pseudo-element variants
+	"backdrop", "details-content",
+	// directional variants
+	"rtl", "ltr",
+	// extended container query variants
+	"@3xs", "@2xs", "@xs", "@3xl", "@4xl", "@5xl", "@6xl", "@7xl",
+	// @starting-style variant
+	"starting",
+}
+
+var fuzzCompoundVariantPrefixes = []string{
+	"not", "has", "in",
+}
+
+var fuzzCompoundVariantValues = []string{
+	"hover", "focus", "checked", "disabled", "open", "empty",
+}
+
+var fuzzGroupPeerNames = []string{
+	"", "/sidebar", "/modal", "/input", "/card",
+}
+
+var fuzzAriaAttributes = []string{
+	"checked", "disabled", "expanded", "hidden", "pressed", "readonly", "required", "selected", "busy",
+}
+
+var fuzzArbitraryAriaValues = []string{
+	"[sort=ascending]", "[labelledby=title]", "[controls=panel]",
+}
+
+var fuzzDataAttributes = []string{
+	"active", "loading", "current", "open",
+}
+
+var fuzzArbitraryDataValues = []string{
+	"[size=large]", "[loading]", "[state=active]",
 }
 
 var fuzzOpacityModifiers = []string{
@@ -452,6 +503,7 @@ const (
 	levelTypography
 	levelBorderVariant
 	levelFilterTransform
+	levelCompoundVariant
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -728,6 +780,41 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 				return "delay-" + pick(rng, fuzzDurationDelayValues)
 			}
 		}
+
+	case levelCompoundVariant:
+		sub := rng.Intn(7)
+		switch sub {
+		case 0: // not-*/has-*/in-*
+			prefix := pick(rng, fuzzCompoundVariantPrefixes)
+			val := pick(rng, fuzzCompoundVariantValues)
+			return prefix + "-" + val + ":" + generateBaseUtility(rng)
+		case 1: // group-*/name
+			val := pick(rng, fuzzCompoundVariantValues)
+			name := pick(rng, fuzzGroupPeerNames)
+			return "group-" + val + name + ":" + generateBaseUtility(rng)
+		case 2: // peer-*/name
+			val := pick(rng, fuzzCompoundVariantValues)
+			name := pick(rng, fuzzGroupPeerNames)
+			return "peer-" + val + name + ":" + generateBaseUtility(rng)
+		case 3: // aria-*
+			if rng.Intn(2) == 0 {
+				return "aria-" + pick(rng, fuzzAriaAttributes) + ":" + generateBaseUtility(rng)
+			}
+			return "aria-" + pick(rng, fuzzArbitraryAriaValues) + ":" + generateBaseUtility(rng)
+		case 4: // data-*
+			if rng.Intn(2) == 0 {
+				return "data-" + pick(rng, fuzzDataAttributes) + ":" + generateBaseUtility(rng)
+			}
+			return "data-" + pick(rng, fuzzArbitraryDataValues) + ":" + generateBaseUtility(rng)
+		case 5: // nth-*
+			nths := []string{"[2]", "[3]", "[3n+1]", "[odd]", "[even]"}
+			return "nth-" + pick(rng, nths) + ":" + generateBaseUtility(rng)
+		case 6: // *: and **: children/descendants
+			if rng.Intn(2) == 0 {
+				return "*:" + generateBaseUtility(rng)
+			}
+			return "**:" + generateBaseUtility(rng)
+		}
 	}
 	return generateBaseUtility(rng)
 }
@@ -736,19 +823,20 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 func generateRandomClasses(rng *rand.Rand, count int) []string {
 	classes := make([]string, 0, count)
 	weights := []int{
-		30, // simple
-		20, // with variant
-		10, // with modifier
-		10, // compound
-		8,  // multi-variant
-		7,  // negative
+		28, // simple
+		18, // with variant
+		9,  // with modifier
+		9,  // compound
+		7,  // multi-variant
+		6,  // negative
 		5,  // important
 		5,  // arbitrary value
 		3,  // arbitrary property
 		2,  // kitchen sink
-		15, // typography
-		12, // border variant
-		12, // filter/transform
+		13, // typography
+		10, // border variant
+		10, // filter/transform
+		15, // compound variant
 	}
 
 	for i := 0; i < count; i++ {
@@ -788,6 +876,7 @@ func TestClassGenerator(t *testing.T) {
 	hasVariant := false
 	hasNegative := false
 	hasArbitrary := false
+	hasCompoundVariant := false
 	for _, c := range classes {
 		if len(c) > 0 && c[0] == '-' {
 			hasNegative = true
@@ -798,6 +887,12 @@ func TestClassGenerator(t *testing.T) {
 		if strings.Contains(c, "[") {
 			hasArbitrary = true
 		}
+		// Detect compound variants: not-*, has-*, in-*, group-*/name, peer-*/name, nth-*, *:, **:
+		for _, prefix := range []string{"not-", "has-", "in-", "group-", "peer-", "nth-", "*:", "**:"} {
+			if strings.HasPrefix(c, prefix) && strings.Contains(c, ":") {
+				hasCompoundVariant = true
+			}
+		}
 	}
 	if !hasVariant {
 		t.Error("no variant classes generated")
@@ -807,6 +902,9 @@ func TestClassGenerator(t *testing.T) {
 	}
 	if !hasArbitrary {
 		t.Error("no arbitrary value classes generated")
+	}
+	if !hasCompoundVariant {
+		t.Error("no compound variant classes generated")
 	}
 
 	// Verify 500 classes produces at least 400 unique (high diversity).
