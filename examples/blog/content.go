@@ -236,7 +236,7 @@ func (s *Store) deleteBySlug(subdir, slug string) error {
 		return err
 	}
 	for _, e := range entries {
-		if strings.HasSuffix(e.Name(), "-"+slug+".md") {
+		if strings.HasSuffix(e.Name(), "-"+slug+".md") || e.Name() == slug+".md" {
 			return os.Remove(filepath.Join(dir, e.Name()))
 		}
 	}
