@@ -350,6 +350,8 @@ const twPropertiesFallbackLayer = `@layer properties {
       --tw-gradient-via: initial;
       --tw-gradient-to: initial;
       --tw-gradient-stops: initial;
+      --tw-gradient-via-stops: initial;
+      --tw-gradient-position: initial;
       --tw-gradient-from-position: initial;
       --tw-gradient-via-position: initial;
       --tw-gradient-to-position: initial;
