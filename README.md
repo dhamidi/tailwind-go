@@ -213,7 +213,7 @@ go test -tags reference -run TestDifferentialFuzz -v -timeout 30m \
   -fuzz-count 1000 -fuzz-seed 123
 ```
 
-The generator produces classes at multiple complexity levels — static utilities, variants, opacity modifiers, negative values, arbitrary values, arbitrary properties, and combinations — using a deterministic pseudo-random seed for reproducibility.
+The generator produces classes at multiple complexity levels — static utilities, spacing, sizing, colors, typography, variants, opacity modifiers, negative values, arbitrary values, arbitrary properties, border width per-side (`border-t-2`, `border-x-4`), border color per-side (`border-t-red-500`), rounded corner variants (`rounded-tl-lg`), border spacing, outline width/offset, ring/inset-ring width, ring offset, divide width/style, and combinations — using a deterministic pseudo-random seed for reproducibility.
 
 The class generator itself can be tested without Node.js:
 

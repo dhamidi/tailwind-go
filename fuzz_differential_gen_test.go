@@ -76,6 +76,16 @@ var staticUtilities = []string{
 	"border-solid", "border-dashed", "border-dotted", "border-double", "border-none",
 	"outline-none", "outline", "outline-dashed", "outline-dotted", "outline-double",
 	"ring-inset",
+	// outline width
+	"outline-0", "outline-1", "outline-2", "outline-4", "outline-8",
+	// ring width
+	"ring-0", "ring-1", "ring-2", "ring-4", "ring-8", "ring",
+	// inset ring width
+	"inset-ring-0", "inset-ring-1", "inset-ring-2", "inset-ring-4", "inset-ring-8",
+	// ring offset
+	"ring-offset-0", "ring-offset-1", "ring-offset-2", "ring-offset-4", "ring-offset-8",
+	// divide style
+	"divide-solid", "divide-dashed", "divide-dotted", "divide-double", "divide-none",
 	"accent-auto",
 	"touch-auto", "touch-none", "touch-manipulation",
 	"scroll-auto", "scroll-smooth",
@@ -92,6 +102,7 @@ var fuzzSpacingPrefixes = []string{
 	"scroll-mx", "scroll-my", "scroll-mt", "scroll-mr", "scroll-mb", "scroll-ml",
 	"scroll-px", "scroll-py", "scroll-pt", "scroll-pr", "scroll-pb", "scroll-pl",
 	"leading",
+	"border-spacing", "border-spacing-x", "border-spacing-y",
 }
 
 var fuzzSpacingValues = []string{
@@ -118,6 +129,9 @@ var fuzzColorPrefixes = []string{
 	"accent", "caret", "fill", "stroke",
 	"shadow", "decoration", "divide", "placeholder",
 	"from", "via", "to",
+	// border color per-side
+	"border-t", "border-r", "border-b", "border-l", "border-x", "border-y",
+	"border-s", "border-e", "border-bs", "border-be",
 }
 
 var fuzzColorFamilies = []string{
@@ -197,6 +211,32 @@ var fuzzArbitraryValues = []string{
 	"10px", "0.5", "200ms",
 }
 
+var fuzzBorderWidthPrefixes = []string{
+	"border", "border-t", "border-r", "border-b", "border-l",
+	"border-x", "border-y",
+	"border-s", "border-e", "border-bs", "border-be",
+}
+
+var fuzzBorderWidthValues = []string{"0", "2", "4", "8"}
+
+var fuzzRoundedPrefixes = []string{
+	"rounded", "rounded-t", "rounded-r", "rounded-b", "rounded-l",
+	"rounded-tl", "rounded-tr", "rounded-br", "rounded-bl",
+	"rounded-s", "rounded-e", "rounded-ss", "rounded-se", "rounded-ee", "rounded-es",
+}
+
+var fuzzRoundedValues = []string{
+	"none", "sm", "md", "lg", "xl", "2xl", "3xl", "full",
+}
+
+var fuzzOutlineOffsetPrefixes = []string{"outline-offset"}
+
+var fuzzOutlineOffsetValues = []string{"0", "1", "2", "4", "8"}
+
+var fuzzDivideWidthPrefixes = []string{"divide-x", "divide-y"}
+
+var fuzzDivideWidthValues = []string{"0", "2", "4", "8", "reverse"}
+
 // Complexity levels for class generation.
 const (
 	levelSimple = iota
@@ -210,6 +250,7 @@ const (
 	levelArbitraryProperty
 	levelKitchenSink
 	levelTypography
+	levelBorderVariant
 )
 
 // weightedChoice picks an index from a slice of weights using rng.
@@ -235,7 +276,7 @@ func pick(rng *rand.Rand, items []string) string {
 
 // generateBaseUtility generates a random utility without variants or modifiers.
 func generateBaseUtility(rng *rand.Rand) string {
-	category := rng.Intn(7)
+	category := rng.Intn(12)
 	switch category {
 	case 0: // static
 		return pick(rng, staticUtilities)
@@ -255,6 +296,24 @@ func generateBaseUtility(rng *rand.Rand) string {
 		return pick(rng, fuzzLeadingNumeric)
 	case 6: // underline offset
 		return pick(rng, fuzzUnderlineOffsetValues)
+	case 7: // border width per-side
+		return pick(rng, fuzzBorderWidthPrefixes) + "-" + pick(rng, fuzzBorderWidthValues)
+	case 8: // rounded corner variants
+		return pick(rng, fuzzRoundedPrefixes) + "-" + pick(rng, fuzzRoundedValues)
+	case 9: // outline offset
+		return pick(rng, fuzzOutlineOffsetPrefixes) + "-" + pick(rng, fuzzOutlineOffsetValues)
+	case 10: // divide width
+		return pick(rng, fuzzDivideWidthPrefixes) + "-" + pick(rng, fuzzDivideWidthValues)
+	case 11: // border/rounded/ring combined (simple)
+		sub := rng.Intn(3)
+		switch sub {
+		case 0:
+			return pick(rng, fuzzBorderWidthPrefixes) + "-" + pick(rng, fuzzBorderWidthValues)
+		case 1:
+			return pick(rng, fuzzRoundedPrefixes) + "-" + pick(rng, fuzzRoundedValues)
+		default:
+			return pick(rng, fuzzDivideWidthPrefixes) + "-" + pick(rng, fuzzDivideWidthValues)
+		}
 	}
 	return pick(rng, staticUtilities)
 }
@@ -326,6 +385,20 @@ func generateClassAtLevel(rng *rand.Rand, level int) string {
 			fuzzUnderlineOffsetValues,
 		}
 		return pick(rng, typoSets[rng.Intn(len(typoSets))])
+
+	case levelBorderVariant:
+		variant := pick(rng, fuzzVariants)
+		sub := rng.Intn(4)
+		switch sub {
+		case 0: // border width with variant
+			return variant + ":" + pick(rng, fuzzBorderWidthPrefixes) + "-" + pick(rng, fuzzBorderWidthValues)
+		case 1: // rounded with variant
+			return variant + ":" + pick(rng, fuzzRoundedPrefixes) + "-" + pick(rng, fuzzRoundedValues)
+		case 2: // divide width with variant
+			return variant + ":" + pick(rng, fuzzDivideWidthPrefixes) + "-" + pick(rng, fuzzDivideWidthValues)
+		default: // outline offset with variant
+			return variant + ":" + pick(rng, fuzzOutlineOffsetPrefixes) + "-" + pick(rng, fuzzOutlineOffsetValues)
+		}
 	}
 	return generateBaseUtility(rng)
 }
@@ -345,6 +418,7 @@ func generateRandomClasses(rng *rand.Rand, count int) []string {
 		3,  // arbitrary property
 		2,  // kitchen sink
 		15, // typography
+		12, // border variant
 	}
 
 	for i := 0; i < count; i++ {
